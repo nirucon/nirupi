@@ -27,7 +27,7 @@ Run from a local text TTY as a normal user. The installer prompts before changes
 
 ## License and attribution
 
-Bundled third-party sources remain subject to their own licenses. Review upstream license files before redistributing.
+Original NIRUPI project code is provided under the MIT License; see [LICENSE](LICENSE). Bundled third-party sources, including suckless components, remain subject to their own licenses. Review upstream license files and notices before redistributing.
 
 ## Alpha.9 notes
 
