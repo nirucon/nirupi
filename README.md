@@ -2,7 +2,7 @@
 
 Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest complete development archive: 0.2.0-alpha.21 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.22 — PRETEST ONLY.**
 
 > **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
@@ -94,3 +94,11 @@ Do not run `--apply` on a valuable workstation until target-system testing is co
 - Adds [engineering review](docs/ALPHA-21-REVIEW.md) and [regression test](tests/config-preservation.sh).
 
 **Repository warning:** Full alpha.21 installer source (152 files) is **not** on GitHub. This repository is not yet a working clone-and-install source. The full source ZIP is provided separately. These changes have not been tested on physical hardware.
+
+## Alpha.22 — Managed helper upgrades
+
+- Added `lib/managed.sh` to track and safely update NIRUPI-managed helpers by checksum.
+- Added functional upgrade tests for preservation, backup and executable permissions in the ZIP release.
+- See [engineering notes](docs/ALPHA-22-ENGINEERING.md).
+
+**Publication blocker:** This GitHub repository does not yet contain the complete alpha.22 installer source tree. The full 155-file ZIP is available in the development conversation. Do not use a GitHub clone as an installation source.
