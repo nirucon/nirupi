@@ -2,7 +2,7 @@
 
 Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest complete development archive: 0.2.0-alpha.18 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.19 — PRETEST ONLY.**
 
 > **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
@@ -69,3 +69,11 @@ Do not run `--apply` on a valuable workstation until target-system testing is co
 - Added [design tokens](docs/NIRU-NOIR-DESIGN.md) and [palette consistency test](tests/noir-consistency.sh).
 
 **Source publication warning:** This repository still does **not** contain the complete alpha.18 installer source tree. The full 146-file ZIP is in the development conversation. Do not attempt a clean-clone installation yet.
+
+## Alpha.19 — Rofi and font diagnostics
+
+- Installer now deploys the bundled `Black-Metal.rasi` theme if absent, before Rofi config, preserving user themes.
+- `--doctor` reports the actual fontconfig match for JetBrainsMono Nerd Font.
+- New [Rofi integration audit](docs/ALPHA-19-REVIEW.md) and [test](tests/rofi-integration.sh).
+
+**Important:** The full alpha.19 source tree (148 files) has **not** been pushed to this repository. The complete ZIP is supplied in the development conversation; a clean GitHub clone remains non-installable. Full source publication and clean-clone validation remain roadmap blockers.
