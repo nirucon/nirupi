@@ -1,27 +1,37 @@
-# NIRU Noir design system — alpha.18
+# NIRU Noir — design tokens (alpha.18)
 
-A minimal matte-graphite desktop with high-contrast text, subdued borders, and semantic terminal colors.
+## Principles
 
-| Token | Value | Use |
+Minimal, low-noise, matte graphite. High-contrast readable text, subdued borders, restrained color only where it conveys terminal semantics. No bright decorative accents.
+
+## Core colors
+
+| Token | Hex | Purpose |
 |---|---|---|
-| Background | `#0f0f10` | DWM, st, Kitty, Alacritty, Dunst |
+| Background | `#0f0f10` | DWM, Kitty, st, Alacritty, Dunst |
 | Foreground | `#e5e5e5` | Primary text |
 | Muted text | `#a8a8a8` | Secondary text |
 | Selection | `#3a3a3d` | Active menu row |
 | Border | `#2a2a2d` | Inactive window |
-| Focus | `#5a5a60` | Active window |
-| Error red | `#b87878` | Semantic ANSI red |
-| Muted blue | `#819eb5` | Semantic ANSI blue |
+| Focus border | `#5a5a60` | Focus indication |
+| Error red | `#b87878` | ANSI red / error state |
+| Muted blue | `#819eb5` | ANSI blue / links |
 
 ## Typography
 
-DWM/dmenu: JetBrainsMono Nerd Font 11; st: 12px; Kitty: 12; Alacritty: 11 (previously 5.5); Dunst: 10. GTK uses Sans 11 as a platform-independent fallback.
+- DWM/dmenu: `JetBrainsMono Nerd Font` 11 pt.
+- st: same family, 12 px (existing setting).
+- Kitty: same family, 12 pt.
+- Alacritty: same family, 11 pt (**previously 5.5**, unreadable).
+- Dunst: same family, 10 pt.
+- GTK: generic `Sans 11` to avoid platform-specific missing font.
 
-The 16 ANSI colors now agree across Kitty, st and Alacritty. Color meaning is preserved (red for errors, green for success, etc.) without bright decoration.
+**Font dependency remains a blocker**: JetBrainsMono Nerd Font is not guaranteed by the current distro package lists. Before the first real installation, either package a redistributable licensed font separately, select an installed equivalent with fontconfig, or explicitly install a verified package on each distro. Do not assume the font exists.
 
-## Unresolved before installation
+## Terminal semantics
 
-- JetBrainsMono Nerd Font is **not guaranteed** by current distro package lists; verify or supply a font fallback.
-- Rofi and SDDM have related but not identical surface tokens; validate screenshots and runtime behavior.
-- Existing customized dotfiles are preserved, so users will not automatically receive theme changes when upgrading.
-- Complete source tree still requires GitHub publication and clean-clone verification.
+The ANSI 16-color palette is now aligned between Kitty, st and Alacritty. Red/green/yellow/blue retain their semantic meaning, rather than mapping red to blue. All colors are desaturated to fit NIRU Noir.
+
+## Not yet unified
+
+Rofi Black-Metal theme and SDDM are visually related but have their own layouts and surface tokens. Their QML/theme runtime and pixel-level consistency require screenshots on real X11/SDDM. Existing user dotfiles are preserved, so upgrades do not forcibly overwrite customized themes.

@@ -1,0 +1,2 @@
+singleton HostInfo 1.0 HostInfo.qml
+singleton UserDefaults 1.0 UserDefaults.qml

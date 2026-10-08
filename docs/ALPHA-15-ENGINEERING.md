@@ -12,3 +12,7 @@
 - This is not a transaction: package installation, user config, SDDM, and privileged slock changes cannot yet be rolled back atomically.
 - Build-output tests are structural; they do not compile all four patched projects on the target distributions.
 - The full GitHub tree still requires verified publication and a clean-clone test.
+
+## Acceptance gate for the test laptop
+
+A clean disposable Debian 13 installation must pass read-only diagnostics, all package installations, patched builds, X11 login, keyboard shortcuts, wallpaper, audio, screenshot, clipboard, locking, suspend and reboot. Keep a recovery medium and backup available.

@@ -1,21 +1,23 @@
 # Alpha.16 — DWM desktop integration and upgrade-safety review
 
-## Changes
-- Validate DISPLAY and the installed DWM executable before launching any session daemons.
-- Add functional regression checks for missing DISPLAY and missing DWM.
-- Track SHA-256 checksums for helper scripts installed by NIRUPI.
-- Upgrade helpers only when their current checksum matches the recorded NIRUPI-managed version.
-- Preserve user-modified, untracked legacy and foreign-symlink helpers.
-- Use existing backup and atomic replacement when updating managed helpers.
+## Fixed
+- DWM and DISPLAY are validated before starting statusbar, wallpaper or notification daemons.
+- Added a functional session-startup regression test (missing DWM and missing DISPLAY).
+- New installations record SHA-256 hashes for managed helper scripts.
+- Later installs update a helper only if its on-disk checksum matches the last NIRUPI-installed version.
+- User-modified scripts, foreign symlinks and untracked scripts from earlier releases remain untouched.
+- All managed helper replacements use existing backup and atomic-file-write logic.
 
-## Limitations
-- Existing alpha.15 and earlier helpers have no ownership manifest and are deliberately preserved.
-- The manifest covers helpers, not dotfiles, SDDM, binaries or full rollback.
-- Package maps, Suckless compilation and X11 runtime have not been validated on all target distros.
-- **The complete source tree is not yet on GitHub**; a clone is not installable.
+## Deliberate limitations
+- Pre-alpha.16 helper files have no trustworthy ownership manifest. They will be preserved; users must migrate them manually after reviewing differences.
+- The manifest tracks helper scripts only. Dotfiles, binaries, SDDM and system files do not yet have a complete transactional ownership model.
+- The manifest update is not a multi-file transaction. Interrupted installs may need manual recovery from backups.
+- No target-distro X11 session or Suckless build has been validated here.
+- GitHub remains incomplete until the entire source tree has been pushed and a clean clone tested.
 
-## Next
-1. Test checksum-based upgrade scenarios and user modifications.
-2. Verify every DWM/dmenu shortcut and installed dependency.
-3. Build and run patched Suckless tools on Debian 13, then other distros.
-4. Publish and verify the full source tree.
+## Next steps
+1. Add automated manifest behavior tests, including user-edited and untracked helper preservation.
+2. Audit and test every DWM keybinding against installed package maps.
+3. Validate package resolution and actual builds in disposable distro images.
+4. Publish all sources to GitHub and verify clean-clone reproducibility.
+5. Test SDDM and startx, including logout, lock, suspend, wallpaper and bar.

@@ -1,13 +1,13 @@
 #!/bin/sh
 # Shared X11 entry point for SDDM and startx.
 export PATH="$HOME/.local/bin:$PATH"
-# Validate before starting any background services.
+# Validate the session before spawning notification, bar or wallpaper daemons.
 if [ -z "${DISPLAY:-}" ]; then
   printf '%s\n' '[NIRUPI] DISPLAY is unset; launch via SDDM or startx' >&2
   exit 1
 fi
 if [ ! -x "$HOME/.local/bin/dwm" ]; then
-  printf '%s\n' "[NIRUPI] DWM binary missing: $HOME/.local/bin/dwm" >&2
+  printf "%s\n" "[NIRUPI] DWM binary missing: $HOME/.local/bin/dwm" >&2
   exit 127
 fi
 [ -r "$HOME/.Xresources" ] && command -v xrdb >/dev/null 2>&1 && xrdb -merge "$HOME/.Xresources"

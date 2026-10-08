@@ -1,12 +1,8 @@
 # Alpha.23 — Managed NIRU Noir configuration upgrades
 
-- Added SHA-256 ownership tracking for DWM config, Rofi theme, per-app dotfiles, Xresources, and user X11 launchers.
-- Tracked files update only when their contents still match the previous NIRUPI-installed checksum.
-- Untracked, user-modified, and symlinked files are preserved.
-- Existing managed files are backed up before replacement; executable permissions are repaired.
-- Added functional tests with an isolated HOME covering installation, upgrade, backup, user edits, symlinks, untracked xinitrc, and mode repair.
-
-## Limitations
-- DWM is compiled from the bundled vendor config; user-edited config.h is preserved but not automatically compiled.
-- Full rollback, system-level ownership, clean-clone GitHub publication, real X11/SDDM tests, and distro package verification are pending.
-- This remains a pretest alpha; do not install over a valuable desktop.
+- New checksum manifest `managed-configs.tsv` covers DWM config, Rofi theme, per-app dotfiles, Xresources and user X11 launchers.
+- A file is upgraded only when it is tracked and still matches its last installed SHA-256.
+- User edits, symlinks, foreign files and legacy untracked configs are preserved.
+- Backups are written before replacing managed files, and executable permissions are repaired.
+- The installer still builds the bundled DWM config; user-edited DWM config is preserved for reference and **not compiled automatically**. This mismatch requires an explicit supported customization workflow.
+- Full rollback, system-level manifest, GitHub source publication, real graphical tests and distro package verification remain open.

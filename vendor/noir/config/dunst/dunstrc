@@ -1,0 +1,41 @@
+[global]
+    font = JetBrainsMono Nerd Font 10
+    frame_width = 2
+    frame_color = "#222222"
+    separator_height = 1
+    separator_color = "#444444"
+    transparency = 0
+    corner_radius = 4
+    padding = 10
+    horizontal_padding = 12
+    vertical_padding = 8
+    text_icon_padding = 6
+    icon_position = left
+    markup = yes
+    alignment = left
+    word_wrap = yes
+    format = "<b>%s</b>\n%b"
+    follow = keyboard
+    stack_duplicates = true
+    hide_duplicate_count = true
+    show_indicators = no
+
+# Matte Black färgpalett
+[urgency_low]
+    background = "#0f0f10"
+    foreground = "#cccccc"
+    frame_color = "#1a1a1a"
+    timeout = 5
+
+[urgency_normal]
+    background = "#0f0f10"
+    foreground = "#ffffff"
+    frame_color = "#222222"
+    timeout = 7
+
+[urgency_critical]
+    background = "#1a1a1a"
+    foreground = "#d69a9a"
+    frame_color = "#b87878"
+    timeout = 0
+

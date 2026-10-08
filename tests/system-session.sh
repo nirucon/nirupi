@@ -5,6 +5,7 @@ TMP="$(mktemp -d)"
 trap 'rm -rf -- "$TMP"' EXIT
 export NIRUPI_SYSTEM_LAUNCHER="$TMP/nirupi-session"
 export NIRUPI_SYSTEM_DESKTOP="$TMP/nirupi-dwm.desktop"
+# Source just the isolated guard definition, not the installer.
 eval "$(sed -n '/^check_system_session_conflicts(){/,/^}/p' "$ROOT/lib/install.sh")"
 die(){ printf '%s\n' "$*" >&2; exit 1; }
 check_system_session_conflicts

@@ -1,113 +1,90 @@
 # NIRUPI — NIRU Post Install
 
-Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
+**Version:** 0.2.0-alpha.32 (development / pretest)
 
-**Latest complete development archive: 0.2.0-alpha.23 — PRETEST ONLY.**
+Modular post-install prototype for the original NIRU Noir Suckless desktop on Arch, CachyOS, Debian 13 and Void Linux glibc. The original DWM, dmenu, st, slock, SDDM theme and helper scripts are bundled. The NIRU applications are not bundled.
 
-> **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
+**Not verified on physical hardware or in a complete clean X11 installation.** Review `docs/ALPHA-8-AUDIT.md` before applying.
 
-## Alpha.14 desktop integration
-
-- Fixed a case-sensitive mismatch in wallpaper directory defaults (`~/Pictures/Wallpapers`).
-- Unified `WALLPAPER_DIR` handling in the X11 session and wallpaper daemon.
-- Added a per-display nonblocking `flock` to the DWM statusbar to avoid duplicate writers.
-- Avoided blank kernel/host/weather/date/time bar segments.
-- Added integration checks and desktop audit documentation.
-
-See [alpha.14 audit](docs/ALPHA-14-DESKTOP-AUDIT.md).
-
-## Planned validation
-
-1. Resolve package dependencies and compile patched DWM/dmenu/st/slock on each target distribution.
-2. Verify SDDM theme, startx, monitor layout, statusbar, shortcuts, clipboard, screenshots and suspend on actual X11.
-3. Implement and test a managed-file upgrade/rollback path.
-4. Publish the complete source and verify a clean clone.
-5. Perform a controlled test-laptop installation.
-
-## Full-source publication
-
-The alpha.14 ZIP contains `publish-github.sh`. On a machine with GitHub write credentials, extract the release and run:
+## Read-only checks
 
 ```sh
-./publish-github.sh
+./install.sh --plan
+./install.sh --doctor
+./install.sh --audit
+./tests/preflight.sh
+./tests/smoke.sh
 ```
 
-The script clones the existing `main`, copies the complete source without replacing Git metadata, displays a change summary, requires typing `PUBLISH`, commits and pushes without force. This has **not yet been run successfully**, because the build container cannot resolve github.com.
+## Disposable test machine only
 
-Do not run `--apply` on a valuable workstation until target-system testing is complete.
+```sh
+./install.sh --apply --session sddm
+# Or: ./install.sh --apply --session startx
+```
 
-## Alpha.15 safety checkpoint
+Run from a local text TTY as a normal user. The installer prompts before changes, preserves existing per-file configuration, and requires separate consent for SDDM and privileged slock. Arch/CachyOS package installation performs an **explicitly approved full system upgrade**, not a partial upgrade. There is no complete system rollback. Read `docs/FIRST-VM-TEST.md` and `docs/ALPHA-8-AUDIT.md`.
 
-- Validate all Suckless binary outputs and dmenu helpers before deploying any compiled binaries.
-- Reject unmanaged global NIRUPI session launcher collisions.
-- Add `tests/build-output.sh` and [engineering notes](docs/ALPHA-15-ENGINEERING.md).
+## License and attribution
 
-**GitHub publication status:** the complete 140-file source tree is **not yet published**. The full release is available as a ZIP in the development conversation. A clean clone is not installable yet.
+Bundled third-party sources remain subject to their own licenses. Review upstream license files before redistributing.
 
-## Alpha.16 desktop and upgrade-safety checkpoint
+## Alpha.9 notes
 
-- Validate DISPLAY and the DWM executable before launching daemons.
-- Record SHA-256 checksums of NIRUPI-managed helper scripts and preserve user-modified or untracked scripts.
-- Added [engineering review](docs/ALPHA-16-REVIEW.md), [session test](tests/session-runtime.sh), and `runtime-session.sh`.
+The update adapter now emits a numeric result even when package queries fail, and update-count regression tests use mocked command output. The desktop session emits a clear diagnostic if DWM is missing. No clean install or graphical login has been validated.
 
-**Publication warning:** Only selected source files and documentation have been pushed. The **complete 142-file alpha.16 tree is not yet on GitHub**, so cloning this repository does not produce an installable release. Use the ZIP in the development conversation. A full-tree push and clean-clone verification are still required.
+See `docs/ALPHA-10-ROADMAP.md` for current changes and validation limits.
 
-## Alpha.17 X11 preflight
+Latest engineering audit: `docs/ALPHA-12-ENGINEERING.md`.
 
-- Added early detection of conflicting system session files before installing packages.
-- Added functional checks for unmanaged launchers and desktop entries.
-- See [alpha.17 review](docs/ALPHA-17-REVIEW.md) and [test](tests/system-session.sh).
+See `docs/ALPHA-13-DWM-AUDIT.md` for the DWM integration audit and remaining blockers.
 
-**Full-tree GitHub publication is still outstanding.** The complete alpha.17 source is delivered as a ZIP in the development conversation; this repository is not yet a verified install source.
+See `docs/ALPHA-14-DESKTOP-AUDIT.md` for wallpaper/statusbar fixes and outstanding validation.
 
-## Alpha.18 — NIRU Noir visual consistency
+## Publishing the full tree
 
-- Matched DWM, st, Kitty, Alacritty and Dunst core background/foreground.
-- Fixed Alacritty font size 5.5 → 11.0.
-- Unified semantic 16-color ANSI palettes in st, Kitty and Alacritty.
-- Standardized dmenu font family and toned down Dunst borders.
-- Added [design tokens](docs/NIRU-NOIR-DESIGN.md) and [palette consistency test](tests/noir-consistency.sh).
+The complete release is currently provided as a ZIP. From an extracted release
+on a workstation with GitHub authentication, run `./publish-github.sh`.
+It clones `main`, copies the complete release (without `.git`), stages changes,
+shows the diff summary and requires typing `PUBLISH` before committing and
+pushing. It does not force-push or delete remote-only files.
 
-**Source publication warning:** This repository still does **not** contain the complete alpha.18 installer source tree. The full 146-file ZIP is in the development conversation. Do not attempt a clean-clone installation yet.
+See `docs/ALPHA-15-ENGINEERING.md` for build and session safety changes.
 
-## Alpha.19 — Rofi and font diagnostics
+Alpha.16 engineering review: `docs/ALPHA-16-REVIEW.md`.
 
-- Installer now deploys the bundled `Black-Metal.rasi` theme if absent, before Rofi config, preserving user themes.
-- `--doctor` reports the actual fontconfig match for JetBrainsMono Nerd Font.
-- New [Rofi integration audit](docs/ALPHA-19-REVIEW.md) and [test](tests/rofi-integration.sh).
+Alpha.17: pre-package system session collision checks and functional regression tests. See `docs/ALPHA-17-REVIEW.md`.
 
-**Important:** The full alpha.19 source tree (148 files) has **not** been pushed to this repository. The complete ZIP is supplied in the development conversation; a clean GitHub clone remains non-installable. Full source publication and clean-clone validation remain roadmap blockers.
+Alpha.18: unified NIRU Noir typography and semantic terminal colors; see `docs/NIRU-NOIR-DESIGN.md`.
 
-## Alpha.20 — DWM shortcut dependencies and screenshots
+Alpha.19 fixes Rofi theme deployment and adds fontconfig diagnostics; see `docs/ALPHA-19-REVIEW.md`.
 
-- Added screenshot tool dependencies to Arch/CachyOS and Debian package profiles.
-- Expanded `--doctor` to report optional shortcut applications without installing personal browsers.
-- Improved screenshot temporary-file cleanup and sanitized custom filenames.
-- Added [engineering audit](docs/ALPHA-20-REVIEW.md) and [regression test](tests/shortcut-dependencies.sh).
+Alpha.20: DWM shortcut dependency checks and safer screenshot temporary files; see `docs/ALPHA-20-REVIEW.md`.
 
-**Source status:** Only selected files have been committed to GitHub. The complete alpha.20 release contains 150 files and is provided as a ZIP in the development conversation. **This repository is not a working clone/install source yet.**
+Alpha.21: DWM config and user session launcher preservation; see `docs/ALPHA-21-REVIEW.md`.
 
-## Alpha.21 — Configuration safety
+## Alpha.22 — managed upgrades
 
-- Preserves existing DWM `config.h` and existing per-application configuration directory collisions.
-- Preserves existing user-level session launcher instead of silently overwriting it.
-- Adds [engineering review](docs/ALPHA-21-REVIEW.md) and [regression test](tests/config-preservation.sh).
+Added `lib/managed.sh` and functional managed-helper upgrade tests, including protection of user edits and recovery of executable permissions. See `docs/ALPHA-22-ENGINEERING.md`.
 
-**Repository warning:** Full alpha.21 installer source (152 files) is **not** on GitHub. This repository is not yet a working clone-and-install source. The full source ZIP is provided separately. These changes have not been tested on physical hardware.
+## Alpha.23 managed configuration upgrades
 
-## Alpha.22 — Managed helper upgrades
+DWM config, Rofi theme, app dotfiles, Xresources and user session launchers now use a SHA-256 manifest. Existing untracked files remain untouched; only known unchanged managed files upgrade automatically. See `docs/ALPHA-23-ENGINEERING.md`.
 
-- Added `lib/managed.sh` to track and safely update NIRUPI-managed helpers by checksum.
-- Added functional upgrade tests for preservation, backup and executable permissions in the ZIP release.
-- See [engineering notes](docs/ALPHA-22-ENGINEERING.md).
+Alpha.24: DWM builds from an existing user `config.h` when available, rather than silently ignoring personal shortcuts/layouts. See `docs/ALPHA-24-ENGINEERING.md`.
 
-**Publication blocker:** This GitHub repository does not yet contain the complete alpha.22 installer source tree. The full 155-file ZIP is available in the development conversation. Do not use a GitHub clone as an installation source.
+Alpha.25: early read-only preflight for unmanaged binaries, DWM config and unsafe manifests before package installation. See `docs/ALPHA-25-ENGINEERING.md`.
 
-## Alpha.23 — Managed NIRU Noir configs
+## Alpha.30 readiness
 
-- Checksum-based safe updates now cover DWM config, Rofi theme, application dotfiles, Xresources and user X11 launchers.
-- Unknown, modified and symlinked files are preserved; managed unchanged files update with backup.
-- Functional isolated-HOME regression tests passed in the complete ZIP release.
-- See [engineering notes](docs/ALPHA-23-ENGINEERING.md).
+Read [release readiness](docs/ALPHA-30-RELEASE-READINESS.md) and [physical pilot checklist](docs/PHYSICAL-PILOT-CHECKLIST.md). New checks cover home/state symlink safety, display-manager conflicts and real non-installing Suckless build validation. This release has **not** passed a real Debian 13 VM or graphical installation. GitHub full-tree publication is still outstanding.
 
-**GitHub is incomplete:** The complete alpha.23 installer tree is not yet pushed; do not install from a clone. Use the verified release ZIP from the development conversation.
+## Alpha.31: controlled migration from an existing DWM desktop
+
+Use `bash ./migrate-desktop.sh --plan` to inspect exactly which *user-level desktop files* would be archived. `--apply` requires a local text TTY and explicit `REPLACE DESKTOP` confirmation. The migration makes a complete copy of selected existing files before clearing their paths, and records a rollback ID. Run `bash ./migrate-desktop.sh --rollback RUN_ID` to restore backed-up user files. **Rollback does not undo packages, system-level SDDM changes, or new files created by the subsequent installation.**
+
+This is a separate migration, not an automatic part of `install.sh --apply`. The migration deliberately excludes Fish, SSH, Git, GPG, personal files, system packages and other display managers. For a real bare-metal pilot, test on a disposable Debian 13 machine from a TTY with a recoverable backup. **Not production-ready or fully tested in a graphical VM.**
+
+## Bare-metal readiness
+
+See [docs/BARE-METAL-DEPLOYMENT.md](docs/BARE-METAL-DEPLOYMENT.md). Use `bash tests/bare-metal-readiness.sh` for a read-only host report and `bash tests/post-install-verify.sh` after installation. Real Debian 13 graphical acceptance remains pending.
