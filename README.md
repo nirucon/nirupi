@@ -2,11 +2,11 @@
 
 A personal, modular NIRU Noir / patched Suckless DWM desktop installer for Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Current development version: 0.2.0-alpha.12 — PRETEST ONLY.**
+**Current development version: 0.2.0-alpha.13 — PRETEST ONLY.**
 
 > **Repository status:** The complete source tree has **not yet** been pushed to GitHub. This README is a progress record, not a working clone/install source. Do not run an installation from this repository until the full source is published and verified.
 
-## Alpha.12 engineering work
+## Alpha.13 DWM engineering work
 
 - Build staging now runs inside a subshell with an EXIT cleanup trap.
 - Preflight rejects unmanaged executable symlinks before compiling/deploying the desktop.
@@ -42,3 +42,12 @@ Do not run `--apply` on a valuable workstation. Complete package resolution, Suc
 5. Perform controlled laptop installation and fix integration issues before a stable release.
 
 This project is tailored to a personal Linux setup, not a general-purpose supported distribution.
+
+## Alpha.13 DWM audit
+
+- Replaced systemd-only suspend shortcut with NIRUPI's lock-before-suspend helper.
+- Removed unsafe shortcut that launched a second DWM process.
+- Corrected keybinding comments and switched viewer to Kitty.
+- Added `tests/dwm-config.sh` and `docs/ALPHA-13-DWM-AUDIT.md` to GitHub.
+
+**Publishing limitation:** These are selected files only. The complete 135-file release is available as a ZIP in the development conversation, but has **not** been committed to GitHub. Cloning this repository is **not** a working installation method yet.
