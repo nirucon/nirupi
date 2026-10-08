@@ -3,6 +3,7 @@ set -euo pipefail
 cmd="${1:-help}"; shift || :
 case "$cmd" in
   version) target="$(readlink "$HOME/.local/bin/dwm" 2>/dev/null || true)"; if [[ "$target" =~ /nirupi/([^/]+)/ ]]; then printf '%s\n' "${BASH_REMATCH[1]}"; else echo "Installed version: unknown"; fi;;
+  appearance) exec "$HOME/.local/bin/nirupi-appearance" "$@";;
   updates) exec "$HOME/.local/bin/nirupi-updates" "$@";;
   status) printf 'Session: %s\nDisplay: %s\n' "${XDG_SESSION_TYPE:-unknown}" "${DISPLAY:-none}"; pgrep -af '[d]wm-status.sh' || :;;
   doctor)
@@ -19,6 +20,6 @@ case "$cmd" in
   history) printf 'Use: bash ~/Git/nirupi/install.sh --history\n';;
   rollback) printf 'For safety, use local TTY: bash ~/Git/nirupi/install.sh --rollback\n' >&2; exit 2;;
   keys) exec "$HOME/.local/bin/dwm-keybindings.sh";;
-  help|-h|--help) printf 'nirupi {version|status|doctor|updates [--refresh]|config|keys|history|rollback}\n';;
+  help|-h|--help) printf 'nirupi {version|status|doctor|appearance|updates [--refresh]|config|keys|history|rollback}\n';;
   *) printf 'Unknown command: %s\n' "$cmd" >&2; exit 2;;
 esac

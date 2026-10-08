@@ -182,6 +182,7 @@ install_desktop() (
  fi
  managed_helper_install nirupi-updates "$ROOT/runtime/nirupi-updates" "$updates_dest"
  managed_helper_install nirupi "$ROOT/runtime/nirupi" "$HOME/.local/bin/nirupi"
+ managed_helper_install nirupi-appearance "$ROOT/runtime/nirupi-appearance" "$HOME/.local/bin/nirupi-appearance"
  for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
@@ -189,6 +190,8 @@ install_desktop() (
    managed_helper_install "$app" "$src" "$dest"
   fi
  done
+ # Only initialize GTK on clean profiles; upgrades preserve LXAppearance choices.
+ "$HOME/.local/bin/nirupi-appearance" default || warn "GTK appearance setup skipped; use nirupi appearance status"
  # Keep user preferences separate from the managed status script.
  local status_conf="$HOME/.config/nirupi/status.conf"
  if [[ ! -e $status_conf && ! -L $status_conf ]]; then

@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+config="${XDG_CONFIG_HOME:-$HOME/.config}"
+state="${XDG_STATE_HOME:-$HOME/.local/state}/nirupi/appearance"
+gtk3="$config/gtk-3.0/settings.ini"
+gtk2="$HOME/.gtkrc-2.0"
+marker="$state/last-snapshot"
+fail(){ printf 'NIRUPI appearance: %s\n' "$*" >&2; exit 1; }
+check_path(){
+ local path="$1" parent
+ [[ ! -L "$path" && ( ! -e "$path" || -f "$path" ) ]] || fail "Unsafe config file: $path"
+ parent="$(dirname "$path")"
+ while [[ "$parent" != / && "$parent" != . ]]; do
+  [[ ! -L "$parent" && ( ! -e "$parent" || -d "$parent" ) ]] || fail "Unsafe directory: $parent"
+  parent="$(dirname "$parent")"
+ done
+}
+get_setting(){
+ local file="$1" key="$2"
+ [[ -f "$file" && ! -L "$file" ]] || return 0
+ sed -n "s/^[[:space:]]*$key[[:space:]]*=[[:space:]]*\(.*\)$/\1/p" "$file" | tail -n 1 | tr -d '\"'
+}
+icon_theme(){
+ local name
+ for name in Papirus-Dark Tela-black Adwaita; do
+  if [[ -d "$HOME/.local/share/icons/$name" || -d "$HOME/.icons/$name" || -d "/usr/share/icons/$name" ]]; then
+   printf '%s\n' "$name"; return
+  fi
+ done
+ printf 'Adwaita\n'
+}
+status(){
+ printf 'GTK 3 theme: %s\n' "$(get_setting "$gtk3" gtk-theme-name)"
+ printf 'GTK 3 icons: %s\n' "$(get_setting "$gtk3" gtk-icon-theme-name)"
+ printf 'GTK 2 theme: %s\n' "$(get_setting "$gtk2" gtk-theme-name)"
+ printf 'GTK 2 icons: %s\n' "$(get_setting "$gtk2" gtk-icon-theme-name)"
+ printf 'Preferred icons available: %s\n' "$(icon_theme)"
+}
+write_ini(){
+ local file="$1" key="$2" value="$3" tmp
+ tmp="$(mktemp "$(dirname "$file")/.nirupi-gtk.XXXXXXXX")"
+ awk -v k="$key" -v v="$value" '
+ BEGIN{section=0;found=0;have_section=0}
+ /^\[Settings\][[:space:]]*$/ {section=1;have_section=1;print;next}
+ /^\[/ {if(section && !found){print k "=" v;found=1};section=0;print;next}
+ {if(section && $0 ~ "^[[:space:]]*" k "[[:space:]]*="){if(!found)print k "=" v;found=1;next};print}
+ END{if(section && !found)print k "=" v;else if(!have_section){print "[Settings]";print k "=" v}}' "$file" > "$tmp"
+ chmod 0644 "$tmp"; mv -f -- "$tmp" "$file"
+}
+write_gtk2(){
+ local file="$1" key="$2" value="$3" tmp
+ tmp="$(mktemp "$(dirname "$file")/.nirupi-gtk.XXXXXXXX")"
+ awk -v k="$key" -v v="$value" '
+ BEGIN{found=0}
+ {if($0 ~ "^[[:space:]]*" k "[[:space:]]*="){if(!found)print k "=\"" v "\"";found=1;next};print}
+ END{if(!found)print k "=\"" v "\""}' "$file" > "$tmp"
+ chmod 0644 "$tmp"; mv -f -- "$tmp" "$file"
+}
+apply(){
+ local mode="$1" icons snap file
+ check_path "$gtk3"; check_path "$gtk2"; check_path "$marker"
+ if [[ "$mode" == default && ( -e "$gtk3" || -e "$gtk2" ) ]]; then
+  printf 'Existing GTK preferences preserved (use: nirupi appearance apply noir).\n'; return 0
+ fi
+ [[ -d /usr/share/themes/Adwaita-dark/gtk-3.0 || -d "$HOME/.themes/Adwaita-dark/gtk-3.0" ]] || fail 'Adwaita-dark GTK 3 theme unavailable; no changes made'
+ icons="$(icon_theme)"
+ mkdir -p -- "$(dirname "$gtk3")" "$state"
+ snap="$(mktemp -d "$state/snapshot.XXXXXXXX")"
+ for file in "$gtk3" "$gtk2"; do
+  if [[ -f "$file" ]]; then
+   cp -p -- "$file" "$snap/$(basename "$(dirname "$file")")-$(basename "$file")"
+  else
+   : > "$snap/absent-$(basename "$(dirname "$file")")-$(basename "$file")"
+  fi
+ done
+ if [[ ! -e "$gtk3" ]]; then printf '[Settings]\n' > "$gtk3"; fi
+ write_ini "$gtk3" gtk-theme-name Adwaita-dark
+ write_ini "$gtk3" gtk-icon-theme-name "$icons"
+ if [[ -d /usr/share/themes/Adwaita-dark/gtk-2.0 || -d "$HOME/.themes/Adwaita-dark/gtk-2.0" ]]; then
+  [[ -e "$gtk2" ]] || : > "$gtk2"
+  write_gtk2 "$gtk2" gtk-theme-name Adwaita-dark
+  write_gtk2 "$gtk2" gtk-icon-theme-name "$icons"
+ fi
+ printf '%s\n' "$snap" > "$marker"
+ printf 'NIRU Noir applied. Icons: %s. Snapshot: %s\n' "$icons" "$snap"
+}
+restore(){
+ local snap file name
+ check_path "$gtk3"; check_path "$gtk2"; check_path "$marker"
+ [[ -f "$marker" ]] || fail 'No snapshot to restore'
+ IFS= read -r snap < "$marker"
+ [[ "$snap" == "$state"/snapshot.* && -d "$snap" && ! -L "$snap" ]] || fail 'Invalid snapshot'
+ for file in "$gtk3" "$gtk2"; do
+  name="$(basename "$(dirname "$file")")-$(basename "$file")"
+  if [[ -f "$snap/$name" && ! -L "$snap/$name" ]]; then
+   mkdir -p -- "$(dirname "$file")"; cp -p -- "$snap/$name" "$file"
+  elif [[ -f "$snap/absent-$name" && ! -L "$snap/absent-$name" ]]; then
+   rm -f -- "$file"
+  else fail "Incomplete snapshot: $name"; fi
+ done
+ rm -f -- "$marker"
+ printf 'Previous GTK settings restored.\n'
+}
+case "${1:-status}" in
+ status) status;;
+ apply) [[ "${2:-}" == noir ]] || fail 'Usage: nirupi appearance apply noir'; apply explicit;;
+ default) apply default;;
+ restore) restore;;
+ *) fail 'Usage: nirupi appearance {status|apply noir|restore}';;
+esac

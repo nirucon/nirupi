@@ -6,7 +6,7 @@ source "$ROOT/lib/install.sh"
 source "$ROOT/lib/release.sh"
 SESSION=sddm; ACTION=plan
 usage(){ cat <<'EOF'
-NIRUPI 0.2.0-beta.2
+NIRUPI 0.2.0-beta.3
 Usage: ./install.sh [--plan|--apply|--doctor|--audit|--verify|--history|--rollback] [--session sddm|startx]
 Default --plan never modifies files. --apply requires confirmation.
 EOF
@@ -51,6 +51,7 @@ fi
 printf 'Login manager: %s (custom theme requested when SDDM is selected)\n' "$SESSION"
 printf 'Packages (%s):\n  %s\n\n' "${#PKGS[@]}" "${PKGS[*]}"
 printf 'Bundled desktop helpers: status, wallpaper, keybindings, screenshots, clipboard and webapp launchers.\n'
+printf 'Appearance: new profiles get Adwaita-dark; existing GTK settings are preserved.\n'
 printf 'Changes: package installation, build patched DWM/dmenu/st/slock, deploy user config, register X11 session.\n'
 printf 'Important: packages are not distro-verified; old shell/config may need migration.\n'
 printf 'NIRU Noir: the bundled Rofi theme will be installed if absent; existing themes are preserved.\n'
