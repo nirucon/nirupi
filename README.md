@@ -1,33 +1,33 @@
 # NIRUPI — NIRU Post Install
 
-A lightweight, modular **NIRU Noir / Suckless DWM** desktop project targeting **Arch, CachyOS, Debian 13, and Void (glibc)** on x86_64.
+A modular, lightweight NIRU Noir / Suckless DWM post-install project targeting **Arch, CachyOS, Debian 13, and Void Linux (glibc)**.
 
-> **Development status: 0.2.0 PRETEST REV3.** This is not verified for production. Real clean-install tests on all four distributions are still required.
+**Current development artifact:** `0.2.0-alpha.4` (pretest). **Not yet verified for a complete installation on any of the four distributions.**
 
-## Design
+The full source archive is available from the development conversation. **This GitHub repository currently contains documentation only, not the installer tree.** Do not clone it expecting `install.sh` to be present until the full source has been pushed.
 
-- Preserve the existing customized DWM, dmenu, st, and slock sources and visual identity.
-- Original **NIRU Noir SDDM** theme by default; `startx` is an option.
-- A single repository with a modular shell installer and distro-specific package maps.
-- Read-only plan, diagnostic checks, backups for modified user files and explicit system-change confirmation.
-- Future support for separate NIRU applications (source currently remains in Nextcloud; not bundled here).
+## Publish the source archive from your machine
 
-## Source availability
+Download and extract `NIRUPI-0.2.0-alpha.4.zip` first. From inside the extracted `nirupi-0.2.0-alpha.4` directory:
 
-The complete `NIRUPI-0.2.0-PRETEST-REV3.zip` is currently provided through the project conversation; this GitHub repository is being initialized separately. **The full installer/vendor source tree has not yet been committed to this repository.** Do not clone this repository expecting a runnable `install.sh` until the source tree is uploaded and verified.
-
-## Planned VM-only commands
-
-```bash
-./install.sh --plan
-./install.sh --doctor
-./tests/smoke.sh
-# After snapshot and preflight checks, in a disposable X11 VM only:
-./install.sh --apply --session sddm
+```sh
+git init -b main
+git remote add origin https://github.com/nirucon/nirupi.git
+git fetch origin main
+git add -A
+git commit -m 'feat: NIRUPI 0.2.0-alpha.4 pretest source'
+git pull --rebase origin main
+git push -u origin main
 ```
 
-The installer does not automatically upgrade the entire OS, and does not silently enable privileged `slock` or a display manager. See the included `docs/FIRST-VM-TEST.md` in the complete archive.
+Review `git status` and `git diff` before pushing. The source includes original bundled Suckless and theme assets; check their license files before publishing. The alpha installer must only be run on a disposable, backed-up machine.
 
-## Release criteria
+## Goals
 
-A stable release requires package resolution, Suckless build, SDDM/X11 login, startx login, keybindings, statusbar, wallpaper, reinstallation and rollback validation on every supported distribution.
+- Keep the original NIRU Noir look and custom DWM/dmenu/st/slock patches.
+- SDDM with custom theme by default; `startx` optional.
+- Distro-specific package handling without silent full OS upgrades.
+- Read-only installation plan, diagnostic checks and guarded configuration changes.
+- Future external NIRU app recipes; the apps themselves remain outside this repository.
+
+See the source archive's `docs/FIRST-VM-TEST.md` and `docs/ALPHA-4-CHANGES.md` before attempting an install.
