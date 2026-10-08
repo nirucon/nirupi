@@ -1,0 +1,17 @@
+# NIRUPI Noir statusbar preferences (Bash assignments).
+# This file is user-owned and never overwritten during upgrades.
+UPDATES_CACHE_SECONDS=1800
+SHOW_UPDATES=1
+SHOW_WEATHER=1
+SHOW_TEMP=1
+SHOW_NETWORK=1
+SHOW_BATTERY=1
+SHOW_MEDIA=1
+SHOW_NOW_PLAYING=1
+SHOW_VOLUME=1
+SHOW_HOST=1
+SHOW_KERNEL=1
+SHOW_DATE=1
+SHOW_TIME=1
+# WEATHER_LAT=""
+# WEATHER_LON=""

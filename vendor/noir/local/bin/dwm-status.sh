@@ -59,9 +59,17 @@ NOW_PLAYING_SCROLL_PASSES=2
 NOW_PLAYING_LABEL_SEPARATOR=": "
 NOW_PLAYING_PREFERRED_PLAYERS="spotify mpv kew cmus brave chromium firefox"
 
+# Optional user settings. This file is never overwritten by NIRUPI.
+# It is sourced as the current user: edit only your own trusted file.
+NIRUPI_STATUS_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf"
+if [[ -f "$NIRUPI_STATUS_CONFIG" && ! -L "$NIRUPI_STATUS_CONFIG" ]]; then
+  source "$NIRUPI_STATUS_CONFIG"
+fi
+
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/dwm-status"
 UPDATES_FILE="$CACHE_DIR/updates.count"
 UPDATES_STAMP="$CACHE_DIR/updates.stamp"
+UPDATES_DB_STAMP="$CACHE_DIR/updates.db-stamp"
 MEDIA_CACHE_FILE="$CACHE_DIR/media.count"
 MEDIA_CACHE_STAMP="$CACHE_DIR/media.stamp"
 NP_STATE_FILE="$CACHE_DIR/nowplaying.state"
@@ -505,7 +513,7 @@ get_updates() {
   [[ "$SHOW_UPDATES" -eq 1 ]] || return 0
   [[ -x "$CHECKUPDATES" ]] || return 0
 
-  local now stamp age pac_count aur_count total
+  local now stamp age pac_count aur_count total db_stamp saved_db_stamp
   now="$($DATEBIN +%s 2>/dev/null || printf '0')"
   stamp=0
 
@@ -514,29 +522,32 @@ get_updates() {
     stamp="${stamp:-0}"
   fi
 
+  [[ "$stamp" =~ ^[0-9]+$ ]] || stamp=0
+  [[ "$UPDATES_CACHE_SECONDS" =~ ^[0-9]+$ ]] || UPDATES_CACHE_SECONDS=1800
   age=$((now - stamp))
+  # Package installation/upgrade changes the local package database.
+  # Cache remains time-bound even if a package manager uses different paths.
+  db_stamp="$("$CHECKUPDATES" --db-stamp 2>/dev/null || true)"
+  saved_db_stamp="$(cat "$UPDATES_DB_STAMP" 2>/dev/null || true)"
 
-  if [[ -r "$UPDATES_FILE" && "$age" -lt "$UPDATES_CACHE_SECONDS" ]]; then
+  if [[ -r "$UPDATES_FILE" && "$db_stamp" == "$saved_db_stamp" && "$age" -ge 0 && "$age" -lt "$UPDATES_CACHE_SECONDS" ]]; then
     total="$(tr -d '[:space:]' < "$UPDATES_FILE" 2>/dev/null)"
     total="${total:-0}"
   else
     pac_count="$("$CHECKUPDATES" 2>/dev/null || printf '0')"
     [[ "$pac_count" =~ ^[0-9]+$ ]] || pac_count=0
     pac_count="${pac_count:-0}"
-
     aur_count=0
     if command -v checkupdates >/dev/null 2>&1 && command -v paru >/dev/null 2>&1; then
       aur_count="$(paru -Qua 2>/dev/null | wc -l | tr -d '[:space:]')"
-      aur_count="${aur_count:-0}"
     elif command -v checkupdates >/dev/null 2>&1 && command -v yay >/dev/null 2>&1; then
       aur_count="$(yay -Qua 2>/dev/null | wc -l | tr -d '[:space:]')"
-      aur_count="${aur_count:-0}"
     fi
-
+    [[ "$aur_count" =~ ^[0-9]+$ ]] || aur_count=0
     total=$((pac_count + aur_count))
-
     printf '%s\n' "$total" > "$UPDATES_FILE" 2>/dev/null || true
     printf '%s\n' "$now" > "$UPDATES_STAMP" 2>/dev/null || true
+    printf '%s\n' "$db_stamp" > "$UPDATES_DB_STAMP" 2>/dev/null || true
   fi
 
   if [[ "${total:-0}" -gt 0 ]]; then

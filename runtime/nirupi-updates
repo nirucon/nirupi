@@ -1,14 +1,46 @@
 #!/usr/bin/env bash
-# A single numeric update count. Never mutate the system or refresh package databases.
+# Read-only update counter and package DB change fingerprint.
 set -o pipefail
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/dwm-status"
+case "${1:-}" in
+  --refresh)
+    # The status loop will repopulate the count on its next iteration.
+    if [[ -L "$cache" || ( -e "$cache" && ! -d "$cache" ) ]]; then
+      printf 'Unsafe cache directory\n' >&2; exit 1
+    fi
+    for name in updates.count updates.stamp updates.db-stamp; do
+      [[ ! -L "$cache/$name" ]] || { printf 'Unsafe cache file\n' >&2; exit 1; }
+      rm -f -- "$cache/$name"
+    done
+    printf 'Update cache invalidated\n'; exit 0;;
+  --db-stamp)
+    # stat metadata only; never calls network or package manager.
+    if command -v apt-get >/dev/null 2>&1; then
+      stat -c '%Y:%s:%i' /var/lib/dpkg/status 2>/dev/null || :
+    elif command -v pacman >/dev/null 2>&1; then
+      stat -c '%Y:%s:%i' /var/lib/pacman/local 2>/dev/null || :
+    elif command -v xbps-install >/dev/null 2>&1; then
+      stat -c '%Y:%s:%i' /var/db/xbps/pkgdb-*.plist 2>/dev/null || :
+    fi
+    exit 0;;
+  '') ;;
+  *) printf 'Usage: nirupi-updates [--refresh|--db-stamp]\n' >&2; exit 2;;
+esac
 if command -v checkupdates >/dev/null 2>&1; then
-  result=$(checkupdates 2>/dev/null) || { printf "0\n"; exit 0; }
-  if [[ -z $result ]]; then printf '0\n'; else printf '%s\n' "$result" | wc -l; fi
-elif command -v xbps-install >/dev/null 2>&1; then
-  result=$(xbps-install -un 2>/dev/null) || { printf "0\n"; exit 0; }
-  if [[ -z $result ]]; then printf '0\n'; else printf '%s\n' "$result" | wc -l; fi
-elif command -v apt >/dev/null 2>&1; then
+  result="$(checkupdates 2>/dev/null)" || { printf '0\n'; exit 0; }
+  [[ -z "$result" ]] && printf '0\n' || printf '%s\n' "$result" | wc -l
+elif command -v apt-get >/dev/null 2>&1; then
   LC_ALL=C apt list --upgradable 2>/dev/null | awk 'NR>1 && /upgradable/ {n++} END {print n+0}'
+elif command -v pacman >/dev/null 2>&1; then
+  if command -v checkupdates >/dev/null 2>&1; then
+    result="$(checkupdates 2>/dev/null)" || { printf '0\n'; exit 0; }
+  else
+    result="$(pacman -Qu 2>/dev/null)" || { printf '0\n'; exit 0; }
+  fi
+  [[ -z "$result" ]] && printf '0\n' || printf '%s\n' "$result" | wc -l
+elif command -v xbps-install >/dev/null 2>&1; then
+  result="$(xbps-install -un 2>/dev/null)" || { printf '0\n'; exit 0; }
+  [[ -z "$result" ]] && printf '0\n' || printf '%s\n' "$result" | wc -l
 else
   printf '0\n'
 fi

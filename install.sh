@@ -6,7 +6,7 @@ source "$ROOT/lib/install.sh"
 source "$ROOT/lib/release.sh"
 SESSION=sddm; ACTION=plan
 usage(){ cat <<'EOF'
-NIRUPI 0.2.0-beta.1
+NIRUPI 0.2.0-beta.2
 Usage: ./install.sh [--plan|--apply|--doctor|--audit|--verify|--history|--rollback] [--session sddm|startx]
 Default --plan never modifies files. --apply requires confirmation.
 EOF

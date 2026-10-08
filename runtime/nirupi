@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cmd="${1:-help}"; shift || :
+case "$cmd" in
+  version) target="$(readlink "$HOME/.local/bin/dwm" 2>/dev/null || true)"; if [[ "$target" =~ /nirupi/([^/]+)/ ]]; then printf '%s\n' "${BASH_REMATCH[1]}"; else echo "Installed version: unknown"; fi;;
+  updates) exec "$HOME/.local/bin/nirupi-updates" "$@";;
+  status) printf 'Session: %s\nDisplay: %s\n' "${XDG_SESSION_TYPE:-unknown}" "${DISPLAY:-none}"; pgrep -af '[d]wm-status.sh' || :;;
+  doctor)
+    failures=0
+    for app in dwm dmenu st nirupi-session dwm-status.sh nirupi-updates; do
+      if [[ -x "$HOME/.local/bin/$app" ]]; then printf 'OK   %s\n' "$app"; else printf 'FAIL %s\n' "$app"; failures=$((failures+1)); fi
+    done
+    for app in Xorg xsetroot kitty rofi; do
+      if command -v "$app" >/dev/null 2>&1; then printf 'OK   %s\n' "$app"; else printf 'WARN %s missing\n' "$app"; fi
+    done
+    [[ -e /usr/share/xsessions/nirupi-dwm.desktop ]] && echo 'OK   X11 session' || echo 'WARN X11 session missing'
+    [[ "$failures" == 0 ]];;
+  config) printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf";;
+  history) printf 'Use: bash ~/Git/nirupi/install.sh --history\n';;
+  rollback) printf 'For safety, use local TTY: bash ~/Git/nirupi/install.sh --rollback\n' >&2; exit 2;;
+  keys) exec "$HOME/.local/bin/dwm-keybindings.sh";;
+  help|-h|--help) printf 'nirupi {version|status|doctor|updates [--refresh]|config|keys|history|rollback}\n';;
+  *) printf 'Unknown command: %s\n' "$cmd" >&2; exit 2;;
+esac
