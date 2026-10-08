@@ -3,21 +3,25 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
 source "$ROOT/lib/packages.sh"
 source "$ROOT/lib/managed.sh"
 source "$ROOT/lib/install.sh"
+source "$ROOT/lib/release.sh"
 SESSION=sddm; ACTION=plan
 usage(){ cat <<'EOF'
-NIRUPI 0.2.0-alpha.32
-Usage: ./install.sh [--plan|--apply|--doctor|--audit] [--session sddm|startx]
+NIRUPI 0.2.0-beta.1
+Usage: ./install.sh [--plan|--apply|--doctor|--audit|--verify|--history|--rollback] [--session sddm|startx]
 Default --plan never modifies files. --apply requires confirmation.
 EOF
 }
 while (($#)); do
  case "$1" in
- --plan) ACTION=plan;; --apply) ACTION=apply;; --doctor) ACTION=doctor;; --audit) ACTION=audit;;
+ --plan) ACTION=plan;; --apply) ACTION=apply;; --doctor) ACTION=doctor;; --audit) ACTION=audit;; --verify) ACTION=verify;; --history) ACTION=history;; --rollback) ACTION=rollback;;
  --session) shift; (($#)) || die 'Missing --session value'; SESSION=$1;;
  -h|--help) usage; exit 0;; *) die "Unknown argument: $1";; esac
  shift
 done
 [[ $SESSION == sddm || $SESSION == startx ]] || die 'Invalid session'
+if [[ $ACTION == verify ]]; then exec "$ROOT/tests/post-install-verify.sh"; fi
+if [[ $ACTION == history ]]; then release_history; exit 0; fi
+if [[ $ACTION == rollback ]]; then release_rollback; exit 0; fi
 packages
 printf '\nN I R U P I   /   N O I R   %s\nDistribution: %s\nSession: %s\nAction: %s\n\n' "$VERSION" "$DISTRO" "$SESSION" "$ACTION"
 if [[ $ACTION == audit ]]; then
@@ -76,6 +80,7 @@ check_display_manager_conflicts
 check_home_path_safety
 check_user_install_conflicts
 RUN_ID="$(date +%Y%m%d-%H%M%S)-$$"
+release_snapshot "$RUN_ID"
 BACKUP_DIR="$STATE/backups/$RUN_ID"
 mkdir -p "$BACKUP_DIR"
 log "Backup directory: $BACKUP_DIR"
@@ -84,4 +89,4 @@ install_packages
 require make; require cc; require pkg-config
 install_desktop
 "$ROOT/tests/post-install-verify.sh" || warn "Post-install verification found missing components; inspect before reboot"
-log 'Alpha installation finished. Check session and login before reboot; no automated rollback of system changes.'
+log 'Beta installation finished. Verify graphical login before reboot; rollback restores NIRUPI binary links only, not system changes.'

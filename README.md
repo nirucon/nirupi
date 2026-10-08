@@ -1,6 +1,6 @@
 # NIRUPI — NIRU Post Install
 
-**Version:** 0.2.0-alpha.32 (development / pretest)
+**Version:** 0.2.0-beta.1 (development / pretest)
 
 Modular post-install prototype for the original NIRU Noir Suckless desktop on Arch, CachyOS, Debian 13 and Void Linux glibc. The original DWM, dmenu, st, slock, SDDM theme and helper scripts are bundled. The NIRU applications are not bundled.
 
@@ -88,3 +88,7 @@ This is a separate migration, not an automatic part of `install.sh --apply`. The
 ## Bare-metal readiness
 
 See [docs/BARE-METAL-DEPLOYMENT.md](docs/BARE-METAL-DEPLOYMENT.md). Use `bash tests/bare-metal-readiness.sh` for a read-only host report and `bash tests/post-install-verify.sh` after installation. Real Debian 13 graphical acceptance remains pending.
+
+## Beta upgrade and verification
+
+See [docs/BETA-1-UPGRADE.md](docs/BETA-1-UPGRADE.md) for alpha.32 → beta.1, `--verify`, release snapshots and limited binary-link rollback. Physical beta verification is still pending.
