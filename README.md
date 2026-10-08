@@ -2,7 +2,7 @@
 
 Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest complete development archive: 0.2.0-alpha.17 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.18 — PRETEST ONLY.**
 
 > **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
@@ -59,3 +59,13 @@ Do not run `--apply` on a valuable workstation until target-system testing is co
 - See [alpha.17 review](docs/ALPHA-17-REVIEW.md) and [test](tests/system-session.sh).
 
 **Full-tree GitHub publication is still outstanding.** The complete alpha.17 source is delivered as a ZIP in the development conversation; this repository is not yet a verified install source.
+
+## Alpha.18 — NIRU Noir visual consistency
+
+- Matched DWM, st, Kitty, Alacritty and Dunst core background/foreground.
+- Fixed Alacritty font size 5.5 → 11.0.
+- Unified semantic 16-color ANSI palettes in st, Kitty and Alacritty.
+- Standardized dmenu font family and toned down Dunst borders.
+- Added [design tokens](docs/NIRU-NOIR-DESIGN.md) and [palette consistency test](tests/noir-consistency.sh).
+
+**Source publication warning:** This repository still does **not** contain the complete alpha.18 installer source tree. The full 146-file ZIP is in the development conversation. Do not attempt a clean-clone installation yet.
