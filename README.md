@@ -114,3 +114,7 @@ should retain its working Super+B after the upgrade.
 The GTK appearance module remains opt-in for existing profiles. Dark icon
 packages are not automatically installed in beta.4; distro-specific icon
 packaging needs validation before changing system packages.
+
+## Author
+
+Ing Leif Nicklas Rudolfsson
