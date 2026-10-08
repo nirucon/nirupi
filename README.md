@@ -95,3 +95,22 @@ See [docs/BETA-1-UPGRADE.md](docs/BETA-1-UPGRADE.md) for alpha.32 → beta.1, `-
 
 
 Beta.2 upgrade notes: [docs/BETA-2-UPGRADE.md](docs/BETA-2-UPGRADE.md).
+
+
+### Browser launcher (beta.4)
+
+New DWM profiles use `nirupi-browser` for Super+B. The launcher resolves
+`helium`, `helium-browser`, Firefox, Brave, Chromium and other known executables,
+then falls back to `xdg-open`. Configure with `nirupi browser status`,
+`nirupi browser set helium`, or `nirupi browser reset`. `browser.conf` stores
+only a validated executable name, not shell commands. No package is installed.
+
+**Existing DWM configs are intentionally preserved.** Users whose existing
+`config.h` still references `helium-browser` must update that binding manually
+and rebuild DWM, or use a subsequent explicit migration; beta.4 will not
+silently rewrite a customized DWM config. INGWAZ already uses `helium` and
+should retain its working Super+B after the upgrade.
+
+The GTK appearance module remains opt-in for existing profiles. Dark icon
+packages are not automatically installed in beta.4; distro-specific icon
+packaging needs validation before changing system packages.

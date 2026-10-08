@@ -6,7 +6,7 @@ source "$ROOT/lib/install.sh"
 source "$ROOT/lib/release.sh"
 SESSION=sddm; ACTION=plan
 usage(){ cat <<'EOF'
-NIRUPI 0.2.0-beta.3
+NIRUPI 0.2.0-beta.4
 Usage: ./install.sh [--plan|--apply|--doctor|--audit|--verify|--history|--rollback] [--session sddm|startx]
 Default --plan never modifies files. --apply requires confirmation.
 EOF
@@ -42,7 +42,7 @@ if [[ $ACTION == doctor ]]; then
   if command -v "$cmd" >/dev/null 2>&1; then printf ' OK  %s\n' "$cmd"; else printf ' --  %s\n' "$cmd"; fi
  done
  printf '\nDWM shortcut dependencies (optional items are not auto-installed):\n'
- for cmd in maim xclip notify-send flameshot sxiv gimp helium-browser brave slock; do
+ for cmd in maim xclip notify-send flameshot sxiv gimp slock; do
   if command -v "$cmd" >/dev/null 2>&1; then printf ' OK  %s\n' "$cmd"; else printf ' --  %s (shortcut may not work)\n' "$cmd"; fi
  done
  [[ $SESSION == startx ]] && warn 'Existing ~/.xinitrc is preserved and may need manual configuration'
@@ -52,6 +52,7 @@ printf 'Login manager: %s (custom theme requested when SDDM is selected)\n' "$SE
 printf 'Packages (%s):\n  %s\n\n' "${#PKGS[@]}" "${PKGS[*]}"
 printf 'Bundled desktop helpers: status, wallpaper, keybindings, screenshots, clipboard and webapp launchers.\n'
 printf 'Appearance: new profiles get Adwaita-dark; existing GTK settings are preserved.\n'
+printf 'Browser: Super+B uses a configurable launcher on new DWM configs; existing DWM configs are preserved.\n'
 printf 'Changes: package installation, build patched DWM/dmenu/st/slock, deploy user config, register X11 session.\n'
 printf 'Important: packages are not distro-verified; old shell/config may need migration.\n'
 printf 'NIRU Noir: the bundled Rofi theme will be installed if absent; existing themes are preserved.\n'

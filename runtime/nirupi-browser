@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# NIRUPI browser resolver. No eval, shell-sourcing, or implicit package installs.
+set -euo pipefail
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi"
+config="$config_dir/browser.conf"
+fail(){ printf 'NIRUPI browser: %s\n' "$*" >&2; exit 1; }
+valid_name(){ [[ "$1" =~ ^[a-zA-Z0-9][a-zA-Z0-9._+-]*$ ]]; }
+read_choice(){
+ local line key value found=''
+ [[ ! -L "$config" ]] || fail 'Refusing symlinked browser.conf'
+ [[ ! -e "$config" || -f "$config" ]] || fail 'Invalid browser.conf'
+ [[ -f "$config" ]] || return 0
+ while IFS= read -r line || [[ -n "$line" ]]; do
+  [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+  [[ "$line" =~ ^[[:space:]]*browser=([a-zA-Z0-9][a-zA-Z0-9._+-]*)[[:space:]]*$ ]] || fail 'Invalid browser.conf (expected browser=executable-name)'
+  [[ -z "$found" ]] || fail 'Duplicate browser= entry'
+  found="${BASH_REMATCH[1]}"
+ done < "$config"
+ [[ "$found" != nirupi-browser ]] || fail 'Recursive browser configuration'
+ printf '%s' "$found"
+}
+resolve(){
+ local chosen candidate
+ chosen="$(read_choice)"
+ if [[ -n "$chosen" ]]; then
+  command -v "$chosen" >/dev/null 2>&1 || fail "Configured browser '$chosen' is not installed (nirupi browser reset)"
+  printf '%s\n' "$chosen"; return
+ fi
+ # Explicitly prefer Helium on every distro, regardless of package naming.
+ for candidate in helium helium-browser firefox brave brave-browser chromium chromium-browser google-chrome-stable; do
+  if command -v "$candidate" >/dev/null 2>&1; then printf '%s\n' "$candidate"; return; fi
+ done
+ # xdg-open handles the user's registered default without requiring a binary name.
+ if command -v xdg-open >/dev/null 2>&1; then printf 'xdg-open\n'; return; fi
+ fail 'No browser found; install one or configure nirupi browser set NAME'
+}
+case "${1:-launch}" in
+ launch)
+  shift || :
+  browser="$(resolve)"
+  if [[ "$browser" == xdg-open ]]; then exec xdg-open "${1:-about:blank}"; fi
+  exec "$browser" "$@";;
+ status)
+  chosen="$(read_choice)"
+  printf 'Configured: %s\n' "${chosen:-auto}"
+  resolved="$(resolve)"
+  printf 'Resolved: %s\n' "$resolved";;
+ set)
+  [[ $# == 2 ]] || fail 'Usage: nirupi browser set EXECUTABLE'
+  valid_name "$2" || fail 'Only executable names (not paths or arguments) are allowed'
+  [[ "$2" != nirupi-browser ]] || fail 'Recursive browser configuration'
+  command -v "$2" >/dev/null 2>&1 || fail "Executable not found: $2"
+  [[ ! -L "$config_dir" && ( ! -e "$config_dir" || -d "$config_dir" ) ]] || fail 'Unsafe config directory'
+  [[ ! -L "$config" && ( ! -e "$config" || -f "$config" ) ]] || fail 'Unsafe browser.conf'
+  mkdir -p -- "$config_dir"
+  tmp="$(mktemp "$config_dir/.browser.XXXXXXXX")"
+  trap 'rm -f -- "${tmp:-}"' EXIT
+  printf 'browser=%s\n' "$2" > "$tmp"
+  chmod 0600 "$tmp"
+  mv -f -- "$tmp" "$config"
+  printf 'Browser set to %s\n' "$2";;
+ reset)
+  [[ $# == 1 ]] || fail 'Usage: nirupi browser reset'
+  [[ ! -L "$config" ]] || fail 'Refusing symlinked browser.conf'
+  [[ ! -e "$config" || -f "$config" ]] || fail 'Invalid browser.conf'
+  if [[ -f "$config" ]]; then
+   # Preserve previous user choice rather than deleting it.
+   backup="$config.before-reset.$(date +%Y%m%d-%H%M%S).$$"
+   mv -- "$config" "$backup"
+   printf 'Automatic browser detection enabled. Previous config: %s\n' "$backup"
+  else printf 'Already using automatic browser detection.\n'; fi;;
+ *) fail 'Usage: nirupi browser {status|set EXECUTABLE|reset} or nirupi-browser [URL]' ;;
+esac

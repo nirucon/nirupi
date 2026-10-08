@@ -183,6 +183,7 @@ install_desktop() (
  managed_helper_install nirupi-updates "$ROOT/runtime/nirupi-updates" "$updates_dest"
  managed_helper_install nirupi "$ROOT/runtime/nirupi" "$HOME/.local/bin/nirupi"
  managed_helper_install nirupi-appearance "$ROOT/runtime/nirupi-appearance" "$HOME/.local/bin/nirupi-appearance"
+ managed_helper_install nirupi-browser "$ROOT/runtime/nirupi-browser" "$HOME/.local/bin/nirupi-browser"
  for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then

@@ -116,7 +116,7 @@ static const char *stcmd[]        = { "st", NULL };
 static const char *alacrittycmd[] = { "alacritty", NULL };
 static const char *kittycmd[]     = { "kitty", NULL };
 static const char *restartcmd[] = { "dwm", NULL };
-static const char *browsercmd[] = { "helium-browser", NULL };
+static const char *browsercmd[] = { "nirupi-browser", NULL };
 static const char *bravecmd[]   = { "brave", NULL };
 static const char *wallnext[]     = { "/bin/sh", "-c", "~/.local/bin/wallrotate.sh next", NULL };
 

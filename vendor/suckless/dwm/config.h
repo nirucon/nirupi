@@ -117,7 +117,7 @@ static const char *alacrittycmd[] = { "alacritty", NULL };
 static const char *kittycmd[]     = { "kitty", NULL };
 /* Re-spawning DWM from inside DWM creates competing window managers.
  * Use a controlled session restart via logout/login instead. */
-static const char *browsercmd[] = { "helium-browser", NULL };
+static const char *browsercmd[] = { "nirupi-browser", NULL };
 static const char *bravecmd[]   = { "brave", NULL };
 static const char *wallnext[]     = { "/bin/sh", "-c", "$HOME/.local/bin/wallrotate.sh next", NULL };
 

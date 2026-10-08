@@ -9,8 +9,10 @@ for dep in ('maim','xclip','flameshot'):
  for distro in ('arch|cachyos)', 'debian)'):
   line=next(x for x in pkg.splitlines() if x.strip().startswith(distro+' PKGS='))
   assert dep in line, (distro,dep)
-for dep in ('helium-browser','brave','slock','sxiv','gimp'):
+for dep in ('slock','sxiv','gimp'):
  assert dep in install, dep
+assert 'managed_helper_install nirupi-browser' in (r/'lib/install.sh').read_text()
+assert 'nirupi-browser' in (r/'vendor/suckless/dwm/config.h').read_text()
 assert "trap " in shot and "rm -f --" in shot
 assert 'custom_name="$(printf' in shot
 print('PASS: screenshot dependencies, optional shortcut diagnostics, safe temp cleanup')
