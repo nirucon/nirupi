@@ -2,7 +2,7 @@
 
 Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest complete development archive: 0.2.0-alpha.15 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.16 — PRETEST ONLY.**
 
 > **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
@@ -43,3 +43,11 @@ Do not run `--apply` on a valuable workstation until target-system testing is co
 - Add `tests/build-output.sh` and [engineering notes](docs/ALPHA-15-ENGINEERING.md).
 
 **GitHub publication status:** the complete 140-file source tree is **not yet published**. The full release is available as a ZIP in the development conversation. A clean clone is not installable yet.
+
+## Alpha.16 desktop and upgrade-safety checkpoint
+
+- Validate DISPLAY and the DWM executable before launching daemons.
+- Record SHA-256 checksums of NIRUPI-managed helper scripts and preserve user-modified or untracked scripts.
+- Added [engineering review](docs/ALPHA-16-REVIEW.md), [session test](tests/session-runtime.sh), and `runtime-session.sh`.
+
+**Publication warning:** Only selected source files and documentation have been pushed. The **complete 142-file alpha.16 tree is not yet on GitHub**, so cloning this repository does not produce an installable release. Use the ZIP in the development conversation. A full-tree push and clean-clone verification are still required.
