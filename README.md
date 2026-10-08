@@ -2,7 +2,7 @@
 
 Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest complete development archive: 0.2.0-alpha.22 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.23 — PRETEST ONLY.**
 
 > **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
@@ -102,3 +102,12 @@ Do not run `--apply` on a valuable workstation until target-system testing is co
 - See [engineering notes](docs/ALPHA-22-ENGINEERING.md).
 
 **Publication blocker:** This GitHub repository does not yet contain the complete alpha.22 installer source tree. The full 155-file ZIP is available in the development conversation. Do not use a GitHub clone as an installation source.
+
+## Alpha.23 — Managed NIRU Noir configs
+
+- Checksum-based safe updates now cover DWM config, Rofi theme, application dotfiles, Xresources and user X11 launchers.
+- Unknown, modified and symlinked files are preserved; managed unchanged files update with backup.
+- Functional isolated-HOME regression tests passed in the complete ZIP release.
+- See [engineering notes](docs/ALPHA-23-ENGINEERING.md).
+
+**GitHub is incomplete:** The complete alpha.23 installer tree is not yet pushed; do not install from a clone. Use the verified release ZIP from the development conversation.
