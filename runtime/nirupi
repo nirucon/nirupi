@@ -2,7 +2,7 @@
 set -euo pipefail
 cmd="${1:-help}"; shift || :
 case "$cmd" in
-  version) target="$(readlink "$HOME/.local/bin/dwm" 2>/dev/null || true)"; if [[ "$target" =~ /nirupi/([^/]+)/ ]]; then printf '%s\n' "${BASH_REMATCH[1]}"; else echo "Installed version: unknown"; fi;;
+  version|--version|-V) target="$(readlink "$HOME/.local/bin/dwm" 2>/dev/null || true)"; if [[ "$target" =~ /nirupi/([^/]+)/ ]]; then printf '%s\n' "${BASH_REMATCH[1]}"; else echo "Installed version: unknown"; fi;;
   browser) exec "$HOME/.local/bin/nirupi-browser" "$@";;
   appearance) exec "$HOME/.local/bin/nirupi-appearance" "$@";;
   updates) exec "$HOME/.local/bin/nirupi-updates" "$@";;
@@ -16,11 +16,39 @@ case "$cmd" in
       if command -v "$app" >/dev/null 2>&1; then printf 'OK   %s\n' "$app"; else printf 'WARN %s missing\n' "$app"; fi
     done
     [[ -e /usr/share/xsessions/nirupi-dwm.desktop ]] && echo 'OK   X11 session' || echo 'WARN X11 session missing'
+    if [[ -r /etc/os-release ]]; then
+      . /etc/os-release
+      if [[ ${ID:-} == void ]]; then
+        if [[ -L /var/service/sddm ]]; then
+          printf 'OK   runit SDDM enabled (service symlink)\n'
+          if command -v sv >/dev/null 2>&1; then
+            if sv status sddm >/dev/null 2>&1; then
+              printf 'OK   runit SDDM status accessible\n'
+            else
+              printf 'INFO runit status requires permissions; try: sudo sv status sddm\n'
+            fi
+          fi
+        else
+          printf 'INFO runit SDDM not enabled (or using startx)\n'
+        fi
+      fi
+    fi
+    if command -v pgrep >/dev/null 2>&1; then
+      pid="$(pgrep -u "$(id -u)" -x dwm | head -n 1 || :)"
+      if [[ -n $pid && -e /proc/$pid/exe ]]; then
+        running="$(readlink -f "/proc/$pid/exe" 2>/dev/null || :)"
+        if [[ $running == "$HOME/.local/lib/nirupi/"*"/bin/dwm" ]]; then
+          printf 'OK   running NIRUPI DWM: %s\n' "$running"
+        else
+          printf 'INFO running DWM is not NIRUPI-managed: %s\n' "${running:-unknown}"
+        fi
+      fi
+    fi
     [[ "$failures" == 0 ]];;
   config) printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf";;
   history) printf 'Use: bash ~/Git/nirupi/install.sh --history\n';;
   rollback) printf 'For safety, use local TTY: bash ~/Git/nirupi/install.sh --rollback\n' >&2; exit 2;;
   keys) exec "$HOME/.local/bin/dwm-keybindings.sh";;
-  help|-h|--help) printf 'nirupi {version|status|doctor|appearance|browser|updates [--refresh]|config|keys|history|rollback}\n';;
+  help|-h|--help) printf 'nirupi {version|--version|status|doctor|appearance|browser|updates [--refresh]|config|keys|history|rollback}\n';;
   *) printf 'Unknown command: %s\n' "$cmd" >&2; exit 2;;
 esac

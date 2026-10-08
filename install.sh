@@ -6,7 +6,7 @@ source "$ROOT/lib/install.sh"
 source "$ROOT/lib/release.sh"
 SESSION=sddm; ACTION=plan
 usage(){ cat <<'EOF'
-NIRUPI 0.2.0-beta.4
+NIRUPI 0.2.0-beta.5
 Usage: ./install.sh [--plan|--apply|--doctor|--audit|--verify|--history|--rollback] [--session sddm|startx]
 Default --plan never modifies files. --apply requires confirmation.
 EOF
@@ -81,6 +81,7 @@ check_system_session_conflicts
 check_display_manager_conflicts
 check_home_path_safety
 check_user_install_conflicts
+void_packages_preflight
 RUN_ID="$(date +%Y%m%d-%H%M%S)-$$"
 release_snapshot "$RUN_ID"
 BACKUP_DIR="$STATE/backups/$RUN_ID"

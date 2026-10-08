@@ -1,33 +1,29 @@
-# NIRUPI
+# NIRUPI — NIRU Noir
 
-NIRUPI is a modular post-install setup for the NIRU Noir Suckless desktop on Arch, CachyOS, Debian 13 and Void Linux (glibc). It includes DWM, dmenu, st, slock, an SDDM theme and desktop helpers.
+Minimal, modular Suckless desktop environment for **Debian 13**, **Void Linux (glibc)** and **Arch/CachyOS**. Bundles patched DWM, dmenu, st and slock, an X11 session, status bar, launchers and optional SDDM theme.
 
-## Requirements
+**Version:** 0.2.0-beta.5 · **Status:** beta, physical Void test pending for this release.
 
-An X11-capable Linux installation with supported package management. NIRUPI is experimental and has not yet been validated as a complete clean desktop installation on physical hardware.
+## Installation
 
-## Inspect before installing
-
-```sh
-./install.sh --plan
-./install.sh --doctor
-./install.sh --audit
-./tests/preflight.sh
-./tests/smoke.sh
-```
-
-## Installation in a disposable test environment
+Run as a normal user from a **local text TTY** (not an active graphical session or SSH connection):
 
 ```sh
-./install.sh --apply --session sddm
+bash ./install.sh --plan
+bash ./install.sh --doctor
+bash ./install.sh --apply --session sddm
 ```
 
-Alternatively use `--session startx`. Run from a local text console as a regular user. Review the proposed changes before approval. Package installation can trigger a full system upgrade and there is no complete rollback.
+Use `--session startx` instead if appropriate. The installer asks before making changes and separately asks for privileged slock and SDDM setup. Existing user configurations are preserved; an existing DWM `config.h` takes precedence. The installed NIRUPI DWM lives in `~/.local/lib/nirupi/`, leaving `/usr/local/bin/dwm` untouched.
 
-## Documentation
+## Commands
 
-See `docs/` for testing guidance, technical audits and development notes.
+`nirupi doctor`, `nirupi version`, `nirupi browser status`, `nirupi updates`, `nirupi keys`. `nirupi --version` is also supported. `./install.sh --history` and `./install.sh --rollback` provide limited NIRUPI-managed rollback; they do not revert system package transactions.
 
-## License
+## Void Linux
 
-Original project contributions are by Ing Leif Nicklas Rudolfsson. Bundled upstream components retain their respective licenses. Review the license notices before redistribution; no blanket MIT license is claimed for third-party code.
+Void uses XBPS and runit. NIRUPI uses the Void-specific `fish-shell` package name and checks requested XBPS packages before the transaction. SDDM service activation is not performed automatically on Void; check with `sudo sv status sddm` when applicable. Only x86_64 glibc Void is supported at present.
+
+## Development and licensing
+
+Author: **Ing Leif Nicklas Rudolfsson**. Run `bash tests/smoke.sh` for regression checks. Bundled third-party sources retain their own licenses; consult the included license files before redistribution. See `docs/BETA5-VOID.md` for validation details.
