@@ -2,7 +2,7 @@
 
 Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest complete development archive: 0.2.0-alpha.16 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.17 — PRETEST ONLY.**
 
 > **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
@@ -51,3 +51,11 @@ Do not run `--apply` on a valuable workstation until target-system testing is co
 - Added [engineering review](docs/ALPHA-16-REVIEW.md), [session test](tests/session-runtime.sh), and `runtime-session.sh`.
 
 **Publication warning:** Only selected source files and documentation have been pushed. The **complete 142-file alpha.16 tree is not yet on GitHub**, so cloning this repository does not produce an installable release. Use the ZIP in the development conversation. A full-tree push and clean-clone verification are still required.
+
+## Alpha.17 X11 preflight
+
+- Added early detection of conflicting system session files before installing packages.
+- Added functional checks for unmanaged launchers and desktop entries.
+- See [alpha.17 review](docs/ALPHA-17-REVIEW.md) and [test](tests/system-session.sh).
+
+**Full-tree GitHub publication is still outstanding.** The complete alpha.17 source is delivered as a ZIP in the development conversation; this repository is not yet a verified install source.
