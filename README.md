@@ -1,53 +1,37 @@
 # NIRUPI — NIRU Post Install
 
-A personal, modular NIRU Noir / patched Suckless DWM desktop installer for Arch, CachyOS, Debian 13 and Void Linux (glibc).
+Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Current development version: 0.2.0-alpha.13 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.14 — PRETEST ONLY.**
 
-> **Repository status:** The complete source tree has **not yet** been pushed to GitHub. This README is a progress record, not a working clone/install source. Do not run an installation from this repository until the full source is published and verified.
+> **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
-## Alpha.13 DWM engineering work
+## Alpha.14 desktop integration
 
-- Build staging now runs inside a subshell with an EXIT cleanup trap.
-- Preflight rejects unmanaged executable symlinks before compiling/deploying the desktop.
-- Package installation messaging correctly distinguishes Arch/CachyOS full upgrades.
-- Earlier alphas improved read-only diagnostics, helper deployment, dotfile preservation, package update reporting and file-safety tests.
+- Fixed a case-sensitive mismatch in wallpaper directory defaults (`~/Pictures/Wallpapers`).
+- Unified `WALLPAPER_DIR` handling in the X11 session and wallpaper daemon.
+- Added a per-display nonblocking `flock` to the DWM statusbar to avoid duplicate writers.
+- Avoided blank kernel/host/weather/date/time bar segments.
+- Added integration checks and desktop audit documentation.
 
-## Target architecture
+See [alpha.14 audit](docs/ALPHA-14-DESKTOP-AUDIT.md).
 
-- Patched DWM, dmenu, st, slock.
-- NIRU Noir look, NIRU SDDM theme by default; startx optional.
-- Shared user-level helper scripts and dotfiles, distro-aware package installation.
-- Explicit confirmations before privileged actions.
+## Planned validation
 
-## First-test workflow
+1. Resolve package dependencies and compile patched DWM/dmenu/st/slock on each target distribution.
+2. Verify SDDM theme, startx, monitor layout, statusbar, shortcuts, clipboard, screenshots and suspend on actual X11.
+3. Implement and test a managed-file upgrade/rollback path.
+4. Publish the complete source and verify a clean clone.
+5. Perform a controlled test-laptop installation.
 
-On a disposable Debian 13 installation, **using the complete source ZIP provided separately**:
+## Full-source publication
+
+The alpha.14 ZIP contains `publish-github.sh`. On a machine with GitHub write credentials, extract the release and run:
 
 ```sh
-./install.sh --plan
-./install.sh --doctor
-./install.sh --audit
-./tests/smoke.sh
+./publish-github.sh
 ```
 
-Do not run `--apply` on a valuable workstation. Complete package resolution, Suckless compilation, SDDM QML runtime, X11 login, and full rollback are **not yet verified on target distributions**.
+The script clones the existing `main`, copies the complete source without replacing Git metadata, displays a change summary, requires typing `PUBLISH`, commits and pushes without force. This has **not yet been run successfully**, because the build container cannot resolve github.com.
 
-## Roadmap
-
-1. Audit and test all statusbar modules, desktop helpers, keybindings and dependencies.
-2. Verify packages, builds and X11 login on Debian 13, Arch, CachyOS and Void glibc.
-3. Add managed-file manifests, upgrade safety and tested rollback.
-4. Publish and verify the **complete** source tree on GitHub.
-5. Perform controlled laptop installation and fix integration issues before a stable release.
-
-This project is tailored to a personal Linux setup, not a general-purpose supported distribution.
-
-## Alpha.13 DWM audit
-
-- Replaced systemd-only suspend shortcut with NIRUPI's lock-before-suspend helper.
-- Removed unsafe shortcut that launched a second DWM process.
-- Corrected keybinding comments and switched viewer to Kitty.
-- Added `tests/dwm-config.sh` and `docs/ALPHA-13-DWM-AUDIT.md` to GitHub.
-
-**Publishing limitation:** These are selected files only. The complete 135-file release is available as a ZIP in the development conversation, but has **not** been committed to GitHub. Cloning this repository is **not** a working installation method yet.
+Do not run `--apply` on a valuable workstation until target-system testing is complete.
