@@ -2,7 +2,7 @@
 
 Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest complete development archive: 0.2.0-alpha.19 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.20 — PRETEST ONLY.**
 
 > **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
@@ -77,3 +77,12 @@ Do not run `--apply` on a valuable workstation until target-system testing is co
 - New [Rofi integration audit](docs/ALPHA-19-REVIEW.md) and [test](tests/rofi-integration.sh).
 
 **Important:** The full alpha.19 source tree (148 files) has **not** been pushed to this repository. The complete ZIP is supplied in the development conversation; a clean GitHub clone remains non-installable. Full source publication and clean-clone validation remain roadmap blockers.
+
+## Alpha.20 — DWM shortcut dependencies and screenshots
+
+- Added screenshot tool dependencies to Arch/CachyOS and Debian package profiles.
+- Expanded `--doctor` to report optional shortcut applications without installing personal browsers.
+- Improved screenshot temporary-file cleanup and sanitized custom filenames.
+- Added [engineering audit](docs/ALPHA-20-REVIEW.md) and [regression test](tests/shortcut-dependencies.sh).
+
+**Source status:** Only selected files have been committed to GitHub. The complete alpha.20 release contains 150 files and is provided as a ZIP in the development conversation. **This repository is not a working clone/install source yet.**
