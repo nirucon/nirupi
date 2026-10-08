@@ -1,46 +1,44 @@
 # NIRUPI — NIRU Post Install
 
-Modular NIRU Noir / Suckless DWM desktop integration for Arch, CachyOS, Debian 13 and Void Linux (glibc).
+A personal, modular NIRU Noir / patched Suckless DWM desktop installer for Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest local development artifact:** `0.2.0-alpha.6` — PRETEST ONLY.
+**Current development version: 0.2.0-alpha.12 — PRETEST ONLY.**
 
-> **Important:** This GitHub repository currently contains documentation, not the complete installer source. Do not expect `git clone` followed by `./install.sh` to work until the full source tree is published. The full alpha.6 ZIP is provided in the development conversation.
+> **Repository status:** The complete source tree has **not yet** been pushed to GitHub. This README is a progress record, not a working clone/install source. Do not run an installation from this repository until the full source is published and verified.
 
-## Alpha.6 changes
+## Alpha.12 engineering work
 
-- Corrected the update-count integration bug in `dwm-status.sh`.
-- Reduced reliance on hardcoded executable paths and machine-specific media mount paths.
-- Configurable status refresh interval, default 2 seconds.
-- Added missing clipboard, screenshot, launcher and webapp helpers to deployment.
-- Preserved existing per-file configuration during initial install.
-- Added checks for directory collisions and regression tests.
+- Build staging now runs inside a subshell with an EXIT cleanup trap.
+- Preflight rejects unmanaged executable symlinks before compiling/deploying the desktop.
+- Package installation messaging correctly distinguishes Arch/CachyOS full upgrades.
+- Earlier alphas improved read-only diagnostics, helper deployment, dotfile preservation, package update reporting and file-safety tests.
 
-## Intended first test
+## Target architecture
 
-On a disposable Debian 13 installation with recovery media and no valuable data:
+- Patched DWM, dmenu, st, slock.
+- NIRU Noir look, NIRU SDDM theme by default; startx optional.
+- Shared user-level helper scripts and dotfiles, distro-aware package installation.
+- Explicit confirmations before privileged actions.
+
+## First-test workflow
+
+On a disposable Debian 13 installation, **using the complete source ZIP provided separately**:
 
 ```sh
 ./install.sh --plan
 ./install.sh --doctor
+./install.sh --audit
 ./tests/smoke.sh
 ```
 
-Do not run `--apply` on a production workstation. SDDM QML runtime dependencies, distro package maps, Void runit activation, and complete hardware installation remain unverified. The source archive includes `docs/ALPHA-5-AUDIT.md` for detailed limitations.
+Do not run `--apply` on a valuable workstation. Complete package resolution, Suckless compilation, SDDM QML runtime, X11 login, and full rollback are **not yet verified on target distributions**.
 
-## Design
+## Roadmap
 
-- Preserve original patched DWM, dmenu, st, slock and NIRU Noir look.
-- NIRU SDDM default; `startx` optional.
-- Shared modular installer with distro-specific package adapters.
-- No automatic full OS upgrades, and no unapproved display manager or privileged `slock` changes.
-- Future external NIRU app recipes without bundling their sources.
+1. Audit and test all statusbar modules, desktop helpers, keybindings and dependencies.
+2. Verify packages, builds and X11 login on Debian 13, Arch, CachyOS and Void glibc.
+3. Add managed-file manifests, upgrade safety and tested rollback.
+4. Publish and verify the **complete** source tree on GitHub.
+5. Perform controlled laptop installation and fix integration issues before a stable release.
 
-
-## Alpha.6 preflight additions
-
-- Source asset and Bash syntax preflight before package mutation.
-- Preserves existing user helper scripts and refuses unsafe binary/symlink replacement.
-- Explicit Arch/CachyOS partial-upgrade warning.
-- Guards duplicate status processes.
-
-**The full alpha.6 source tree has not yet been committed to this GitHub repository.** Download the verified ZIP from the development conversation until source publication is complete.
+This project is tailored to a personal Linux setup, not a general-purpose supported distribution.
