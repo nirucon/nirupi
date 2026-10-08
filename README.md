@@ -2,7 +2,7 @@
 
 Personal NIRU Noir / patched Suckless DWM desktop installer targeting Arch, CachyOS, Debian 13 and Void Linux (glibc).
 
-**Latest complete development archive: 0.2.0-alpha.20 — PRETEST ONLY.**
+**Latest complete development archive: 0.2.0-alpha.21 — PRETEST ONLY.**
 
 > **Publication status:** GitHub contains the audit documentation and selected tests, **not the full 138-file source release**. A clean clone is not yet installable. The complete ZIP is provided in the development conversation.
 
@@ -86,3 +86,11 @@ Do not run `--apply` on a valuable workstation until target-system testing is co
 - Added [engineering audit](docs/ALPHA-20-REVIEW.md) and [regression test](tests/shortcut-dependencies.sh).
 
 **Source status:** Only selected files have been committed to GitHub. The complete alpha.20 release contains 150 files and is provided as a ZIP in the development conversation. **This repository is not a working clone/install source yet.**
+
+## Alpha.21 — Configuration safety
+
+- Preserves existing DWM `config.h` and existing per-application configuration directory collisions.
+- Preserves existing user-level session launcher instead of silently overwriting it.
+- Adds [engineering review](docs/ALPHA-21-REVIEW.md) and [regression test](tests/config-preservation.sh).
+
+**Repository warning:** Full alpha.21 installer source (152 files) is **not** on GitHub. This repository is not yet a working clone-and-install source. The full source ZIP is provided separately. These changes have not been tested on physical hardware.
