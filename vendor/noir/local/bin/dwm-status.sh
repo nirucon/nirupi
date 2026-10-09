@@ -55,6 +55,7 @@ NOW_PLAYING_MAXLEN=20
 NOW_PLAYING_SCROLL=1
 NOW_PLAYING_SCROLL_DELAY=3
 NOW_PLAYING_SCROLL_STEP=1
+NOW_PLAYING_FRAME_INTERVAL=0.3  # seconds; music animation only
 NOW_PLAYING_SCROLL_PASSES=0  # 0 = continuous
 NOW_PLAYING_LABEL_SEPARATOR=": "
 NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox"
@@ -77,6 +78,7 @@ NP_TEXT_FILE="$CACHE_DIR/nowplaying.text"
 NP_SEEN_FILE="$CACHE_DIR/nowplaying.seen"
 NP_OFFSET_FILE="$CACHE_DIR/nowplaying.offset"
 NP_PASSES_FILE="$CACHE_DIR/nowplaying.passes"
+NP_CURRENT_FILE="$CACHE_DIR/nowplaying.current"
 WEATHER_CACHE_FILE="$CACHE_DIR/weather.json"
 WEATHER_CACHE_STAMP="$CACHE_DIR/weather.stamp"
 
@@ -757,6 +759,12 @@ get_now_playing() {
         raw_text="$app"
       fi
 
+      if [[ "${NOW_PLAYING_TEMPLATE:-0}" == 1 ]]; then
+        printf '%s\n%s\n' "$app" "$raw_text" > "$NP_CURRENT_FILE"
+        printf '%s' '__NIRUPI_NOW_PLAYING__'
+        return 0
+      fi
+
       visible="$(render_now_playing_text "$raw_text")"
       if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
         printf '%s %s%s%s' "$(icon_play)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
@@ -781,6 +789,12 @@ get_now_playing() {
         raw_text="$title"
       else
         raw_text="$app"
+      fi
+
+      if [[ "${NOW_PLAYING_TEMPLATE:-0}" == 1 ]]; then
+        printf '%s\n%s\n' "$app" "$raw_text" > "$NP_CURRENT_FILE"
+        printf '%s' '__NIRUPI_NOW_PLAYING__'
+        return 0
       fi
 
       visible="$(render_now_playing_text "$raw_text")"
@@ -809,6 +823,12 @@ get_now_playing() {
         raw_text="$app"
       fi
 
+      if [[ "${NOW_PLAYING_TEMPLATE:-0}" == 1 ]]; then
+        printf '%s\n%s\n' "$app" "$raw_text" > "$NP_CURRENT_FILE"
+        printf '%s' '__NIRUPI_NOW_PLAYING__'
+        return 0
+      fi
+
       visible="$(render_now_playing_text "$raw_text")"
       if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
         printf '%s %s%s%s' "$(icon_play)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
@@ -819,6 +839,7 @@ get_now_playing() {
     fi
   fi
 
+  [[ "${NOW_PLAYING_TEMPLATE:-0}" == 1 ]] && : > "$NP_CURRENT_FILE"
   NP_LAST_TEXT=""
   NP_FIRST_SEEN=0
   NP_OFFSET=0
@@ -874,9 +895,43 @@ build_status_line() {
   printf '[ %s ]' "$(printf '%s\n' "${parts[@]}" | paste -sd '|' - | sed 's/|/ | /g')"
 }
 
+# Heavy/system probes run at the original interval. Only the cached music
+# text is animated between probes; playerctl and network tools are not polled
+# for every animation frame.
 [[ "$INTERVAL" =~ ^[1-9][0-9]*$ ]] || INTERVAL=2
+[[ "$NOW_PLAYING_FRAME_INTERVAL" =~ ^(0\\.[1-9][0-9]*|1(\\.0+)?)$ ]] || NOW_PLAYING_FRAME_INTERVAL=0.3
+[[ "$NOW_PLAYING_SCROLL_STEP" =~ ^[1-9][0-9]*$ ]] || NOW_PLAYING_SCROLL_STEP=1
+
+render_cached_now_playing() {
+  local app="" raw="" visible=""
+  [[ -r "$NP_CURRENT_FILE" ]] || return 0
+  { IFS= read -r app || true; IFS= read -r raw || true; } < "$NP_CURRENT_FILE"
+  [[ -n "$raw" ]] || return 0
+  visible="$(render_now_playing_text "$raw")"
+  if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
+    printf '%s %s%s%s' "$(icon_play)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
+  else
+    printf '%s %s' "$(icon_play)" "$visible"
+  fi
+}
+
+# Prefer one-character frames; user config can still request larger steps.
+# The system line is rebuilt only at INTERVAL, including metadata detection.
+NOW_PLAYING_TEMPLATE=1
+last_system_update=0
+template=""
 while :; do
-  line="$(build_status_line)"
+  now_seconds="$("$DATEBIN" +%s 2>/dev/null || printf '0')"
+  if [[ -z "$template" ]] || (( now_seconds - last_system_update >= INTERVAL )); then
+    template="$(build_status_line)"
+    last_system_update="$now_seconds"
+  fi
+  if [[ "$template" == *'__NIRUPI_NOW_PLAYING__'* ]]; then
+    music="$(render_cached_now_playing)"
+    line="${template/__NIRUPI_NOW_PLAYING__/$music}"
+  else
+    line="$template"
+  fi
   [[ -n "$XSETROOT" ]] && "$XSETROOT" -name "$line" 2>/dev/null || true
-  sleep "$INTERVAL"
+  sleep "$NOW_PLAYING_FRAME_INTERVAL"
 done
