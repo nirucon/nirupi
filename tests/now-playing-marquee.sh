@@ -21,7 +21,7 @@ for ((i=0;i<150;i++)); do
   frame="$(render_now_playing_text "$full")"
   [[ ${#frame} -le 12 ]] || { echo "frame too long" >&2; exit 1; }
   [[ "$frame" == *"Title"* ]] && saw_end=1
-  [[ "$frame" == *"   Runemagick"* ]] && saw_wrap=1
+  [[ "$frame" == *"  Runemagick"* ]] && saw_wrap=1
 done
 (( saw_end && saw_wrap )) || { echo "marquee did not scroll and wrap" >&2; exit 1; }
 [[ "$(cat "$NP_STATE_FILE")" != done ]] || { echo "unlimited scrolling stopped" >&2; exit 1; }
