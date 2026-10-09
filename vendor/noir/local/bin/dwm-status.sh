@@ -55,9 +55,9 @@ NOW_PLAYING_MAXLEN=20
 NOW_PLAYING_SCROLL=1
 NOW_PLAYING_SCROLL_DELAY=3
 NOW_PLAYING_SCROLL_STEP=1
-NOW_PLAYING_SCROLL_PASSES=2
+NOW_PLAYING_SCROLL_PASSES=0  # 0 = continuous
 NOW_PLAYING_LABEL_SEPARATOR=": "
-NOW_PLAYING_PREFERRED_PLAYERS="spotify mpv kew cmus brave chromium firefox"
+NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox"
 
 # Optional user settings. This file is never overwritten by NIRUPI.
 # It is sourced as the current user: edit only your own trusted file.
@@ -291,6 +291,12 @@ render_now_playing_text() {
   delay="${NOW_PLAYING_SCROLL_DELAY:-3}"
   step="${NOW_PLAYING_SCROLL_STEP:-1}"
   max_passes="${NOW_PLAYING_SCROLL_PASSES:-2}"
+  [[ "$maxlen" =~ ^[1-9][0-9]*$ ]] || maxlen=20
+  [[ "$delay" =~ ^[0-9]+$ ]] || delay=3
+  [[ "$step" =~ ^[1-9][0-9]*$ ]] || step=1
+  [[ "$max_passes" =~ ^[0-9]+$ ]] || max_passes=0
+  (( maxlen > 200 )) && maxlen=200
+  (( step > maxlen )) && step=maxlen
   now="$($DATEBIN +%s 2>/dev/null || printf '0')"
 
   last_text=""
@@ -308,7 +314,7 @@ render_now_playing_text() {
   [[ "$first_seen" =~ ^[0-9]+$ ]] || first_seen=0
   [[ "$np_offset" =~ ^[0-9]+$ ]] || np_offset=0
   [[ "$np_passes" =~ ^[0-9]+$ ]] || np_passes=0
-  (( max_passes < 1 )) && max_passes=1
+  [[ "$max_passes" =~ ^[0-9]+$ ]] || max_passes=0
   [[ "$np_state" == "pause" || "$np_state" == "scroll" || "$np_state" == "done" ]] || np_state="pause"
 
   if [[ "$full" != "$last_text" ]]; then
@@ -338,18 +344,23 @@ render_now_playing_text() {
       fi
       ;;
     scroll)
-      visible="${full:np_offset:maxlen}"
-      (( np_offset += step ))
-      (( np_offset < 0 )) && np_offset=0
-      if (( np_offset + maxlen > ${#full} )); then
-        (( np_passes += 1 ))
-        if (( np_passes >= max_passes )); then
+      # Include a visible gap, then wrap seamlessly back to the artist.
+      local cycle="${full}   "
+      local cycle_len=${#cycle}
+      local doubled="$cycle$cycle"
+      while (( ${#doubled} < cycle_len + maxlen )); do doubled+="$cycle"; done
+      visible="${doubled:np_offset:maxlen}"
+      # Clamp the step to avoid skipping the wrap boundary.
+      (( step > maxlen )) && step=maxlen
+      np_offset=$(( (np_offset + step) % cycle_len ))
+      if (( np_offset < step )); then
+        np_passes=$((np_passes + 1))
+        first_seen="$now"
+        if (( max_passes > 0 && np_passes >= max_passes )); then
           np_state="done"
         else
           np_state="pause"
         fi
-        first_seen="$now"
-        np_offset=0
       fi
       ;;
     done)
