@@ -55,7 +55,7 @@ NOW_PLAYING_MAXLEN=20
 NOW_PLAYING_SCROLL=1
 NOW_PLAYING_SCROLL_DELAY=3
 NOW_PLAYING_SCROLL_STEP=1
-NOW_PLAYING_FRAME_INTERVAL=0.3  # seconds; music animation only
+NOW_PLAYING_FRAME_INTERVAL=0.2  # seconds; music animation only
 NOW_PLAYING_SCROLL_PASSES=0  # 0 = continuous
 NOW_PLAYING_LABEL_SEPARATOR=": "
 NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox"
@@ -284,108 +284,55 @@ truncate_text() {
   fi
 }
 
+# Animation state lives in this process; no cache-file reads/writes per frame.
+NP_LAST_TEXT=""
+NP_OFFSET=0
+NP_PASSES=0
+NP_PAUSE_UNTIL=0
+NP_RENDER=""
+NP_DONE=0
 render_now_playing_text() {
-  local full="$1"
-  local now maxlen delay step max_passes visible
-  local last_text first_seen np_offset np_state np_passes
-
-  maxlen="${NOW_PLAYING_MAXLEN:-20}"
-  delay="${NOW_PLAYING_SCROLL_DELAY:-3}"
-  step="${NOW_PLAYING_SCROLL_STEP:-1}"
-  max_passes="${NOW_PLAYING_SCROLL_PASSES:-2}"
+  local full="$1" maxlen="${NOW_PLAYING_MAXLEN:-20}"
+  local delay="${NOW_PLAYING_SCROLL_DELAY:-3}" passes="${NOW_PLAYING_SCROLL_PASSES:-0}"
+  local step="${NOW_PLAYING_SCROLL_STEP:-1}" now cycle doubled cycle_len
   [[ "$maxlen" =~ ^[1-9][0-9]*$ ]] || maxlen=20
-  [[ "$delay" =~ ^[0-9]+$ ]] || delay=3
-  [[ "$step" =~ ^[1-9][0-9]*$ ]] || step=1
-  [[ "$max_passes" =~ ^[0-9]+$ ]] || max_passes=0
   (( maxlen > 200 )) && maxlen=200
+  [[ "$delay" =~ ^[0-9]+$ ]] || delay=3
+  [[ "$passes" =~ ^[0-9]+$ ]] || passes=0
+  [[ "$step" =~ ^[1-9][0-9]*$ ]] || step=1
   (( step > maxlen )) && step=maxlen
-  now="$($DATEBIN +%s 2>/dev/null || printf '0')"
-
-  last_text=""
-  first_seen=0
-  np_offset=0
-  np_state="pause"
-  np_passes=0
-
-  [[ -r "$NP_TEXT_FILE" ]] && last_text="$(cat "$NP_TEXT_FILE" 2>/dev/null || true)"
-  [[ -r "$NP_SEEN_FILE" ]] && first_seen="$(tr -d '[:space:]' < "$NP_SEEN_FILE" 2>/dev/null || printf '0')"
-  [[ -r "$NP_OFFSET_FILE" ]] && np_offset="$(tr -d '[:space:]' < "$NP_OFFSET_FILE" 2>/dev/null || printf '0')"
-  [[ -r "$NP_STATE_FILE" ]] && np_state="$(tr -d '[:space:]' < "$NP_STATE_FILE" 2>/dev/null || printf 'pause')"
-  [[ -r "$NP_PASSES_FILE" ]] && np_passes="$(tr -d '[:space:]' < "$NP_PASSES_FILE" 2>/dev/null || printf '0')"
-
-  [[ "$first_seen" =~ ^[0-9]+$ ]] || first_seen=0
-  [[ "$np_offset" =~ ^[0-9]+$ ]] || np_offset=0
-  [[ "$np_passes" =~ ^[0-9]+$ ]] || np_passes=0
-  [[ "$max_passes" =~ ^[0-9]+$ ]] || max_passes=0
-  [[ "$np_state" == "pause" || "$np_state" == "scroll" || "$np_state" == "done" ]] || np_state="pause"
-
-  if [[ "$full" != "$last_text" ]]; then
-    last_text="$full"
-    first_seen="$now"
-    np_offset=0
-    np_state="pause"
-    np_passes=0
+  NP_RENDER="$full"
+  if [[ "$full" != "$NP_LAST_TEXT" ]]; then
+    NP_LAST_TEXT="$full"
+    NP_OFFSET=0
+    NP_PASSES=0
+    NP_DONE=0
+    NP_PAUSE_UNTIL=$(( SECONDS + delay ))
   fi
-
-  if (( ${#full} <= maxlen )) || [[ "${NOW_PLAYING_SCROLL:-1}" -eq 0 ]]; then
-    printf '%s\n' "$full" > "$NP_TEXT_FILE" 2>/dev/null || true
-    printf '%s\n' "$first_seen" > "$NP_SEEN_FILE" 2>/dev/null || true
-    printf '%s\n' '0' > "$NP_OFFSET_FILE" 2>/dev/null || true
-    printf '%s\n' 'pause' > "$NP_STATE_FILE" 2>/dev/null || true
-    printf '%s\n' '0' > "$NP_PASSES_FILE" 2>/dev/null || true
-    printf '%s' "$full"
+  (( ${#full} > maxlen )) || return 0
+  [[ "${NOW_PLAYING_SCROLL:-1}" == 1 ]] || return 0
+  if (( NP_DONE )); then
+    NP_RENDER="${full:0:maxlen}"
     return 0
   fi
-
-  case "$np_state" in
-    pause)
-      visible="${full:0:maxlen}"
-      if (( now - first_seen >= delay )); then
-        np_state="scroll"
-        np_offset=1
-      fi
-      ;;
-    scroll)
-      # Include a visible gap, then wrap seamlessly back to the artist.
-      local cycle="${full}   "
-      local cycle_len=${#cycle}
-      local doubled="$cycle$cycle"
-      while (( ${#doubled} < cycle_len + maxlen )); do doubled+="$cycle"; done
-      visible="${doubled:np_offset:maxlen}"
-      # Clamp the step to avoid skipping the wrap boundary.
-      (( step > maxlen )) && step=maxlen
-      np_offset=$(( (np_offset + step) % cycle_len ))
-      if (( np_offset < step )); then
-        np_passes=$((np_passes + 1))
-        first_seen="$now"
-        if (( max_passes > 0 && np_passes >= max_passes )); then
-          np_state="done"
-        else
-          np_state="pause"
-        fi
-      fi
-      ;;
-    done)
-      visible="${full:0:maxlen}"
-      np_state="done"
-      np_offset=0
-      ;;
-    *)
-      visible="${full:0:maxlen}"
-      np_state="pause"
-      np_offset=0
-      np_passes=0
-      first_seen="$now"
-      ;;
-  esac
-
-  printf '%s\n' "$full" > "$NP_TEXT_FILE" 2>/dev/null || true
-  printf '%s\n' "$first_seen" > "$NP_SEEN_FILE" 2>/dev/null || true
-  printf '%s\n' "$np_offset" > "$NP_OFFSET_FILE" 2>/dev/null || true
-  printf '%s\n' "$np_state" > "$NP_STATE_FILE" 2>/dev/null || true
-  printf '%s\n' "$np_passes" > "$NP_PASSES_FILE" 2>/dev/null || true
-
-  printf '%s' "$visible"
+  if (( SECONDS < NP_PAUSE_UNTIL )); then
+    NP_RENDER="${full:0:maxlen}"
+    return 0
+  fi
+  cycle="${full}   "
+  cycle_len=${#cycle}
+  doubled="$cycle$cycle"
+  while (( ${#doubled} < cycle_len + maxlen )); do doubled+="$cycle"; done
+  NP_RENDER="${doubled:NP_OFFSET:maxlen}"
+  NP_OFFSET=$(( (NP_OFFSET + step) % cycle_len ))
+  if (( NP_OFFSET < step )); then
+    NP_PASSES=$(( NP_PASSES + 1 ))
+    if (( passes > 0 && NP_PASSES >= passes )); then
+      NP_DONE=1
+    else
+      NP_PAUSE_UNTIL=$(( SECONDS + delay ))
+    fi
+  fi
 }
 
 get_kernel() {
@@ -899,19 +846,21 @@ build_status_line() {
 # text is animated between probes; playerctl and network tools are not polled
 # for every animation frame.
 [[ "$INTERVAL" =~ ^[1-9][0-9]*$ ]] || INTERVAL=2
-[[ "$NOW_PLAYING_FRAME_INTERVAL" =~ ^(0\\.[1-9][0-9]*|1(\\.0+)?)$ ]] || NOW_PLAYING_FRAME_INTERVAL=0.3
+[[ "$NOW_PLAYING_FRAME_INTERVAL" =~ ^(0\.[1-9][0-9]*|1(\.0+)?)$ ]] || NOW_PLAYING_FRAME_INTERVAL=0.2
 [[ "$NOW_PLAYING_SCROLL_STEP" =~ ^[1-9][0-9]*$ ]] || NOW_PLAYING_SCROLL_STEP=1
 
+# Metadata is captured at the system refresh interval; the animation uses RAM.
 render_cached_now_playing() {
-  local app="" raw="" visible=""
+  local app="" raw=""
+  MUSIC_RENDER=""
   [[ -r "$NP_CURRENT_FILE" ]] || return 0
   { IFS= read -r app || true; IFS= read -r raw || true; } < "$NP_CURRENT_FILE"
-  [[ -n "$raw" ]] || return 0
-  visible="$(render_now_playing_text "$raw")"
+  [[ -n "$raw" ]] || { NP_LAST_TEXT=""; return 0; }
+  render_now_playing_text "$raw"
   if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
-    printf '%s %s%s%s' "$(icon_play)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
+    MUSIC_RENDER="$(icon_play) $app${NOW_PLAYING_LABEL_SEPARATOR:-: }$NP_RENDER"
   else
-    printf '%s %s' "$(icon_play)" "$visible"
+    MUSIC_RENDER="$(icon_play) $NP_RENDER"
   fi
 }
 
@@ -921,13 +870,14 @@ NOW_PLAYING_TEMPLATE=1
 last_system_update=0
 template=""
 while :; do
-  now_seconds="$("$DATEBIN" +%s 2>/dev/null || printf '0')"
+  now_seconds="$SECONDS"
   if [[ -z "$template" ]] || (( now_seconds - last_system_update >= INTERVAL )); then
     template="$(build_status_line)"
     last_system_update="$now_seconds"
   fi
   if [[ "$template" == *'__NIRUPI_NOW_PLAYING__'* ]]; then
-    music="$(render_cached_now_playing)"
+    render_cached_now_playing
+    music="$MUSIC_RENDER"
     line="${template/__NIRUPI_NOW_PLAYING__/$music}"
   else
     line="$template"
