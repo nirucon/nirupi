@@ -17,12 +17,12 @@ SHOW_TIME=1
 # WEATHER_LON=""
 
 # Now playing: NPLAY is preferred when multiple MPRIS players are active.
-# Long artist/title strings scroll continuously (0 = unlimited passes).
+# Long artist/title strings scroll three loops, then stop at the beginning (0 = unlimited).
 NOW_PLAYING_MAXLEN=20
 NOW_PLAYING_SCROLL=1
 NOW_PLAYING_SCROLL_DELAY=3
 NOW_PLAYING_SCROLL_STEP=1
 # Animation refresh only; system probes remain at NIRUPI_BAR_INTERVAL (default 2s).
-NOW_PLAYING_FRAME_INTERVAL=0.3
-NOW_PLAYING_SCROLL_PASSES=0
+NOW_PLAYING_FRAME_INTERVAL=0.2
+NOW_PLAYING_SCROLL_PASSES=3
 # NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox"
