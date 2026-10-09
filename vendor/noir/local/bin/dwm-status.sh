@@ -56,7 +56,7 @@ NOW_PLAYING_SCROLL=1
 NOW_PLAYING_SCROLL_DELAY=3
 NOW_PLAYING_SCROLL_STEP=1
 NOW_PLAYING_FRAME_INTERVAL=0.2  # seconds; music animation only
-NOW_PLAYING_SCROLL_PASSES=0  # 0 = continuous
+NOW_PLAYING_SCROLL_PASSES=3  # 0 = continuous; stop at the start after 3 loops
 NOW_PLAYING_LABEL_SEPARATOR=": "
 NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox"
 
