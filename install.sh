@@ -7,18 +7,22 @@ source "$ROOT/lib/release.sh"
 SESSION=sddm; ACTION=plan
 usage(){ cat <<'EOF'
 NIRUPI 0.2.0-beta.5
-Usage: ./install.sh [--plan|--apply|--doctor|--audit|--verify|--history|--rollback] [--session sddm|startx]
+Usage: ./install.sh [--plan|--apply|--statusbar-check|--statusbar-update|--doctor|--audit|--verify|--history|--rollback] [--session sddm|startx]
 Default --plan never modifies files. --apply requires confirmation.
 EOF
 }
 while (($#)); do
  case "$1" in
- --plan) ACTION=plan;; --apply) ACTION=apply;; --doctor) ACTION=doctor;; --audit) ACTION=audit;; --verify) ACTION=verify;; --history) ACTION=history;; --rollback) ACTION=rollback;;
+ --plan) ACTION=plan;; --apply) ACTION=apply;; --statusbar-check) ACTION=statusbar-check;; --statusbar-update) ACTION=statusbar-update;; --doctor) ACTION=doctor;; --audit) ACTION=audit;; --verify) ACTION=verify;; --history) ACTION=history;; --rollback) ACTION=rollback;;
  --session) shift; (($#)) || die 'Missing --session value'; SESSION=$1;;
  -h|--help) usage; exit 0;; *) die "Unknown argument: $1";; esac
  shift
 done
 [[ $SESSION == sddm || $SESSION == startx ]] || die 'Invalid session'
+# User-level statusbar upgrades are safe from a running desktop and do not
+# install packages or rebuild DWM. Preserve modified/untracked helpers.
+if [[ $ACTION == statusbar-check ]]; then exec bash "$ROOT/tools/update-statusbar.sh" --check; fi
+if [[ $ACTION == statusbar-update ]]; then exec bash "$ROOT/tools/update-statusbar.sh" --apply; fi
 if [[ $ACTION == verify ]]; then exec "$ROOT/tests/post-install-verify.sh"; fi
 if [[ $ACTION == history ]]; then release_history; exit 0; fi
 if [[ $ACTION == rollback ]]; then release_rollback; exit 0; fi
