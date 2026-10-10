@@ -6,8 +6,8 @@ NIRUPI ships the same Bash statusbar on all three distributions. The user-owned
 From a current NIRUPI source checkout:
 
 ```bash
-bash tools/update-statusbar.sh --check
-bash tools/update-statusbar.sh --apply
+bash install.sh --statusbar-check
+bash install.sh --statusbar-update
 ```
 
 If an older installation has no ownership manifest, or the script has been
