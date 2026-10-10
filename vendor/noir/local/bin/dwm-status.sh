@@ -899,7 +899,7 @@ build_status_line() {
 # text is animated between probes; playerctl and network tools are not polled
 # for every animation frame.
 [[ "$INTERVAL" =~ ^[1-9][0-9]*$ ]] || INTERVAL=2
-[[ "$NOW_PLAYING_FRAME_INTERVAL" =~ ^(0\\.[1-9][0-9]*|1(\\.0+)?)$ ]] || NOW_PLAYING_FRAME_INTERVAL=0.3
+[[ "$NOW_PLAYING_FRAME_INTERVAL" =~ ^(0[.][1-9][0-9]*|1([.]0+)?)$ ]] || NOW_PLAYING_FRAME_INTERVAL=0.3
 [[ "$NOW_PLAYING_SCROLL_STEP" =~ ^[1-9][0-9]*$ ]] || NOW_PLAYING_SCROLL_STEP=1
 
 render_cached_now_playing() {
