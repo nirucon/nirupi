@@ -116,7 +116,7 @@ install_helpers(){
  managed_helper_install nirupi-update "$ROOT/runtime/nirupi-update.sh" "$HOME/.local/bin/nirupi-update.sh"
  # Back-compat: dwm builds on some earlier versions invoked this without .sh
  ln -sf nirupi-status-click.sh "$HOME/.local/bin/nirupi-status-click"
- for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
+ for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
    dest="$HOME/.local/bin/$app"
@@ -229,7 +229,7 @@ install_desktop() (
   # version that was just built; a modified/untracked config is preserved and
   # receives a sibling *.nirupi-new proposal. Binary and config never diverge.
   managed_config_install 'dwm/config.h' "$ROOT/vendor/suckless/dwm/config.h" "$dwm_cfg"
-  for app in kitty fish dunst picom rofi alacritty gtk-3.0 cmus tmux lazygit micro aerc; do
+  for app in kitty fish picom rofi alacritty gtk-3.0 cmus tmux lazygit micro aerc; do
   [[ -d $ROOT/vendor/noir/config/$app ]] || continue
   if [[ -L $HOME/.config/$app ]]; then warn "Preserving symlink ~/.config/$app"; continue; fi
   if [[ -e $HOME/.config/$app && ! -d $HOME/.config/$app ]]; then
@@ -243,12 +243,17 @@ install_desktop() (
   done < <(find "$ROOT/vendor/noir/config/$app" -type f -print0)
  done
   managed_config_install dotfiles/Xresources "$ROOT/vendor/noir/dotfiles/.Xresources" "$HOME/.Xresources"
-  # Browser dark-mode flags, environment.d and GTK4 Noir defaults.
-  theme_apply_browser_flags "$ROOT/vendor/noir"
-  theme_apply_environment
-  theme_apply_gtk4
-  # Deploy the reusable bundle so `nirupi theme|dots|migrate` work after install.
-  deploy_bundle
+   # Browser dark-mode flags, environment.d and GTK4 Noir defaults.
+   theme_apply_browser_flags "$ROOT/vendor/noir"
+   theme_apply_environment
+   theme_apply_gtk4
+   # Generate rofi/dunst/SDDM assets from the token palette.
+   NIRUPI_NOIR_DIR="$ROOT/vendor/noir" theme_load_tokens
+   theme_render_rofi
+   theme_render_dunst
+   theme_render_sddm
+   # Deploy the reusable bundle so `nirupi theme|dots|migrate` work after install.
+   deploy_bundle
   local user_session="$HOME/.local/bin/nirupi-session"
  managed_config_install 'session/nirupi-session' "$ROOT/runtime-session.sh" "$user_session" 0755
  managed_config_install 'session/xinitrc' "$ROOT/runtime-xinitrc" "$HOME/.xinitrc" 0755
@@ -297,7 +302,14 @@ configure_sddm(){
  if [[ -e /usr/share/sddm/themes/niru-noir/Main.qml ]]; then
   warn 'Existing NIRU theme preserved'
  else
-  sudo cp -a "$ROOT/vendor/sddm/." /usr/share/sddm/themes/niru-noir/
+  # Prefer the token-colored theme staged by the theme engine.
+  NIRUPI_NOIR_DIR="$ROOT/vendor/noir" theme_load_tokens
+  theme_render_sddm
+  if [[ -f "$HOME/.local/share/nirupi/sddm/Main.qml" ]]; then
+   sudo cp -a "$HOME/.local/share/nirupi/sddm/." /usr/share/sddm/themes/niru-noir/
+  else
+   sudo cp -a "$ROOT/vendor/sddm/." /usr/share/sddm/themes/niru-noir/
+  fi
  fi
  if [[ -e /etc/sddm.conf.d/10-niru-noir.conf ]]; then
   warn 'Existing SDDM configuration preserved'
@@ -332,6 +344,16 @@ deploy_bundle(){
    cp -f -- "$f" "$dest/src/suckless/$rel"
   fi
  done < <(find "$ROOT/vendor/suckless" -type f -print0)
+ # SDDM theme sources (colors are generated from tokens at theme apply time).
+ if [[ -d $ROOT/vendor/sddm ]]; then
+  while IFS= read -r -d '' f; do
+   rel="${f#"$ROOT/vendor/sddm/"}"
+   mkdir -p "$dest/sddm/$(dirname "$rel")"
+   if [[ ! -f $dest/sddm/$rel ]] || ! cmp -s -- "$f" "$dest/sddm/$rel"; then
+    cp -f -- "$f" "$dest/sddm/$rel"
+   fi
+  done < <(find "$ROOT/vendor/sddm" -type f -print0)
+ fi
  log 'Runtime bundle deployed to ~/.local/lib/nirupi'
 }
 # Rebuild DWM from the deployed sources with the effective user config, then

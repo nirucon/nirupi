@@ -2,10 +2,11 @@
 static const char *user  = "nobody";
 static const char *group = "nobody";
 
+/* NIRU Noir lock screen palette (mirrors vendor/noir/theme/tokens.env). */
 static const char *colorname[NUMCOLS] = {
-	[INIT] =   "black",     /* after initialization */
-	[INPUT] =  "#005577",   /* during input */
-	[FAILED] = "#CC3333",   /* wrong password */
+	[INIT] =   "#0f0f10",   /* after initialization */
+	[INPUT] =  "#3a3a3d",   /* during input */
+	[FAILED] = "#b87878",   /* wrong password */
 };
 
 /* treat a cleared input like a wrong password (color) */

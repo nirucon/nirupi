@@ -6,16 +6,18 @@ Rectangle {
     id: root
     width: 1920
     height: 1080
-    color: "#050505"
+    // BEGIN NIRU-NOIR-COLORS (generated; keep these markers)
+    color: "#0f0f10"
 
-    property color fg: "#d9d9d9"
-    property color muted: "#777777"
-    property color dim: "#4f4f4f"
-    property color line: "#282828"
-    property color inputBg: "#0f0f0f"
-    property color inputBorder: "#383838"
-    property color focusBorder: "#9a9a9a"
-    property color warn: "#b85c5c"
+    property color fg: "#e5e5e5"
+    property color muted: "#a8a8a8"
+    property color dim: "#5a5a60"
+    property color line: "#2a2a2d"
+    property color inputBg: "#0f0f10"
+    property color inputBorder: "#2a2a2d"
+    property color focusBorder: "#5a5a60"
+    property color warn: "#b87878"
+    // END NIRU-NOIR-COLORS
 
     property int sessionIndex: sessionModel.lastIndex >= 0 ? sessionModel.lastIndex : 0
 

@@ -11,6 +11,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+#include <X11/Xresource.h>
 #ifdef XINERAMA
 #include <X11/extensions/Xinerama.h>
 #endif
@@ -26,12 +27,19 @@
 
 /* enums */
 enum { SchemeNorm, SchemeSel, SchemeOut, SchemeLast }; /* color schemes */
+enum XResType { STRING, INTEGER, FLOAT };
 
 struct item {
 	char *text;
 	struct item *left, *right;
 	int out;
 };
+
+typedef struct {
+	const char *name;
+	enum XResType type;
+	void *dst;
+} XResPref;
 
 static char text[BUFSIZ] = "";
 static char *embed;
@@ -51,6 +59,8 @@ static XIC xic;
 
 static Drw *drw;
 static Clr *scheme[SchemeLast];
+
+static XrmDatabase xrdb;
 
 #include "config.h"
 
@@ -107,6 +117,7 @@ cleanup(void)
 		free(items[i].text);
 	free(items);
 	drw_free(drw);
+	XrmDestroyDatabase(xrdb);
 	XSync(dpy, False);
 	XCloseDisplay(dpy);
 }
@@ -718,11 +729,59 @@ usage(void)
 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
 }
 
+void
+xresload(const XResPref *resource)
+{
+	char *type;
+	XrmValue ret;
+
+	if (!XrmGetResource(xrdb, resource->name, NULL, &type, &ret))
+		return;
+	if (!ret.addr || strncmp(type, "String", sizeof("String")))
+		return;
+
+	switch (resource->type) {
+	case STRING:
+		*(char **)resource->dst = ret.addr;
+		break;
+	case INTEGER:
+		*(int *)resource->dst = strtoul(ret.addr, NULL, 10);
+		break;
+	case FLOAT:
+		*(float *)resource->dst = strtof(ret.addr, NULL);
+		break;
+	}
+}
+
+void
+xresupdate(void)
+{
+	Display *display;
+	char *resm;
+	const XResPref *p;
+
+	display = XOpenDisplay(NULL);
+	if (!display)
+		return;
+	resm = XResourceManagerString(display);
+	if (resm) {
+		xrdb = XrmGetStringDatabase(resm);
+		if (xrdb) {
+			for (p = resources; p < resources + LENGTH(resources); ++p)
+				xresload(p);
+		}
+	}
+	XCloseDisplay(display);
+}
+
 int
 main(int argc, char *argv[])
 {
 	XWindowAttributes wa;
 	int i, fast = 0;
+
+	XrmInitialize();
+	xresupdate();
 
 	for (i = 1; i < argc; i++)
 		/* these options take no arguments */

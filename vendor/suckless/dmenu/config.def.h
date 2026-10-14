@@ -22,3 +22,18 @@ static unsigned int lines      = 0;
  */
 static const char worddelimiters[] = " ";
 
+
+/* X resources loaded at startup (see lib/theme.sh -> xresources.noir). */
+static const XResPref resources[] = {
+	/* name                  type     address */
+	{ "dmenu.font",          STRING,  &fonts[0] },
+	{ "dmenu.prompt",        STRING,  &prompt },
+	{ "dmenu.foreground",    STRING,  &colors[SchemeNorm][ColFg] },
+	{ "dmenu.background",    STRING,  &colors[SchemeNorm][ColBg] },
+	{ "dmenu.selforeground", STRING,  &colors[SchemeSel][ColFg] },
+	{ "dmenu.selbackground", STRING,  &colors[SchemeSel][ColBg] },
+	{ "dmenu.foregroundOut", STRING,  &colors[SchemeOut][ColFg] },
+	{ "dmenu.backgroundOut", STRING,  &colors[SchemeOut][ColBg] },
+	{ "dmenu.topbar",        INTEGER, &topbar },
+	{ "dmenu.lines",         INTEGER, &lines },
+};
