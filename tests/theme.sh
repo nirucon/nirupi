@@ -3,7 +3,7 @@ set -Eeuo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TMP="$(mktemp -d)"
 trap 'rm -rf -- "$TMP"' EXIT
-export HOME="$TMP/home" XDG_STATE_HOME="$TMP/home/.local/state"
+export HOME="$TMP/home" XDG_STATE_HOME="$TMP/home/.local/state" XDG_CONFIG_HOME="$TMP/home/.config"
 mkdir -p "$HOME"
 source "$ROOT/lib/common.sh"
 source "$ROOT/lib/managed.sh"
@@ -16,7 +16,8 @@ for f in \
   .config/kitty/kitty.conf .config/alacritty/alacritty.toml .config/fish/config.fish \
   .config/tmux/tmux.conf .config/lazygit/config.yml .config/micro/settings.json \
   .config/aerc/aerc.conf .config/brave-flags.conf .config/chromium-flags.conf \
-  .config/environment.d/90-nirupi.conf .config/gtk-4.0/settings.ini; do
+  .config/environment.d/90-nirupi.conf .config/gtk-4.0/settings.ini \
+  .config/nirupi/xresources.noir; do
   [[ -f "$HOME/$f" ]] || { echo "FAIL missing $f" >&2; exit 1; }
 done
 

@@ -15,6 +15,8 @@ INTERVAL="${NIRUPI_BAR_INTERVAL:-2}"
 TEMP_WARN=70
 UPDATES_CACHE_SECONDS=1800
 MEDIA_CACHE_SECONDS=300
+NETWORK_CACHE_SECONDS=20
+NEXTCLOUD_CACHE_SECONDS=60
 DISK_WARN_PERCENT=90
 
 SHOW_MEDIA=1
@@ -31,6 +33,10 @@ SHOW_DISK=0
 SHOW_CPU=0
 SHOW_LOAD=0
 SHOW_BLUETOOTH=0
+SHOW_MIC=1
+SHOW_DND=1
+SHOW_RECORDING=1
+SHOW_NEXTCLOUD=1
 USE_ICONS=1
 SHOW_KERNEL=1
 SHOW_HOST=1
@@ -38,10 +44,10 @@ SHOW_WEATHER=1
 SHOW_DATE=1
 SHOW_TIME=1
 
-# ── Weather ───────────────────────────────────────────────────────────────────
-WEATHER_CITY=""
-WEATHER_LAT=""
-WEATHER_LON=""
+# ── Weather (default: Ljungskile, Sweden) ─────────────────────────────────────
+WEATHER_CITY="Ljungskile"
+WEATHER_LAT="58.2167"
+WEATHER_LON="11.9333"
 WEATHER_TIMEZONE="Europe/Stockholm"
 WEATHER_INTERVAL_SECONDS=3600   # fetch at most once per hour
 
@@ -81,8 +87,28 @@ NP_PASSES_FILE="$CACHE_DIR/nowplaying.passes"
 NP_CURRENT_FILE="$CACHE_DIR/nowplaying.current"
 WEATHER_CACHE_FILE="$CACHE_DIR/weather.json"
 WEATHER_CACHE_STAMP="$CACHE_DIR/weather.stamp"
+PROVIDER_DIR="$CACHE_DIR/providers"
 
-mkdir -p "$CACHE_DIR"
+mkdir -p "$CACHE_DIR" "$PROVIDER_DIR"
+# Cache an expensive provider for a number of seconds: provider_cached NAME TTL CMD...
+provider_cached() {
+  local name="$1" ttl="$2"; shift 2
+  local file="$PROVIDER_DIR/$name" stamp_file="$PROVIDER_DIR/$name.stamp"
+  local now stamp age value
+  now="$($DATEBIN +%s 2>/dev/null || printf '0')"
+  stamp=0
+  [[ -r "$stamp_file" ]] && stamp="$(tr -d '[:space:]' < "$stamp_file" 2>/dev/null)"
+  [[ "$stamp" =~ ^[0-9]+$ ]] || stamp=0
+  age=$((now - stamp))
+  if [[ -r "$file" && "$age" -ge 0 && "$age" -lt "$ttl" ]]; then
+    cat "$file"
+    return 0
+  fi
+  value="$("$@" 2>/dev/null || true)"
+  printf '%s\n' "$value" > "$file" 2>/dev/null || true
+  printf '%s\n' "$now" > "$stamp_file" 2>/dev/null || true
+  printf '%s' "$value"
+}
 # Keep exactly one bar writer per user/X display, including concurrent startx/SDDM starts.
 if command -v flock >/dev/null 2>&1; then
   display_key="${DISPLAY:-no-display}"
@@ -150,24 +176,62 @@ icon_load() {
 }
 
 icon_play() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'play'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'play'
+}
+
+icon_mic() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf130' || printf 'mic'
+}
+
+icon_mic_mute() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf131' || printf 'mic-mute'
+}
+
+icon_dnd() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf1f6' || printf 'dnd'
+}
+
+icon_rec() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf111' || printf 'REC'
+}
+
+icon_cloud() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf0c2' || printf 'cloud'
+}
+
+icon_cloud_off() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf0c2' || printf 'cloud-off'
+}
+
+icon_bluetooth() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf294' || printf 'bt'
 }
 
 
+
 wmo_emoji() {
+  if [[ "$USE_ICONS" -ne 1 ]]; then
+    case "$1" in
+      0)                        printf 'sun' ;;
+      1|2|3)                    printf 'cloud' ;;
+      45|48)                    printf 'fog' ;;
+      51|53|55)                 printf 'drizzle' ;;
+      61|63|65|66|67|80|81|82)  printf 'rain' ;;
+      71|73|75|77|85|86)        printf 'snow' ;;
+      95|96|99)                 printf 'storm' ;;
+      *)                        printf '?' ;;
+    esac
+    return 0
+  fi
   case "$1" in
-    0)           printf '☀'  ;;
-    1|2|3)       printf '⛅' ;;
-    45|48)       printf '🌫' ;;
-    51|53|55)    printf '🌦' ;;
-    61|63|65)    printf '🌧' ;;
-    66|67)       printf '🌧' ;;
-    71|73|75|77) printf '🌨' ;;
-    80|81|82)    printf '🌦' ;;
-    85|86)       printf '❄'  ;;
-    95)          printf '⛈' ;;
-    96|99)       printf '⛈' ;;
-    *)           printf '?'  ;;
+    0)                        printf '\uf185' ;;  # sun
+    1|2|3)                    printf '\uf0c2' ;;  # cloud
+    45|48)                    printf '\uf0c2' ;;  # fog
+    51|53|55)                 printf '\uf043' ;;  # drizzle
+    61|63|65|66|67|80|81|82)  printf '\uf043' ;;  # rain
+    71|73|75|77|85|86)        printf '\uf2dc' ;;  # snow
+    95|96|99)                 printf '\uf0e7' ;;  # storm
+    *)                        printf '\uf128' ;;  # question
   esac
 }
 
@@ -410,7 +474,7 @@ get_network() {
   [[ "$SHOW_NETWORK" -eq 1 ]] || return 0
   [[ -x "$NMCLI" ]] || return 0
 
-  local eth wifi_name wifi_signal
+  local eth wifi_line wifi_name wifi_signal
 
   eth="$($NMCLI -t -f DEVICE,TYPE,STATE device status 2>/dev/null \
     | awk -F: '$2=="ethernet" && $3=="connected" {print $1; exit}')"
@@ -420,11 +484,11 @@ get_network() {
     return 0
   fi
 
-  wifi_name="$($NMCLI -t -f IN-USE,SSID,SIGNAL device wifi list 2>/dev/null \
-    | awk -F: '$1=="*" {print $2; exit}')"
-
-  wifi_signal="$($NMCLI -t -f IN-USE,SSID,SIGNAL device wifi list 2>/dev/null \
-    | awk -F: '$1=="*" {print $3; exit}')"
+  wifi_line="$($NMCLI -t -f IN-USE,SSID,SIGNAL device wifi list 2>/dev/null \
+    | awk -F: '$1=="*" {print; exit}')"
+  wifi_name="${wifi_line#*:}"
+  wifi_name="${wifi_name%%:*}"
+  wifi_signal="${wifi_line##*:}"
 
   if [[ -n "${wifi_name:-}" ]]; then
     if [[ -n "${wifi_signal:-}" ]]; then
@@ -474,10 +538,24 @@ get_battery() {
 
   icon="$(icon_battery_for_level "$cap" "$charging")"
 
+  local secs="" tstr="" suffix=""
+  if [[ "$charging" -eq 0 && -r "$bat/time_to_empty_now" ]]; then
+    secs="$(tr -d '[:space:]' < "$bat/time_to_empty_now" 2>/dev/null)"
+  elif [[ "$charging" -eq 1 && -r "$bat/time_to_full_now" ]]; then
+    secs="$(tr -d '[:space:]' < "$bat/time_to_full_now" 2>/dev/null)"
+  fi
+  if [[ "${secs:-}" =~ ^[0-9]+$ ]] && (( secs > 0 )); then
+    tstr="$(printf '%dh%02dm' $((secs / 3600)) $(((secs % 3600) / 60)))"
+  fi
+
+  if [[ "$cap" -le 15 && "$charging" -eq 0 ]]; then suffix='!'; fi
+
   if [[ "$status" == "Full" ]]; then
     printf '%s %s%% full' "$icon" "$cap"
+  elif [[ -n "$tstr" ]]; then
+    printf '%s %s%%%s %s' "$icon" "$cap" "$suffix" "$tstr"
   else
-    printf '%s %s%%' "$icon" "$cap"
+    printf '%s %s%%%s' "$icon" "$cap" "$suffix"
   fi
 }
 
@@ -485,19 +563,30 @@ get_temp_high() {
   [[ "$SHOW_TEMP" -eq 1 ]] || return 0
 
   local best=0 file raw temp_c
+  # Prefer hwmon sensors (coretemp/k10temp/amdgpu) over ACPI thermal zones.
   while IFS= read -r file; do
     [[ -r "$file" ]] || continue
     raw="$(tr -d '[:space:]' < "$file" 2>/dev/null)"
-    [[ "$raw" =~ ^[0-9]+$ ]] || continue
+    [[ "$raw" =~ ^-?[0-9]+$ ]] || continue
     temp_c=$((raw / 1000))
     (( temp_c > best )) && best="$temp_c"
-  done < <(find /sys/class/thermal -type f -name temp 2>/dev/null)
+  done < <(find /sys/class/hwmon -maxdepth 2 -type f -name 'temp*_input' 2>/dev/null)
+
+  if (( best == 0 )); then
+    while IFS= read -r file; do
+      [[ -r "$file" ]] || continue
+      raw="$(tr -d '[:space:]' < "$file" 2>/dev/null)"
+      [[ "$raw" =~ ^[0-9]+$ ]] || continue
+      temp_c=$((raw / 1000))
+      (( temp_c > best )) && best="$temp_c"
+    done < <(find /sys/class/thermal -type f -name temp -not -path '*/cooling_device*' 2>/dev/null)
+  fi
 
   (( best > 0 )) || return 0
 
-  if [[ "$best" -ge "$TEMP_WARN" ]]; then
-    printf '%s %sC' "$(icon_temp)" "$best"
-  fi
+  local suffix=""
+  (( best >= TEMP_WARN )) && suffix='!'
+  printf '%s %s°C%s' "$(icon_temp)" "$best" "$suffix"
 }
 
 get_memory() {
@@ -718,14 +807,31 @@ get_disk() {
 
 get_cpu() {
   [[ "$SHOW_CPU" -eq 1 ]] || return 0
-  return 0
+  [[ -r /proc/stat ]] || return 0
+
+  local line total idle prev_total prev_idle diff_total diff_idle pct
+  local f="$PROVIDER_DIR/cpu.stat"
+  total=0; idle=0
+  line="$(awk '/^cpu /{s=0; for(i=2;i<=NF;i++) s+=$i; print s, $5}' /proc/stat 2>/dev/null)"
+  [[ -n "$line" ]] || return 0
+  total="${line%% *}"; idle="${line##* }"
+
+  prev_total=0; prev_idle=0
+  if [[ -r "$f" ]]; then read -r prev_total prev_idle < "$f" 2>/dev/null || true; fi
+  printf '%s %s\n' "$total" "$idle" > "$f" 2>/dev/null || true
+
+  [[ "$prev_total" =~ ^[0-9]+$ ]] || return 0
+  diff_total=$(( total - prev_total )); diff_idle=$(( idle - prev_idle ))
+  (( diff_total > 0 )) || return 0
+  pct=$(( (100 * (diff_total - diff_idle)) / diff_total ))
+  printf '%s %s%%' "$(icon_cpu)" "$pct"
 }
 
 get_load() {
   [[ "$SHOW_LOAD" -eq 1 ]] || return 0
 
   local load
-  load="$(awk '{print $1}' /proc/loadavg 2>/dev/null)"
+  load="$(awk '{printf "%.2f", $1}' /proc/loadavg 2>/dev/null)"
   [[ -n "${load:-}" ]] || return 0
 
   printf '%s %s' "$(icon_load)" "$load"
@@ -733,7 +839,88 @@ get_load() {
 
 get_bluetooth() {
   [[ "$SHOW_BLUETOOTH" -eq 1 ]] || return 0
-  return 0
+  command -v bluetoothctl >/dev/null 2>&1 || return 0
+
+  local n
+  n="$(bluetoothctl devices Connected 2>/dev/null | wc -l | tr -d '[:space:]')"
+  [[ "${n:-0}" =~ ^[0-9]+$ ]] || n=0
+  (( n > 0 )) || return 0
+  printf '%s %s' "$(icon_bluetooth)" "$n"
+}
+
+get_mic() {
+  [[ "$SHOW_MIC" -eq 1 ]] || return 0
+  command -v wpctl >/dev/null 2>&1 || return 0
+
+  local out
+  out="$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null)" || return 0
+  printf '%s' "$out" | grep -q 'MUTED' && printf '%s' "$(icon_mic_mute)"
+}
+
+get_dnd() {
+  [[ "$SHOW_DND" -eq 1 ]] || return 0
+  command -v dunstctl >/dev/null 2>&1 || return 0
+
+  local paused
+  paused="$(dunstctl is-paused 2>/dev/null || true)"
+  [[ "$paused" == "true" ]] && printf '%s' "$(icon_dnd)"
+}
+
+get_recording() {
+  [[ "$SHOW_RECORDING" -eq 1 ]] || return 0
+  command -v pgrep >/dev/null 2>&1 || return 0
+
+  if pgrep -u "$(id -u)" -f 'wf-recorder' >/dev/null 2>&1 \
+    || pgrep -u "$(id -u)" -f 'ffmpeg .*x11grab' >/dev/null 2>&1; then
+    printf '%s' "$(icon_rec)"
+  fi
+}
+
+# Best-effort Nextcloud status without a tray, via the StatusNotifierItem over
+# the session bus. Falls back to "running/offline" when DBus is unavailable.
+nextcloud_sni_state() {
+  local names name id status icon
+  if command -v gdbus >/dev/null 2>&1; then
+    names="$(gdbus call --session --dest org.freedesktop.DBus \
+      --object-path /org/freedesktop/DBus \
+      --method org.freedesktop.DBus.ListNames 2>/dev/null || true)"
+  elif command -v busctl >/dev/null 2>&1; then
+    names="$(busctl --user --no-pager list --no-legend 2>/dev/null | awk '{print $1}')"
+  else
+    return 0
+  fi
+  while IFS= read -r name; do
+    [[ "$name" == *StatusNotifierItem* ]] || continue
+    id="$(gdbus call --session --dest "$name" --object-path /StatusNotifierItem \
+      --method org.freedesktop.DBus.Properties.Get org.kde.StatusNotifierItem Id 2>/dev/null || true)"
+    [[ "$id" == *extcloud* ]] || continue
+    status="$(gdbus call --session --dest "$name" --object-path /StatusNotifierItem \
+      --method org.freedesktop.DBus.Properties.Get org.kde.StatusNotifierItem Status 2>/dev/null || true)"
+    icon="$(gdbus call --session --dest "$name" --object-path /StatusNotifierItem \
+      --method org.freedesktop.DBus.Properties.Get org.kde.StatusNotifierItem IconName 2>/dev/null || true)"
+    case "$status" in
+      *NeedsAttention*|*Attention*) printf 'attention'; return 0;;
+    esac
+    case "$icon" in
+      *error*|*Error*) printf 'error'; return 0;;
+      *sync*|*Sync*) printf 'sync'; return 0;;
+    esac
+    printf 'ok'; return 0
+  done <<< "$(printf '%s\n' "$names" | tr -d '(),' | tr ' ' '\n')"
+}
+
+get_nextcloud() {
+  [[ "$SHOW_NEXTCLOUD" -eq 1 ]] || return 0
+  command -v nextcloud >/dev/null 2>&1 || return 0
+
+  if ! pgrep -u "$(id -u)" -x nextcloud >/dev/null 2>&1; then
+    printf '%s' "$(icon_cloud_off)"
+    return 0
+  fi
+  case "$(nextcloud_sni_state)" in
+    attention|error) printf '%s!' "$(icon_cloud)";;
+    *) printf '%s' "$(icon_cloud)";;
+  esac
 }
 
 get_now_playing() {
@@ -848,17 +1035,21 @@ get_now_playing() {
 }
 
 build_status_line() {
-  local kernel host weather network battery temp updates media volume nowplaying memory uptime disk cpu load bluetooth datepart timepart
+  local kernel host weather network battery temp updates media volume nowplaying memory uptime disk cpu load bluetooth nextcloud dnd mic recording datepart timepart
   local -a parts=()
 
-  kernel="$(get_kernel)"
-  host="$(get_hostname)"
-  network="$(get_network || true)"
+  kernel="$(provider_cached kernel 3600 get_kernel)"
+  host="$(provider_cached host 3600 get_hostname)"
+  network="$(provider_cached network "$NETWORK_CACHE_SECONDS" get_network)"
+  nextcloud="$(provider_cached nextcloud "$NEXTCLOUD_CACHE_SECONDS" get_nextcloud)"
   battery="$(get_battery || true)"
   temp="$(get_temp_high || true)"
   updates="$(get_updates || true)"
   media="$(get_media_counts || true)"
   volume="$(get_volume || true)"
+  mic="$(get_mic || true)"
+  dnd="$(get_dnd || true)"
+  recording="$(get_recording || true)"
   nowplaying="$(get_now_playing || true)"
   memory="$(get_memory || true)"
   uptime="$(get_uptime || true)"
@@ -874,10 +1065,14 @@ build_status_line() {
 
   [[ -n "${media:-}" ]] && parts+=("$media")
   [[ -n "${volume:-}" ]] && parts+=("$volume")
+  [[ -n "${mic:-}" ]] && parts+=("$mic")
   [[ -n "${nowplaying:-}" ]] && parts+=("$nowplaying")
   [[ -n "${network:-}" ]] && parts+=("$network")
+  [[ -n "${nextcloud:-}" ]] && parts+=("$nextcloud")
   [[ -n "${battery:-}" ]] && parts+=("$battery")
   [[ -n "${temp:-}" ]] && parts+=("$temp")
+  [[ -n "${dnd:-}" ]] && parts+=("$dnd")
+  [[ -n "${recording:-}" ]] && parts+=("$recording")
   [[ -n "${memory:-}" ]] && parts+=("$memory")
   [[ -n "${uptime:-}" ]] && parts+=("$uptime")
   [[ -n "${disk:-}" ]] && parts+=("$disk")

@@ -1,28 +1,49 @@
 # NIRUPI Noir statusbar preferences (Bash assignments).
 # This file is user-owned and never overwritten during upgrades.
 UPDATES_CACHE_SECONDS=1800
+NETWORK_CACHE_SECONDS=20
+NEXTCLOUD_CACHE_SECONDS=60
+
+# Segments (1 = show, 0 = hide)
 SHOW_UPDATES=1
 SHOW_WEATHER=1
 SHOW_TEMP=1
 SHOW_NETWORK=1
+SHOW_NEXTCLOUD=1
 SHOW_BATTERY=1
 SHOW_MEDIA=1
 SHOW_NOW_PLAYING=1
 SHOW_VOLUME=1
-SHOW_HOST=1
+SHOW_MIC=1
+SHOW_DND=1
+SHOW_RECORDING=1
 SHOW_KERNEL=1
+SHOW_HOST=1
 SHOW_DATE=1
 SHOW_TIME=1
+# Optional segments (off by default)
+SHOW_MEMORY=0
+SHOW_UPTIME=0
+SHOW_DISK=0
+SHOW_CPU=0
+SHOW_LOAD=0
+SHOW_BLUETOOTH=0
+
+# Weather (default: Ljungskile, Sweden). Click the segment or run
+# `nirupi weather locate` to auto-detect from IP (opt-in).
+WEATHER_CITY="Ljungskile"
+WEATHER_LAT="58.2167"
+WEATHER_LON="11.9333"
+WEATHER_TIMEZONE="Europe/Stockholm"
 # WEATHER_LAT=""
 # WEATHER_LON=""
 
 # Now playing: NPLAY is preferred when multiple MPRIS players are active.
-# Long artist/title strings scroll three times, then rest at the beginning (0 = unlimited passes).
+# Long artist/title strings scroll, then rest at the beginning (0 = unlimited passes).
 NOW_PLAYING_MAXLEN=20
 NOW_PLAYING_SCROLL=1
 NOW_PLAYING_SCROLL_DELAY=3
 NOW_PLAYING_SCROLL_STEP=1
-# Animation refresh only; system probes remain at NIRUPI_BAR_INTERVAL (default 2s).
 NOW_PLAYING_FRAME_INTERVAL=0.2
 NOW_PLAYING_SCROLL_PASSES=3
 # NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox"

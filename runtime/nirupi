@@ -53,7 +53,10 @@ case "$cmd" in
     fi
     printf 'NIRUPI maintenance library not installed; run install.sh --apply to deploy it.\n' >&2
     exit 2;;
-  keys) exec "$HOME/.local/bin/dwm-keybindings.sh";;
-  help|-h|--help) printf 'nirupi {version|--version|status|doctor|appearance|browser|updates [--refresh]|config|keys|theme apply|dots update|migrate plan|rollback --all|history}\n';;
+  agent) exec "$HOME/.local/bin/nirupi-agent.sh" "$@";;
+  menu) exec "$HOME/.local/bin/nirupi-menu.sh" "$@";;
+  keys) exec "$HOME/.local/bin/nirupi-keys.sh" "$@";;
+  backup) exec "$HOME/.local/bin/nirupi-backup.sh" "$@";;
+  help|-h|--help) printf 'nirupi {version|--version|status|doctor|appearance|browser|updates [--refresh]|config|keys|menu|agent [profile]|backup|theme apply|dots update|migrate plan|rollback --all|history}\n';;
   *) printf 'Unknown command: %s\n' "$cmd" >&2; exit 2;;
 esac

@@ -131,6 +131,13 @@ static const char *keybindingscmd[] = {
   NULL 
 };
 
+/* Keybinding cheat-sheet / command palette (rofi) */
+static const char *keyscmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-keys.sh", NULL };
+/* Control center (rofi) */
+static const char *menucmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-menu.sh", NULL };
+/* AI agent launcher */
+static const char *agentcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent.sh", NULL };
+
 /* Clipboard save */
 static const char *clipsavecmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/clip-save.sh", NULL };
 static const char *clipmenucmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/clip-menu.sh", NULL };
@@ -200,6 +207,9 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_p,                     spawn,          {.v = rofiruncmd } },     /* Super+Shift+p -> rofi -show run */
 	{ MODKEY,                       XK_p,                     spawn,          {.v = dmenucmd } },       /* Super+p -> dmenu (MatteBlack) */
 	{ MODKEY|Mod1Mask,              XK_k,                     spawn,          {.v = keybindingscmd } }, /* Super+Alt+k -> keybindings viewer */
+	{ MODKEY,                       XK_slash,                 spawn,          {.v = keyscmd } },         /* Super+/ -> keybinding cheat-sheet / palette */
+	{ MODKEY,                       XK_grave,                 spawn,          {.v = menucmd } },         /* Super+` -> control center */
+	{ MODKEY,                       XK_a,                     spawn,          {.v = agentcmd } },        /* Super+a -> AI agent (opencode) */
 	{ MODKEY|ShiftMask,             XK_f,                     spawn,          {.v = fmcmd } },          /* Super+Shift+f -> pcmanfm */
 
 	/* Clipboard */

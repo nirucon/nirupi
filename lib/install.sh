@@ -178,7 +178,7 @@ install_desktop() (
  managed_helper_install nirupi-appearance "$ROOT/runtime/nirupi-appearance" "$HOME/.local/bin/nirupi-appearance"
  managed_helper_install nirupi-browser "$ROOT/runtime/nirupi-browser" "$HOME/.local/bin/nirupi-browser"
  managed_helper_install nirupi-maintenance "$ROOT/runtime/nirupi-maintenance" "$HOME/.local/bin/nirupi-maintenance"
- for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh; do
+ for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
    dest="$HOME/.local/bin/$app"
@@ -190,8 +190,13 @@ install_desktop() (
  # Keep user preferences separate from the managed status script.
  local status_conf="$HOME/.config/nirupi/status.conf"
  if [[ ! -e $status_conf && ! -L $status_conf ]]; then
-   mkdir -p "$HOME/.config/nirupi"
-   put_file "$ROOT/runtime/status.conf.example" "$status_conf" 0644
+  mkdir -p "$HOME/.config/nirupi"
+  put_file "$ROOT/runtime/status.conf.example" "$status_conf" 0644
+ fi
+ local session_conf="$HOME/.config/nirupi/session.conf"
+ if [[ ! -e $session_conf && ! -L $session_conf ]]; then
+  mkdir -p "$HOME/.config/nirupi"
+  put_file "$ROOT/runtime/session.conf.example" "$session_conf" 0644
  fi
  # Update only previously recorded, unchanged NIRUPI configuration assets.
  local rofi_theme_src="$ROOT/vendor/noir/local/share/rofi/themes/Black-Metal.rasi"
@@ -362,4 +367,22 @@ ensure_nerd_font(){
   warn 'Nerd Font download or extraction failed; continuing without it'
  fi
  rm -rf -- "$tmp"
+}
+# Install opencode (AI coding agent) so `nirupi agent` works. Best effort:
+# npm first, then the official installer. Never fatal.
+install_opencode(){
+ if command -v opencode >/dev/null 2>&1; then
+  log "opencode already installed: $(command -v opencode)"; return 0
+ fi
+ if command -v npm >/dev/null 2>&1; then
+  if npm install -g opencode-ai >/dev/null 2>&1 || sudo npm install -g opencode-ai >/dev/null 2>&1; then
+   log 'opencode installed via npm (opencode-ai)'; return 0
+  fi
+ fi
+ if command -v curl >/dev/null 2>&1; then
+  if curl -fsSL https://opencode.ai/install | bash; then
+   log 'opencode installed via the official installer'; return 0
+  fi
+ fi
+ warn 'opencode could not be installed automatically; install it manually (https://opencode.ai)'
 }

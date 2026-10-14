@@ -1,0 +1,14 @@
+# NIRUPI session preferences (sourced by ~/.local/bin/nirupi-session).
+# This file is user-owned and never overwritten during upgrades.
+
+# Lock the screen with slock after N minutes of inactivity. 0 disables.
+IDLE_LOCK_MINUTES=10
+
+# Warn this many seconds before locking (xautolock only; 0 disables warning).
+IDLE_WARN_SECONDS=30
+
+# Start the notification daemon (dunst) with the session.
+START_DUNST=1
+
+# Start the compositor (picom) with the session if installed.
+START_PICOM=1

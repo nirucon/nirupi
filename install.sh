@@ -134,10 +134,12 @@ mkdir -p "$BACKUP_DIR"
 log "Backup directory: $BACKUP_DIR"
 # Ensure the requested build prerequisites are present in the package transaction.
 install_packages
+install_optional_packages
 install_custom_packages
 install_custom_repos
 require make; require cc; require pkg-config
 ensure_nerd_font
+install_opencode
 install_desktop
 write_installed_state
 "$ROOT/tests/post-install-verify.sh" || warn "Post-install verification found missing components; inspect before reboot"
