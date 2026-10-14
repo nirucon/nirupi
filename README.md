@@ -98,7 +98,7 @@ nirupi browser status|set|reset       nirupi updates --refresh
 ```
 
 Keybindings: `Super+Return` terminal, `Super+b` browser, `Super+a` agent,
-`Super+F1` keybinding palette, `Super+F2` control center, `Super+Esc` lock,
+`Super+Shift+h` keybinding palette, `Super+Shift+m` control center, `Super+Esc` lock,
 `Super+Shift+w` next wallpaper, `Super+F5` reload theme colors.
 (On US layouts `Super+/` and ``Super+` `` also work.)
 
