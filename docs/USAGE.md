@@ -217,3 +217,28 @@ bash ./install.sh --verify
 - User config: `~/.config/<app>/` and `~/.config/nirupi/`.
 - State/backups/legacy: `~/.local/state/nirupi/`.
 - DWM config: `~/.config/suckless/dwm/config.h`.
+
+## Features added in 0.7 (NIRU Noir)
+
+Full detail in [`FEATURES.md`](FEATURES.md). Quick keys:
+
+| Key | Action |
+|---|---|
+| `Super+w` | Window switcher (rofi) |
+| `Super+r` | Toggle screen recording |
+| `Super+g` | Toggle gaps |
+| `Super+Shift+e` | Real fullscreen |
+| `Super+Shift+c` | Caffeine (stay awake) |
+| `Super+Shift+d` | Focus / do-not-disturb |
+| `Super+Shift+l` | Keyboard layout se/us |
+| `Super+Shift+t` | Touchpad toggle |
+| `Super+Shift+n` | nirunote |
+| `Super+Shift+o` | nplay |
+| `Super+Shift+r` | Reload theme colours |
+
+The **lock screen** (`Super+Esc`) shows a minimal clock, date and hostname.
+**Suspend** (`Super+Shift+Esc`) locks, waits `SUSPEND_DELAY_SECONDS` (default 3s)
+and suspends — unlock within the wait to cancel. **Clipboard history is now
+automatic** (`Super+v`). The **control center** (`Super+Shift+m`) collects all of
+the above. No function keys are used; see `Super+Alt+k` for the full, up-to-date
+list (including every tag binding).

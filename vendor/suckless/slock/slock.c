@@ -8,6 +8,8 @@
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
+#include <time.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,10 +17,13 @@
 #include <unistd.h>
 #include <spawn.h>
 #include <sys/types.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <X11/extensions/Xrandr.h>
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xft/Xft.h>
 #include <Imlib2.h>
 
 #include "arg.h"
@@ -39,6 +44,8 @@ struct lock {
 	Pixmap pmap;
 	Pixmap bgmap;
 	unsigned long colors[NUMCOLS];
+	XftDraw *xftdraw;
+	char lastclock[48];
 };
 
 struct xrandr {
@@ -50,6 +57,11 @@ struct xrandr {
 #include "config.h"
 
 Imlib_Image image;
+
+/* NIRU Noir lock-screen clock (Xft). */
+static XftFont *clkfont, *clkfontsmall;
+static XftColor clkfg, clkdim;
+static char hostnamebuf[HOST_NAME_MAX + 1];
 
 static void
 die(const char *errstr, ...)
@@ -130,6 +142,62 @@ gethash(void)
 }
 
 static void
+initclock(Display *dpy)
+{
+	int screen = DefaultScreen(dpy);
+
+	if (!(clkfont = XftFontOpenName(dpy, screen, clockfont)))
+		return;
+	clkfontsmall = XftFontOpenName(dpy, screen, clockfontsmall);
+	XftColorAllocName(dpy, DefaultVisual(dpy, screen),
+	                  DefaultColormap(dpy, screen), clockforeground, &clkfg);
+	XftColorAllocName(dpy, DefaultVisual(dpy, screen),
+	                  DefaultColormap(dpy, screen), clockdim, &clkdim);
+}
+
+/* Draw time (big) + date + hostname (dim) centred on the locked window. */
+static void
+drawclock(Display *dpy, struct lock *lock, int force)
+{
+	char tim[8], date[32], stamp[48];
+	time_t t = time(NULL);
+	struct tm *tm = localtime(&t);
+	XGlyphInfo ext;
+	int sw, sh, y;
+
+	if (!lock->xftdraw || !clkfont)
+		return;
+	sw = DisplayWidth(dpy, lock->screen);
+	sh = DisplayHeight(dpy, lock->screen);
+	strftime(tim, sizeof tim, "%H:%M", tm);
+	strftime(date, sizeof date, "%A %d %B", tm);
+	snprintf(stamp, sizeof stamp, "%s %s", tim, date);
+	if (!force && !strcmp(stamp, lock->lastclock))
+		return;
+	snprintf(lock->lastclock, sizeof lock->lastclock, "%s", stamp);
+
+	XClearWindow(dpy, lock->win);
+
+	XftTextExtentsUtf8(dpy, clkfont, (FcChar8 *)tim, strlen(tim), &ext);
+	XftDrawStringUtf8(lock->xftdraw, &clkfg, clkfont,
+	                  (sw - ext.xOff) / 2, sh / 2 + clkfont->ascent / 2, (FcChar8 *)tim, strlen(tim));
+
+	y = sh / 2 + clkfont->ascent / 2 + 24;
+	if (clkfontsmall) {
+		int smasc = clkfontsmall->ascent;
+		XftTextExtentsUtf8(dpy, clkfontsmall, (FcChar8 *)date, strlen(date), &ext);
+		XftDrawStringUtf8(lock->xftdraw, &clkdim, clkfontsmall,
+		                  (sw - ext.xOff) / 2, y + smasc, (FcChar8 *)date, strlen(date));
+		if (hostnamebuf[0]) {
+			XftTextExtentsUtf8(dpy, clkfontsmall, (FcChar8 *)hostnamebuf, strlen(hostnamebuf), &ext);
+			XftDrawStringUtf8(lock->xftdraw, &clkdim, clkfontsmall,
+			                  (sw - ext.xOff) / 2, y + smasc + clkfontsmall->height + 4,
+			                  (FcChar8 *)hostnamebuf, strlen(hostnamebuf));
+		}
+	}
+}
+
+static void
 readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
        const char *hash)
 {
@@ -145,7 +213,18 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 	failure = 0;
 	oldc = INIT;
 
-	while (running && !XNextEvent(dpy, &ev)) {
+	while (running) {
+		if (!XPending(dpy)) {
+			fd_set fds;
+			struct timeval tv = { 1, 0 };
+			FD_ZERO(&fds);
+			FD_SET(ConnectionNumber(dpy), &fds);
+			(void)select(ConnectionNumber(dpy) + 1, &fds, NULL, NULL, &tv);
+			for (screen = 0; screen < nscreens; screen++)
+				drawclock(dpy, locks[screen], 0);
+			continue;
+		}
+		XNextEvent(dpy, &ev);
 		if (ev.type == KeyPress) {
 			explicit_bzero(&buf, sizeof(buf));
 			num = XLookupString(&ev.xkey, buf, sizeof(buf), &ksym, 0);
@@ -204,6 +283,8 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
                         XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
 					XClearWindow(dpy, locks[screen]->win);
 				}
+				for (screen = 0; screen < nscreens; screen++)
+					drawclock(dpy, locks[screen], 1);
 				oldc = color;
 			}
 		} else if (rr->active && ev.type == rr->evbase + RRScreenChangeNotify) {
@@ -221,6 +302,9 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 					break;
 				}
 			}
+		} else if (ev.type == Expose) {
+			for (screen = 0; screen < nscreens; screen++)
+				drawclock(dpy, locks[screen], 1);
 		} else {
 			for (screen = 0; screen < nscreens; screen++)
 				XRaiseWindow(dpy, locks[screen]->win);
@@ -264,15 +348,20 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	/* init */
 	wa.override_redirect = 1;
 	wa.background_pixel = lock->colors[INIT];
+	wa.event_mask = ExposureMask;
 	lock->win = XCreateWindow(dpy, lock->root, 0, 0,
 	                          DisplayWidth(dpy, lock->screen),
 	                          DisplayHeight(dpy, lock->screen),
 	                          0, DefaultDepth(dpy, lock->screen),
 	                          CopyFromParent,
 	                          DefaultVisual(dpy, lock->screen),
-	                          CWOverrideRedirect | CWBackPixel, &wa);
+	                          CWOverrideRedirect | CWBackPixel | CWEventMask, &wa);
     if(lock->bgmap)
         XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
+	lock->xftdraw = XftDrawCreate(dpy, lock->win,
+	                              DefaultVisual(dpy, lock->screen),
+	                              DefaultColormap(dpy, lock->screen));
+	lock->lastclock[0] = '\0';
 	lock->pmap = XCreateBitmapFromData(dpy, lock->win, curs, 8, 8);
 	invisible = XCreatePixmapCursor(dpy, lock->pmap, lock->pmap,
 	                                &color, &color, 0, 0);
@@ -298,6 +387,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 				XRRSelectInput(dpy, lock->win, RRScreenChangeNotifyMask);
 
 			XSelectInput(dpy, lock->root, SubstructureNotifyMask);
+			drawclock(dpy, lock, 1);
 			return lock;
 		}
 
@@ -372,6 +462,12 @@ main(int argc, char **argv) {
 
 	if (!(dpy = XOpenDisplay(NULL)))
 		die("slock: cannot open display\n");
+
+	/* lock-screen clock: resolve fonts/colours before dropping privileges */
+	if (gethostname(hostnamebuf, sizeof hostnamebuf - 1) != 0)
+		hostnamebuf[0] = '\0';
+	hostnamebuf[sizeof hostnamebuf - 1] = '\0';
+	initclock(dpy);
 
 	/* drop privileges */
 	if (setgroups(0, NULL) < 0)

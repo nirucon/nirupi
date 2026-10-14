@@ -316,7 +316,7 @@ theme_apply(){
   theme_write_xresources
   if [[ -n ${DISPLAY:-} ]] && command -v xrdb >/dev/null 2>&1; then
     xrdb -merge "$(cfgdir)/nirupi/xresources.noir" 2>/dev/null || :
-    command -v xdotool >/dev/null 2>&1 && xdotool key --clearmodifiers super+F5 >/dev/null 2>&1 || :
+    command -v xdotool >/dev/null 2>&1 && xdotool key --clearmodifiers super+shift+r >/dev/null 2>&1 || :
   fi
   if [[ -x $HOME/.local/bin/nirupi-appearance ]]; then
     "$HOME/.local/bin/nirupi-appearance" apply noir >/dev/null 2>&1 || \

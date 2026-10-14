@@ -47,7 +47,7 @@ export COLORTERM=truecolor
 command -v setxkbmap >/dev/null 2>&1 && setxkbmap se
 command -v xsetroot >/dev/null 2>&1 && xsetroot -solid '#0f0f10'
 
-STATUS_PID= WALL_PID= DUNST_PID= PICOM_PID= IDLE_PID= LOCK_PID=
+STATUS_PID= WALL_PID= DUNST_PID= PICOM_PID= IDLE_PID= LOCK_PID= CLIP_PID=
 if [ "$START_PICOM" = 1 ] && command -v picom >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x picom >/dev/null 2>&1; then
   picom & PICOM_PID=$!
 fi
@@ -64,6 +64,15 @@ fi
 if command -v wallrotate.sh >/dev/null 2>&1; then
   if [ -d "${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}" ]; then
     wallrotate.sh & WALL_PID=$!
+  fi
+fi
+
+# ── Automatic clipboard history (text) for the Super+v clipboard menu ─────────
+if command -v nirupi-clipd.sh >/dev/null 2>&1; then
+  if command -v pgrep >/dev/null 2>&1 && pgrep -u "$(id -u)" -f '[/]nirupi-clipd.sh' >/dev/null 2>&1; then
+    printf '%s\n' '[NIRUPI] Existing clipboard watcher detected; skipping duplicate' >&2
+  else
+    nirupi-clipd.sh & CLIP_PID=$!
   fi
 fi
 
@@ -132,7 +141,7 @@ if [ "$LOCK_ON_SUSPEND" = 1 ] && command -v xss-lock >/dev/null 2>&1; then
 fi
 
 cleanup() {
-  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID"; do
+  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID" "$CLIP_PID"; do
     [ -z "$pid" ] || kill "$pid" 2>/dev/null || :
   done
 }

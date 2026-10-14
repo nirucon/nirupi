@@ -22,7 +22,7 @@
   "MatteBlack" theme
 =========================*/
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
-static const unsigned int gappx     = 15;       /* gaps between windows */
+static unsigned int gappx           = 15;       /* gaps between windows (Super+g toggles) */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int swallowfloating    = 0;        /* 1 = terminal also swallows floating windows */
 static const int showbar            = 1;        /* 0 hides bar */
@@ -149,7 +149,8 @@ static const StatusCmd statuscmds[] = {
 	{ "$HOME/.local/bin/nirupi-status-click.sh kernel",   27 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh host",     28 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh date",     29 },
-	{ "$HOME/.local/bin/nirupi-status-click.sh time",     30 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh time",      30 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh caffeine",  31 },
 };
 static const char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
 static const char *dmenucmd[] = {
@@ -211,18 +212,28 @@ static const char *logoutcmd[]    = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-
 /* Night light toggle (gammastep/redshift). */
 static const char *nightlightcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-nightlight.sh", NULL };
 
+/* v0.7 feature commands (all minimal, keyboard-first). */
+static const char *windowsmenu[]  = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-window.sh", NULL };       /* Super+w band */
+static const char *recordcmd[]    = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-record.sh", NULL };        /* Super+r */
+static const char *caffeinecmd[]  = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-caffeine.sh", NULL };      /* Super+Shift+c */
+static const char *focuscmd[]     = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-focus.sh", NULL };         /* Super+Shift+d */
+static const char *kblayoutcmd[]  = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-keyboard.sh", NULL };      /* Super+Shift+k */
+static const char *touchpadcmd[]  = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-touchpad.sh", NULL };      /* Super+Shift+t */
+static const char *nirunotecmd[]  = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-app.sh nirunote", NULL };  /* Super+Shift+n */
+static const char *nplaycmd[]     = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-app.sh nplay", NULL };     /* Super+Shift+o */
+
 /* Display configuration (F1 screen button) */
 static const char *arandrcmd[] = { "arandr", NULL };
 
-/* Brightness (requires: brightnessctl) */
-static const char *br_up[]   = { "brightnessctl", "set", "+5%", NULL };
-static const char *br_down[] = { "brightnessctl", "set", "5%-", NULL };
+/* Brightness (brightnessctl) with a minimal on-screen indicator. */
+static const char *br_up[]   = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-osd.sh brightness up", NULL };
+static const char *br_down[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-osd.sh brightness down", NULL };
 
-/* Audio (PipeWire native) */
-static const char *vol_up[]     = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@",   "5%+",    NULL };
-static const char *vol_down[]   = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@",   "5%-",    NULL };
-static const char *vol_toggle[] = { "wpctl", "set-mute",   "@DEFAULT_AUDIO_SINK@",   "toggle", NULL };
-static const char *mic_toggle[] = { "wpctl", "set-mute",   "@DEFAULT_AUDIO_SOURCE@", "toggle", NULL };
+/* Audio (PipeWire native) with a minimal on-screen indicator. */
+static const char *vol_up[]     = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-osd.sh volume up", NULL };
+static const char *vol_down[]   = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-osd.sh volume down", NULL };
+static const char *vol_toggle[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-osd.sh volume mute", NULL };
+static const char *mic_toggle[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-osd.sh mic mute", NULL };
 
 /* Media control (requires: playerctl) */
 static const char *media_play[]     = { "playerctl", "play-pause", NULL };
@@ -311,7 +322,7 @@ static const Key keys[] = {
 	{ MODKEY|ControlMask,           XK_period,                cyclelayout,    {.i = +1 } },            /* Super+Ctrl+. -> next layout */
 
 	/* Fullscreen / urgent */
-	{ MODKEY,                       XK_F11,                   togglefullscr,  {0} },                   /* Super+F11 -> actual fullscreen */
+	{ MODKEY|ShiftMask,             XK_e,                     togglefullscr,  {0} },                   /* Super+Shift+e -> actual fullscreen */
 	{ MODKEY|ShiftMask,             XK_u,                     focusurgent,    {0} },                   /* Super+Shift+u -> jump to urgent */
 
 	/* Monitors */
@@ -343,6 +354,18 @@ static const Key keys[] = {
 
 	/* Night light */
 	{ MODKEY,                       XK_n,                     spawn,          {.v = nightlightcmd } }, /* Super+n -> night light toggle */
+
+	/* v0.7 features (all letters: safe on the Swedish layout) */
+	{ MODKEY,                       XK_w,                     spawn,          {.v = windowsmenu } },   /* Super+w -> window switcher (rofi) */
+	{ MODKEY,                       XK_r,                     spawn,          {.v = recordcmd } },     /* Super+r -> toggle screen recording */
+	{ MODKEY,                       XK_g,                     togglegaps,     {0} },                   /* Super+g -> toggle gaps */
+	{ MODKEY|ShiftMask,             XK_c,                     spawn,          {.v = caffeinecmd } },   /* Super+Shift+c -> keep awake (caffeine) */
+	{ MODKEY|ShiftMask,             XK_d,                     spawn,          {.v = focuscmd } },      /* Super+Shift+d -> focus / do-not-disturb */
+	{ MODKEY|ShiftMask,             XK_l,                     spawn,          {.v = kblayoutcmd } },   /* Super+Shift+l -> toggle keyboard layout */
+	{ MODKEY|ShiftMask,             XK_t,                     spawn,          {.v = touchpadcmd } },   /* Super+Shift+t -> toggle touchpad */
+	{ MODKEY|ShiftMask,             XK_n,                     spawn,          {.v = nirunotecmd } },   /* Super+Shift+n -> nirunote */
+	{ MODKEY|ShiftMask,             XK_o,                     spawn,          {.v = nplaycmd } },      /* Super+Shift+o -> nplay */
+	{ MODKEY|ShiftMask,             XK_r,                     xresreload,     {0} },                   /* Super+Shift+r -> reload theme colours */
 
 	/* Zoom (vanilla) */
 	{ MODKEY|ShiftMask,             XK_z,                     zoom,           {0} },
@@ -377,7 +400,6 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_Print,                 spawn,          {.v = ss_full } },       /* Super+Print -> full screen */
 	{ MODKEY|ShiftMask,             XK_Print,                 spawn,          {.v = ss_flameshot } },  /* Super+Shift+Print -> flameshot gui */
 	{ MODKEY|Mod1Mask,              XK_s,                     spawn,          {.v = ss_browser } },    /* Super+Alt+S -> browse screenshots */
-	{ MODKEY,                       XK_F5,                    xresreload,     {0} },                   /* Super+F5 -> reload Xresources theme */
 };
 
 /*========================

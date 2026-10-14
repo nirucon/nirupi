@@ -44,6 +44,7 @@ SHOW_BLUETOOTH=0
 SHOW_MIC=1
 SHOW_DND=1
 SHOW_RECORDING=1
+SHOW_CAFFEINE=1
 SHOW_NEXTCLOUD=1
 USE_ICONS=1
 SHOW_KERNEL=1
@@ -233,6 +234,9 @@ icon_dnd() {
 
 icon_rec() {
   [[ "$USE_ICONS" -eq 1 ]] && printf '\uf111' || printf 'REC'
+}
+icon_caffeine() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf0f4' || printf 'CAF'
 }
 
 icon_cloud() {
@@ -919,6 +923,11 @@ get_recording() {
   fi
 }
 
+get_caffeine() {
+  [[ "$SHOW_CAFFEINE" -eq 1 ]] || return 0
+  [[ -e "${XDG_CACHE_HOME:-$HOME/.cache}/nirupi/caffeine" ]] && printf '%s' "$(icon_caffeine)"
+}
+
 # Best-effort Nextcloud status without a tray, via the StatusNotifierItem over
 # the session bus. Falls back to "running/offline" when DBus is unavailable.
 nextcloud_sni_state() {
@@ -1078,7 +1087,7 @@ get_now_playing() {
 }
 
 build_status_line() {
-  local kernel host weather network battery temp updates media volume nowplaying memory uptime disk cpu load bluetooth nextcloud dnd mic recording datepart timepart
+  local kernel host weather network battery temp updates media volume nowplaying memory uptime disk cpu load bluetooth nextcloud dnd mic recording caffeine datepart timepart
   local -a parts=()
 
   kernel="$(provider_cached kernel 3600 get_kernel)"
@@ -1093,6 +1102,7 @@ build_status_line() {
   mic="$(get_mic || true)"
   dnd="$(get_dnd || true)"
   recording="$(get_recording || true)"
+  caffeine="$(get_caffeine || true)"
   nowplaying="$(get_now_playing || true)"
   memory="$(get_memory || true)"
   uptime="$(get_uptime || true)"
@@ -1116,6 +1126,7 @@ build_status_line() {
   [[ -n "${mic:-}" ]] && mic="$(sect 18 "$mic")"
   [[ -n "${dnd:-}" ]] && dnd="$(sect 19 "$dnd")"
   [[ -n "${recording:-}" ]] && recording="$(sect 20 "$recording")"
+  [[ -n "${caffeine:-}" ]] && caffeine="$(sect 31 "$caffeine")"
   [[ -n "${memory:-}" ]] && memory="$(sect 21 "$memory")"
   [[ -n "${uptime:-}" ]] && uptime="$(sect 22 "$uptime")"
   [[ -n "${disk:-}" ]] && disk="$(sect 23 "$disk")"
@@ -1131,6 +1142,7 @@ build_status_line() {
   if bar_color_on; then
     [[ "$recording" == *"$(icon_rec)"* ]] && recording="$(colorc b87878 "$recording")"
     [[ "$dnd" == *"$(icon_dnd)"* ]] && dnd="$(colorc a8a8a8 "$dnd")"
+    [[ "$caffeine" == *"$(icon_caffeine)"* ]] && caffeine="$(colorc b5a47e "$caffeine")"
     [[ "$battery" == *"!"* ]] && battery="$(colorc b87878 "$battery")"
     [[ "$temp" == *"!"* ]] && temp="$(colorc b5a47e "$temp")"
     [[ -n "${updates:-}" ]] && updates="$(colorc 819eb5 "$updates")"
@@ -1146,6 +1158,7 @@ build_status_line() {
   [[ -n "${temp:-}" ]] && parts+=("$temp")
   [[ -n "${dnd:-}" ]] && parts+=("$dnd")
   [[ -n "${recording:-}" ]] && parts+=("$recording")
+  [[ -n "${caffeine:-}" ]] && parts+=("$caffeine")
   [[ -n "${memory:-}" ]] && parts+=("$memory")
   [[ -n "${uptime:-}" ]] && parts+=("$uptime")
   [[ -n "${disk:-}" ]] && parts+=("$disk")

@@ -39,7 +39,8 @@ case "$action" in
 
   # ── Desktop state ──────────────────────────────────────────────────────────
   dnd) command -v dunstctl >/dev/null 2>&1 && dunstctl set-paused toggle || ns "Do not disturb" "dunstctl not available";;
-  recording) open_dir "$HOME/Videos";;
+  caffeine) exec "$HOME/.local/bin/nirupi-caffeine.sh";;
+  recording) if [[ "${BUTTON:-1}" == 3 ]]; then exec "$HOME/.local/bin/nirupi-record.sh"; else open_dir "$HOME/Videos"; fi;;
 
   # ── System info ────────────────────────────────────────────────────────────
   battery)

@@ -34,19 +34,43 @@ readable_key() {
 
 list_keybindings() {
   [[ -r "$CONFIG" ]] || return 0
-  # Extract { MASK, KEY, func, ... } /* description */
+  # Explicit entries: { MASK, KEY, func, arg } with an optional /* description */
   awk '
-    /^[[:space:]]*\{/ && /(XK_|XF86XK_)/ && /\/\*/ {
-      line=$0
-      desc=line; sub(/^.*\/\*[[:space:]]*/,"",desc); sub(/[[:space:]]*\*\/.*$/,"",desc)
-      sub(/^[^{]*\{/,"",line); sub(/\}.*$/,"",line)
-      n=split(line,a,","); mask=a[1]; key=a[2]
-      gsub(/[[:space:]]/,"",mask); gsub(/[[:space:]]/,"",key)
+    /^[[:space:]]*\{/ && /(XK_|XF86XK_)/ {
+      line=$0; desc=""
+      if (match(line, /\/\*[^*]*\*\//)) {
+        desc=substr(line, RSTART+2, RLENGTH-4)
+        gsub(/^[[:space:]]+|[[:space:]]+$/,"",desc)
+        if (index(desc,"->")>0) desc=substr(desc, index(desc,"->")+2)
+        gsub(/^[[:space:]]+|[[:space:]]+$/,"",desc)
+      }
+      body=line; sub(/^[^{]*\{/,"",body); sub(/\}.*/,"",body)
+      n=split(body,a,","); mask=a[1]; key=a[2]; fn=a[3]
+      gsub(/[[:space:]]/,"",mask); gsub(/[[:space:]]/,"",key); gsub(/[[:space:]]/,"",fn)
       if (key !~ /^(XK_|XF86XK_)/) next
+      if (desc=="") {
+        desc=fn
+        if (match(a[4], /= *[A-Za-z0-9_]+/)) { v=substr(a[4],RSTART,RLENGTH); sub(/= */,"",v); desc=desc" "v }
+      }
       printf "%s\t%s\t%s\n", key, mask, desc
     }
   ' "$CONFIG" | while IFS=$'\t' read -r key mask desc; do
     printf 'KEY\t%s+%s\t%s\n' "$(readable_mask "$mask")" "$(readable_key "$key")" "$desc"
+  done
+  # Tag keys: TAGKEYS(KEY, INDEX) expands to four bindings per tag.
+  awk '
+    /TAGKEYS\(/ {
+      l=$0; sub(/.*TAGKEYS\(/,"",l); sub(/\).*/,"",l)
+      n=split(l,a,","); key=a[1]; idx=a[2]
+      gsub(/[[:space:]]/,"",key); gsub(/[[:space:]]/,"",idx)
+      if (key ~ /^XK_/ && idx ~ /^[0-9]+$/) print key"\t"idx
+    }
+  ' "$CONFIG" | while IFS=$'\t' read -r key idx; do
+    k="$(readable_key "$key")"; t=$((idx + 1))
+    printf 'KEY\tSuper+%s\tView tag %s\n' "$k" "$t"
+    printf 'KEY\tSuper+Ctrl+%s\tToggle view tag %s\n' "$k" "$t"
+    printf 'KEY\tSuper+Shift+%s\tMove window to tag %s\n' "$k" "$t"
+    printf 'KEY\tSuper+Ctrl+Shift+%s\tToggle window on tag %s\n' "$k" "$t"
   done
 }
 

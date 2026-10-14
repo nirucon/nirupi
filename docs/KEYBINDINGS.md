@@ -2,7 +2,7 @@
 
 <!-- Generated from vendor/suckless/dwm/config.h by tools/gen-keybindings.sh. Do not edit by hand. -->
 
-104 bindings. `Super` is the Mod4/Win key.
+113 bindings. `Super` is the Mod4/Win key.
 
 | Keys | Action |
 | --- | --- |
@@ -42,7 +42,7 @@
 | `Super+U` | centered floating master |
 | `Super+Ctrl+,` | previous layout |
 | `Super+Ctrl+.` | next layout |
-| `Super+F11` | actual fullscreen |
+| `Super+Shift+E` | actual fullscreen |
 | `Super+Shift+U` | jump to urgent |
 | `Super+,` | focusmon |
 | `Super+.` | focusmon |
@@ -91,6 +91,16 @@
 | `Super+Shift+Q` | logout (confirm) |
 | `Super+Ctrl+Shift+Q` | quit immediately |
 | `Super+N` | night light toggle |
+| `Super+W` | window switcher (rofi) |
+| `Super+R` | toggle screen recording |
+| `Super+G` | toggle gaps |
+| `Super+Shift+C` | keep awake (caffeine) |
+| `Super+Shift+D` | focus / do-not-disturb |
+| `Super+Shift+L` | toggle keyboard layout |
+| `Super+Shift+T` | toggle touchpad |
+| `Super+Shift+N` | nirunote |
+| `Super+Shift+O` | nplay |
+| `Super+Shift+R` | reload theme colours |
 | `Super+Shift+Z` | zoom |
 | `Super+Shift+S` | togglescratch scratchpadcmd |
 | `(none)+MonBrightnessUp` | spawn br_up |
@@ -109,4 +119,3 @@
 | `Super+Print` | full screen |
 | `Super+Shift+Print` | flameshot gui |
 | `Super+Alt+S` | browse screenshots |
-| `Super+F5` | reload Xresources theme |

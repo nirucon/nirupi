@@ -269,6 +269,7 @@ static void centeredfloatingmaster(Monitor *m);
 static void cyclelayout(const Arg *arg);
 static void focusurgent(const Arg *arg);
 static void togglefullscr(const Arg *arg);
+static void togglegaps(const Arg *arg);
 static const char *tagtext(int i);
 static void swallow(Client *p, Client *c);
 static void unswallow(Client *c);
@@ -2234,6 +2235,17 @@ togglefullscr(const Arg *arg)
 {
 	if (selmon->sel)
 		setfullscreen(selmon->sel, !selmon->sel->isfullscreen);
+}
+
+void
+togglegaps(const Arg *arg)
+{
+	static unsigned int saved = 0;
+
+	if (saved == 0)
+		saved = gappx;
+	gappx = gappx > 0 ? 0 : saved;
+	arrange(NULL);
 }
 
 void

@@ -2,6 +2,27 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.7.0
+- **Lock screen clock**: `slock` now draws a minimal clock + date + hostname
+  (Xft) over the blur, in the Noir palette.
+- **Window switcher** (`Super+w`), **gaps toggle** (`Super+g`) and **real
+  fullscreen** (`Super+Shift+e`).
+- **Caffeine** (`Super+Shift+c`) keeps the screen awake; the bar shows a cup.
+- **Focus / do-not-disturb** (`Super+Shift+d`).
+- **Screen recording** (`Super+r`) to `~/Videos/Recordings` (ffmpeg x11grab /
+  wf-recorder); the bar shows a recording dot.
+- **Automatic clipboard history** (`nirupi-clipd.sh`); `Super+v` now shows real
+  history.
+- **Minimal volume/brightness/mic OSD** (`nirupi-osd.sh`).
+- **Keyboard-layout** (`Super+Shift+l`) and **touchpad** (`Super+Shift+t`) toggles.
+- **Day/night palette** (`nirupi-theme-auto.sh`, control center).
+- **Quick launch** for `nirunote`/`nplay` (`Super+Shift+n`/`o`) and control-center
+  entries for the three default repos.
+- **Tailscale toggle** in the control center.
+- No keybindings use function keys; all new bindings are letters (Swedish-safe)
+  and collision-tested. `Super+Alt+k` lists every binding including tags.
+- Docs: new `docs/FEATURES.md`; old roadmaps removed.
+
 ## 0.6.1
 - Fix: rofi menus (control center, agent, keybindings, screenshots) rendered a
   dark list on a dark background because `element-text` inherited rofi's dark

@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # NIRUPI control center — a single rofi/dmenu menu for common actions.
-# Usage: nirupi-menu.sh [action]
+# Usage: nirupi-menu.sh [action]   (no action = interactive menu)
 set -Eeuo pipefail
+export PATH="$HOME/.local/bin:$PATH"
 
 rofi_bin="$(command -v rofi || true)"
 dmenu_bin="$(command -v dmenu || true)"
-term="$(command -v kitty || command -v alacritty || command -v st || true)"
+xdo="$(command -v xdotool || true)"
 
-notify(){ command -v notify-send >/dev/null 2>&1 && notify-send "NIRUPI" "$*" || printf 'NIRUPI: %s\n' "$*"; }
+notify(){ command -v notify-send >/dev/null 2>&1 && notify-send -a NIRUPI "$*" || printf 'NIRUPI: %s\n' "$*"; }
 theme_toggle(){
   local mf tf
   mf="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/theme.mode"
@@ -20,7 +21,6 @@ theme_toggle(){
     exec nirupi theme wallpaper
   fi
 }
-term_run(){ [[ -n "$term" ]] || { notify "No terminal found"; return 1; }; "$term" -- "$@"; }
 
 power(){
   case "$1" in
@@ -31,14 +31,24 @@ power(){
   esac
 }
 
+tailscale_toggle(){
+  command -v tailscale >/dev/null 2>&1 || { notify 'tailscale not installed'; return 0; }
+  if tailscale status >/dev/null 2>&1; then
+    tailscale down && notify 'Tailscale: down' || notify 'Tailscale: could not disconnect'
+  else
+    if tailscale up 2>/dev/null || sudo -n tailscale up 2>/dev/null; then notify 'Tailscale: up'
+    else notify 'Tailscale: run "sudo tailscale up" once'; fi
+  fi
+}
+
 choose(){
-  if [[ -n "$rofi_bin" ]]; then "$rofi_bin" -dmenu -i -p 'NIRUPI'; 
-  elif [[ -n "$dmenu_bin" ]]; then "$dmenu_bin" -i -p 'NIRUPI'; 
+  if [[ -n "$rofi_bin" ]]; then "$rofi_bin" -dmenu -i -p 'NIRUPI';
+  elif [[ -n "$dmenu_bin" ]]; then "$dmenu_bin" -i -p 'NIRUPI';
   else return 0; fi
 }
 
 wifi(){
-  command -v nmcli >/dev/null 2>&1 || { notify 'nmcli not available'; return; }
+  command -v nmcli >/dev/null 2>&1 || { notify 'nmcli not available'; return 0; }
   local ssid
   ssid="$(nmcli -t -f SSID device wifi list 2>/dev/null | awk 'NF && !seen[$0]++' | choose)" || return 0
   [[ -n "$ssid" ]] || return 0
@@ -49,7 +59,7 @@ wifi(){
 }
 
 bluetooth(){
-  command -v bluetoothctl >/dev/null 2>&1 || { notify 'bluetoothctl not available'; return; }
+  command -v bluetoothctl >/dev/null 2>&1 || { notify 'bluetoothctl not available'; return 0; }
   local sel
   sel="$(printf '%s\n' 'power on' 'power off' 'scan on' 'paired devices' | choose)" || return 0
   case "$sel" in
@@ -67,14 +77,26 @@ Suspend
 Log out
 Reboot
 Shut down
+Keep awake (caffeine): toggle
+Focus / notifications: toggle
+Screen recording: toggle
+Window switcher
+Gaps: toggle
+Keyboard layout (se/us)
+Touchpad: toggle
+Night light: toggle
 Apply Noir theme
 Wallpaper mode: toggle
 Next wallpaper
-Night light: toggle
+Theme: auto (day/night)
+Tailscale: toggle
 Wi-Fi
 Bluetooth
 Weather
 Mute / unmute
+nirunote
+nplay
+nirupresence
 Agent (AI)
 Backup configs
 Check updates
@@ -91,14 +113,26 @@ case "$action" in
   'Log out') power logout;;
   Reboot) power reboot;;
   'Shut down') power poweroff;;
+  'Keep awake (caffeine): toggle') exec "$HOME/.local/bin/nirupi-caffeine.sh";;
+  'Focus / notifications: toggle') exec "$HOME/.local/bin/nirupi-focus.sh";;
+  'Screen recording: toggle') exec "$HOME/.local/bin/nirupi-record.sh";;
+  'Window switcher') exec "$HOME/.local/bin/nirupi-window.sh";;
+  'Gaps: toggle') [[ -n "$xdo" ]] && "$xdo" key --clearmodifiers super+g || notify 'xdotool missing';;
+  'Keyboard layout (se/us)') exec "$HOME/.local/bin/nirupi-keyboard.sh";;
+  'Touchpad: toggle') exec "$HOME/.local/bin/nirupi-touchpad.sh";;
+  'Night light: toggle') exec "$HOME/.local/bin/nirupi-nightlight.sh";;
   'Apply Noir theme') exec nirupi theme apply;;
   'Wallpaper mode: toggle') theme_toggle;;
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
-  'Night light: toggle') exec "$HOME/.local/bin/nirupi-nightlight.sh";;
+  'Theme: auto (day/night)') exec "$HOME/.local/bin/nirupi-theme-auto.sh" auto;;
+  'Tailscale: toggle') tailscale_toggle;;
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;
   Weather) exec xdg-open "https://www.yr.no/en/forecast/daily-table/2-2694503/Sweden/V%C3%A4stra%20G%C3%B6taland/Ljungskile" 2>/dev/null || true;;
-  'Mute / unmute') wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle 2>/dev/null || amixer -q set Master toggle 2>/dev/null || true;;
+  'Mute / unmute') exec "$HOME/.local/bin/nirupi-osd.sh" volume mute;;
+  nirunote) exec "$HOME/.local/bin/nirupi-app.sh" nirunote;;
+  nplay) exec "$HOME/.local/bin/nirupi-app.sh" nplay;;
+  nirupresence) exec "$HOME/.local/bin/nirupi-app.sh" nirupresence;;
   'Agent (AI)') exec nirupi-agent;;
   'Backup configs') exec nirupi backup;;
   'Check updates') n="$(nirupi updates --refresh >/dev/null 2>&1; nirupi updates 2>/dev/null)"; notify "Updates: ${n:-0}";;

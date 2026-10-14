@@ -20,3 +20,10 @@ static const int blurRadius=5;
 //#define PIXELATION
 /*Set pixelation radius*/
 static const int pixelSize=0;
+
+/* NIRU Noir lock-screen clock. Big time, then date and hostname in a dim tone,
+ * centred over the blurred root. Requires Xft (see config.mk). */
+static const char *clockfont          = "JetBrainsMono Nerd Font:size=54";
+static const char *clockfontsmall     = "JetBrainsMono Nerd Font:size=14";
+static const char *clockforeground    = "#e5e5e5";
+static const char *clockdim           = "#8a8a8a";

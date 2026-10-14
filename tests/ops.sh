@@ -42,7 +42,7 @@ grep -q 'helium.tar.xz' "$ROOT/lib/install.sh" || fail 'Helium tarball fallback 
 # overhaul roadmap docs are pruned.
 ! grep -q 'ln -sf nirupi-status-click.sh' "$ROOT/lib/install.sh" || fail 'legacy status-click symlink still created'
 grep -q 'Removed legacy nirupi-status-click' "$ROOT/lib/install.sh" || fail 'legacy symlink cleanup missing'
-for d in ROADMAP-v0.4.md V0.3-OVERHAUL.md V0.4-OVERHAUL.md; do
+for d in ROADMAP-v0.4.md ROADMAP-v0.6.md V0.3-OVERHAUL.md V0.4-OVERHAUL.md statusbar-upgrades.md; do
   [[ ! -e "$ROOT/docs/$d" ]] || fail "obsolete doc still present: $d"
 done
 
