@@ -4,6 +4,10 @@ UPDATES_CACHE_SECONDS=1800
 NETWORK_CACHE_SECONDS=20
 NEXTCLOUD_CACHE_SECONDS=60
 
+# Bar colour. NIRU Noir is monochrome; colour is only used automatically in
+# wallpaper mode. Set to 1 to force colour, 0 to force monochrome.
+BAR_COLOR=0
+
 # Segments (1 = show, 0 = hide)
 SHOW_UPDATES=1
 SHOW_WEATHER=1

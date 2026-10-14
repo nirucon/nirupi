@@ -44,6 +44,14 @@ SHOW_WEATHER=1
 SHOW_DATE=1
 SHOW_TIME=1
 
+# Bar colour: NIRU Noir is monochrome. Colours are only used in wallpaper mode
+# (or if you set BAR_COLOR=1 in status.conf).
+BAR_COLOR=0
+_theme_mode_file="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/theme.mode"
+if [[ -r "$_theme_mode_file" ]] && [[ "$(tr -d '[:space:]' < "$_theme_mode_file" 2>/dev/null)" == wallpaper ]]; then
+  BAR_COLOR=1
+fi
+
 # ── Weather (default: Ljungskile, Sweden) ─────────────────────────────────────
 WEATHER_CITY="Ljungskile"
 WEATHER_LAT="58.2167"
@@ -1079,12 +1087,15 @@ build_status_line() {
   [[ -n "${volume:-}" ]] && volume="$(sect 6 "$volume")"
   [[ -n "${network:-}" ]] && network="$(sect 8 "$network")"
   [[ -n "${nextcloud:-}" ]] && nextcloud="$(sect 7 "$nextcloud")"
-  [[ -n "${updates:-}" ]] && updates="$(colorc 819eb5 "$(sect 5 "$updates")")"
+  [[ -n "${updates:-}" ]] && updates="$(sect 5 "$updates")"
   [[ -n "${weather:-}" ]] && weather="$(sect 4 "$weather")"
-  [[ "$recording" == *"$(icon_rec)"* ]] && recording="$(colorc b87878 "$recording")"
-  [[ "$dnd" == *"$(icon_dnd)"* ]] && dnd="$(colorc a8a8a8 "$dnd")"
-  [[ "$battery" == *"!"* ]] && battery="$(colorc b87878 "$battery")"
-  [[ "$temp" == *"!"* ]] && temp="$(colorc b5a47e "$temp")"
+  if [[ "${BAR_COLOR:-0}" -eq 1 ]]; then
+    [[ "$recording" == *"$(icon_rec)"* ]] && recording="$(colorc b87878 "$recording")"
+    [[ "$dnd" == *"$(icon_dnd)"* ]] && dnd="$(colorc a8a8a8 "$dnd")"
+    [[ "$battery" == *"!"* ]] && battery="$(colorc b87878 "$battery")"
+    [[ "$temp" == *"!"* ]] && temp="$(colorc b5a47e "$temp")"
+    [[ -n "${updates:-}" ]] && updates="$(colorc 819eb5 "$updates")"
+  fi
 
   [[ -n "${media:-}" ]] && parts+=("$media")
   [[ -n "${volume:-}" ]] && parts+=("$volume")
@@ -1110,7 +1121,11 @@ build_status_line() {
   [[ -n "${datepart:-}" ]] && parts+=("$datepart")
   [[ -n "${timepart:-}" ]] && parts+=("$timepart")
 
-  parts=("$(colorc 83a9a7 "$(sect 1 "$(icon_agent)")")" "${parts[@]}")
+  if [[ "${BAR_COLOR:-0}" -eq 1 ]]; then
+    parts=("$(colorc 83a9a7 "$(sect 1 "$(icon_agent)")")" "${parts[@]}")
+  else
+    parts=("$(sect 1 "$(icon_agent)")" "${parts[@]}")
+  fi
   printf '[ %s ]' "$(printf '%s\n' "${parts[@]}" | paste -sd '|' - | sed 's/|/ | /g')"
 }
 

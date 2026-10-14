@@ -75,6 +75,10 @@ API keys/accounts stay in opencode's own config — never in this repo.
   (uses ImageMagick, then reloads terminals and the bar). `Super+F5` re-applies
   the dwm colors. Back to static: `nirupi theme mode noir`.
 
+Noir is monochrome: the status bar uses no colour codes in noir mode. Colour is
+applied automatically only in wallpaper mode (or force it with `BAR_COLOR=1` in
+`~/.config/nirupi/status.conf`).
+
 ## Screen lock & idle
 
 The screen locks with `slock` after **10 minutes** of inactivity. Change or

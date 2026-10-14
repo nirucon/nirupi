@@ -252,6 +252,7 @@ static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
+static unsigned int textw_nocode(const char *text);
 static void xresload(const XResPref *resource);
 static void xresupdate(void);
 static void xresreload(const Arg *arg);
@@ -508,7 +509,7 @@ buttonpress(XEvent *e)
 				if ((unsigned char)(*s) < ' ') {
 					ch = *s;
 					*s = '\0';
-					x += TEXTW(text) - lrpad;
+					x += textw_nocode(text);
 					*s = ch;
 					text = s + 1;
 					if (x >= ev->x)
@@ -783,6 +784,28 @@ dirtomon(int dir)
 	else
 		for (m = mons; m->next != selmon; m = m->next);
 	return m;
+}
+
+static unsigned int
+textw_nocode(const char *t)
+{
+	unsigned int w = 0, tw, th;
+	const char *p = t, *q;
+	while (*p) {
+		if (*p == '^') {              /* skip status2d code sequence */
+			q = p + 1;
+			while (*q && *q != '^') q++;
+			if (!*q) break;
+			p = q + 1;
+			continue;
+		}
+		q = p;
+		while (*q && *q != '^') q++;
+		drw_font_getexts(drw->fonts, p, (unsigned int)(q - p), &tw, &th);
+		w += tw;
+		p = q;
+	}
+	return w;
 }
 
 int
@@ -2397,7 +2420,7 @@ updatestatus(void)
 			if ((unsigned char)(*s) < ' ') {
 				ch = *s;
 				*s = '\0';
-				statusw += TEXTW(text) - lrpad;
+				statusw += textw_nocode(text);
 				*s = ch;
 				text = s + 1;
 			}

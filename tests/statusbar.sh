@@ -29,4 +29,6 @@ HOME="$TMP/home" XDG_CACHE_HOME="$TMP/cache" XDG_CONFIG_HOME="$TMP/home/.config"
 [[ -s "$TMP/bar.txt" ]] || { echo "FAIL status bar produced no output" >&2; cat "$TMP/err" >&2; exit 1; }
 line="$(head -n1 "$TMP/bar.txt")"
 [[ "$line" == *"["* && "$line" == *"]"* ]] || { echo "FAIL malformed bar: $line" >&2; exit 1; }
+# Noir default must be monochrome (no status2d colour codes).
+[[ "$line" != *'^c#'* ]] || { echo "FAIL Noir bar contains colour codes" >&2; exit 1; }
 echo 'PASS: status bar providers, temp, DND/mic/recording and Nextcloud segments'
