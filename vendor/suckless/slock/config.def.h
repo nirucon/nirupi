@@ -25,3 +25,5 @@ static const char *clockfont          = "JetBrainsMono Nerd Font:size=54";
 static const char *clockfontsmall     = "JetBrainsMono Nerd Font:size=14";
 static const char *clockforeground    = "#e5e5e5";
 static const char *clockdim           = "#8a8a8a";
+
+static const char *clockshadow        = "#0f0f10";

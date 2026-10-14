@@ -60,7 +60,7 @@ Imlib_Image image;
 
 /* NIRU Noir lock-screen clock (Xft). */
 static XftFont *clkfont, *clkfontsmall;
-static XftColor clkfg, clkdim;
+static XftColor clkfg, clkdim, clkshadow;
 static char hostnamebuf[HOST_NAME_MAX + 1];
 
 static void
@@ -153,6 +153,18 @@ initclock(Display *dpy)
 	                  DefaultColormap(dpy, screen), clockforeground, &clkfg);
 	XftColorAllocName(dpy, DefaultVisual(dpy, screen),
 	                  DefaultColormap(dpy, screen), clockdim, &clkdim);
+	XftColorAllocName(dpy, DefaultVisual(dpy, screen),
+	                  DefaultColormap(dpy, screen), clockshadow, &clkshadow);
+}
+
+/* Draw text with a subtle 1px dark halo so it stays readable on any blur. */
+static void
+drawtext(struct lock *lock, XftFont *f, XftColor *c, int x, int y, const char *s)
+{
+	int n = strlen(s);
+	XftDrawStringUtf8(lock->xftdraw, &clkshadow, f, x + 1, y + 1, (FcChar8 *)s, n);
+	XftDrawStringUtf8(lock->xftdraw, &clkshadow, f, x - 1, y - 1, (FcChar8 *)s, n);
+	XftDrawStringUtf8(lock->xftdraw, c, f, x, y, (FcChar8 *)s, n);
 }
 
 /* Draw time (big) + date + hostname (dim) centred on the locked window. */
@@ -179,20 +191,18 @@ drawclock(Display *dpy, struct lock *lock, int force)
 	XClearWindow(dpy, lock->win);
 
 	XftTextExtentsUtf8(dpy, clkfont, (FcChar8 *)tim, strlen(tim), &ext);
-	XftDrawStringUtf8(lock->xftdraw, &clkfg, clkfont,
-	                  (sw - ext.xOff) / 2, sh / 2 + clkfont->ascent / 2, (FcChar8 *)tim, strlen(tim));
+	drawtext(lock, clkfont, &clkfg, (sw - ext.xOff) / 2,
+	         sh / 2 + clkfont->ascent / 2, tim);
 
 	y = sh / 2 + clkfont->ascent / 2 + 24;
 	if (clkfontsmall) {
 		int smasc = clkfontsmall->ascent;
 		XftTextExtentsUtf8(dpy, clkfontsmall, (FcChar8 *)date, strlen(date), &ext);
-		XftDrawStringUtf8(lock->xftdraw, &clkdim, clkfontsmall,
-		                  (sw - ext.xOff) / 2, y + smasc, (FcChar8 *)date, strlen(date));
+		drawtext(lock, clkfontsmall, &clkdim, (sw - ext.xOff) / 2, y + smasc, date);
 		if (hostnamebuf[0]) {
 			XftTextExtentsUtf8(dpy, clkfontsmall, (FcChar8 *)hostnamebuf, strlen(hostnamebuf), &ext);
-			XftDrawStringUtf8(lock->xftdraw, &clkdim, clkfontsmall,
-			                  (sw - ext.xOff) / 2, y + smasc + clkfontsmall->height + 4,
-			                  (FcChar8 *)hostnamebuf, strlen(hostnamebuf));
+			drawtext(lock, clkfontsmall, &clkdim, (sw - ext.xOff) / 2,
+			         y + smasc + clkfontsmall->height + 4, hostnamebuf);
 		}
 	}
 }
