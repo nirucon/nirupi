@@ -109,6 +109,15 @@ provider_cached() {
   printf '%s\n' "$now" > "$stamp_file" 2>/dev/null || true
   printf '%s' "$value"
 }
+
+# status2d / statuscmd helpers -------------------------------------------------
+# sect ID TEXT   -> wrap a clickable section with the raw section id byte
+sect() {
+  local id="$1"; shift
+  printf "\\$(printf '%03o' "$id")%s\\$(printf '%03o' "$id")" "$*"
+}
+# colorc RRGGBB TEXT -> status2d coloured text (resets to SchemeNorm afterwards)
+colorc() { printf '^c#%s^%s^d^' "$1" "$2"; }
 # Keep exactly one bar writer per user/X display, including concurrent startx/SDDM starts.
 if command -v flock >/dev/null 2>&1; then
   display_key="${DISPLAY:-no-display}"
@@ -205,6 +214,10 @@ icon_cloud_off() {
 
 icon_bluetooth() {
   [[ "$USE_ICONS" -eq 1 ]] && printf '\uf294' || printf 'bt'
+}
+
+icon_agent() {
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf120' || printf 'AI'
 }
 
 
@@ -1063,6 +1076,16 @@ build_status_line() {
   [[ "$SHOW_DATE" -eq 1 ]] && datepart="$($DATEBIN '+%Y-%m-%d w%V')"
   [[ "$SHOW_TIME" -eq 1 ]] && timepart="$($DATEBIN '+%H:%M')"
 
+  [[ -n "${volume:-}" ]] && volume="$(sect 6 "$volume")"
+  [[ -n "${network:-}" ]] && network="$(sect 8 "$network")"
+  [[ -n "${nextcloud:-}" ]] && nextcloud="$(sect 7 "$nextcloud")"
+  [[ -n "${updates:-}" ]] && updates="$(colorc 819eb5 "$(sect 5 "$updates")")"
+  [[ -n "${weather:-}" ]] && weather="$(sect 4 "$weather")"
+  [[ "$recording" == *"$(icon_rec)"* ]] && recording="$(colorc b87878 "$recording")"
+  [[ "$dnd" == *"$(icon_dnd)"* ]] && dnd="$(colorc a8a8a8 "$dnd")"
+  [[ "$battery" == *"!"* ]] && battery="$(colorc b87878 "$battery")"
+  [[ "$temp" == *"!"* ]] && temp="$(colorc b5a47e "$temp")"
+
   [[ -n "${media:-}" ]] && parts+=("$media")
   [[ -n "${volume:-}" ]] && parts+=("$volume")
   [[ -n "${mic:-}" ]] && parts+=("$mic")
@@ -1087,6 +1110,7 @@ build_status_line() {
   [[ -n "${datepart:-}" ]] && parts+=("$datepart")
   [[ -n "${timepart:-}" ]] && parts+=("$timepart")
 
+  parts=("$(colorc 83a9a7 "$(sect 1 "$(icon_agent)")")" "${parts[@]}")
   printf '[ %s ]' "$(printf '%s\n' "${parts[@]}" | paste -sd '|' - | sed 's/|/ | /g')"
 }
 

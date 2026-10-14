@@ -60,6 +60,7 @@ Wallpaper mode: toggle
 Next wallpaper
 Wi-Fi
 Bluetooth
+Weather
 Mute / unmute
 Agent (AI)
 Backup configs
@@ -82,6 +83,7 @@ case "$action" in
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;
+  Weather) exec xdg-open "https://www.yr.no/en/forecast/daily-table/2-2694503/Sweden/V%C3%A4stra%20G%C3%B6taland/Ljungskile" 2>/dev/null || true;;
   'Mute / unmute') wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle 2>/dev/null || amixer -q set Master toggle 2>/dev/null || true;;
   'Agent (AI)') exec nirupi-agent;;
   'Backup configs') exec nirupi backup;;

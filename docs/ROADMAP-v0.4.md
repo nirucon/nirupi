@@ -1,7 +1,7 @@
 # NIRUPI v0.4 — "Noir Bar & Agent" (planering, ej committad)
 
-Status: resonemang pågår. Inget implementerat. Denna fil är den levande
-backloggen så beslut inte tappas.
+> Status: **implementerad** (se `docs/V0.4-OVERHAUL.md` och
+> `docs/TEST-CHECKLIST.md`). Denna fil behålls som beslutslogg.
 
 ## Låsta beslut
 - Tray: **hoppas över**. App-status löses som bar-segment utan tray.

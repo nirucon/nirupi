@@ -18,8 +18,14 @@ themes are **not** mine and keep their own licenses (also listed in `LICENSE`).
 
 - Installs and builds patched `dwm`/`dmenu`/`st`/`slock` into `~/.local`
   (`/usr/local/bin/dwm` stays untouched).
+- Status bar with **Noir colors and clickable segments** (agent, volume,
+  weather, network, updates, Nextcloud); Nextcloud status without a tray.
 - Applies the NIRU Noir dark theme everywhere: terminals, fish, TUI tools
   (`tmux`, `lazygit`, `micro`, `aerc`), GTK/Qt, browsers and the status bar.
+  Opt-in **wallpaper-driven theme** (`nirupi theme wallpaper IMAGE`).
+- Automatic **screen lock** after 10 min idle (configurable).
+- Installs **opencode** and wires `nirupi agent` + a control center / keybinding
+  cheat-sheet (`Super+a`, `Super+/`, ``Super+` ``).
 - Migrates an existing system **non-destructively**: configs are merged, foreign
   binaries are archived (never deleted), customized files are preserved.
 - Provides safe, manifest-based rollback of configs and binary links.
@@ -81,10 +87,16 @@ nirupi rollback --binaries            # binary links only
 ```
 ./install.sh --plan|--apply|--doctor|--verify|--diff|--history|--rollback
 ./install.sh --theme-only|--update-dots|--migrate|--dry-run
-nirupi theme apply|status|diff      nirupi migrate plan|dwm --rebuild
+nirupi theme apply|status|diff|wallpaper IMAGE|mode noir|wallpaper
+nirupi migrate plan|dwm --rebuild     nirupi agent [profile]
+nirupi menu | nirupi keys | nirupi backup
 nirupi rollback --all|--configs RUN|--binaries
-nirupi browser status|set|reset     nirupi updates --refresh
+nirupi browser status|set|reset       nirupi updates --refresh
 ```
+
+Keybindings: `Super+Return` terminal, `Super+b` browser, `Super+a` agent,
+`Super+/` keybinding palette, ``Super+` `` control center, `Super+Esc` lock,
+`Super+Shift+w` next wallpaper, `Super+F5` reload theme colors.
 
 ## Development
 

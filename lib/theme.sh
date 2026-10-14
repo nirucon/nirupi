@@ -120,6 +120,10 @@ theme_apply(){
   theme_apply_environment
   theme_apply_gtk4
   theme_write_xresources
+  if [[ -n ${DISPLAY:-} ]] && command -v xrdb >/dev/null 2>&1; then
+    xrdb -merge "$(cfgdir)/nirupi/xresources.noir" 2>/dev/null || :
+    command -v xdotool >/dev/null 2>&1 && xdotool key --clearmodifiers super+F5 >/dev/null 2>&1 || :
+  fi
   if [[ -x $HOME/.local/bin/nirupi-appearance ]]; then
     "$HOME/.local/bin/nirupi-appearance" apply noir >/dev/null 2>&1 || \
       warn 'GTK appearance helper unavailable; use nirupi appearance status'
@@ -191,6 +195,10 @@ theme_write_xresources(){
     printf 'st.background: #%s\nst.foreground: #%s\n' "$NOIR_BG" "$NOIR_FG"
     printf 'dmenu.background: #%s\ndmenu.foreground: #%s\n' "$NOIR_BG" "$NOIR_FG"
     printf 'dmenu.selforeground: #%s\ndmenu.selbackground: #%s\n' "$NOIR_FG" "$NOIR_SELECTION"
+    # Runtime dwm colors (xresources patch): Super+F5 reloads them live.
+    printf 'dwm.foreground: #%s\ndwm.background: #%s\ndwm.border: #%s\n' "$NOIR_FG" "$NOIR_BG" "$NOIR_BORDER"
+    printf 'dwm.foregroundSel: #%s\ndwm.backgroundSel: #%s\ndwm.borderSel: #%s\n' "$NOIR_FG" "$NOIR_SELECTION" "$NOIR_FOCUS"
+    printf 'dwm.font: %s:%s\n' "$NOIR_FONT" "${NOIR_FONT_SIZE:-11}"
   } > "$tmp"
   chmod 0644 "$tmp"
   mv -f -- "$tmp" "$dest"

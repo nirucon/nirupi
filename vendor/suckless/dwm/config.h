@@ -91,6 +91,20 @@ static const Layout layouts[] = {
 =========================*/
 /* dmenu themed to match MatteBlack */
 static char dmenumon[2] = "0";
+/* Clickable status sections (statuscmd-nosignal + status2d). The status script
+ * prints the section id as a raw byte before and after each clickable segment.
+ * The pressed button is exported to the command as $BUTTON. */
+static const StatusCmd statuscmds[] = {
+	{ "$HOME/.local/bin/nirupi-status-click agent",     1 },
+	{ "$HOME/.local/bin/nirupi-status-click menu",      2 },
+	{ "$HOME/.local/bin/nirupi-status-click keys",      3 },
+	{ "$HOME/.local/bin/nirupi-status-click weather",   4 },
+	{ "$HOME/.local/bin/nirupi-status-click updates",   5 },
+	{ "$HOME/.local/bin/nirupi-status-click volume",    6 },
+	{ "$HOME/.local/bin/nirupi-status-click nextcloud", 7 },
+	{ "$HOME/.local/bin/nirupi-status-click network",   8 },
+};
+static const char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
 static const char *dmenucmd[] = {
 	"dmenu_run",
 	"-m", dmenumon,
@@ -301,6 +315,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_Print,                 spawn,          {.v = ss_full } },       /* Super+Print -> full screen */
 	{ MODKEY|ShiftMask,             XK_Print,                 spawn,          {.v = ss_flameshot } },  /* Super+Shift+Print -> flameshot gui */
 	{ MODKEY|Mod1Mask,              XK_s,                     spawn,          {.v = ss_browser } },    /* Super+Alt+S -> browse screenshots */
+	{ MODKEY,                       XK_F5,                    xresreload,     {0} },                   /* Super+F5 -> reload Xresources theme */
 };
 
 /*========================
@@ -311,7 +326,9 @@ static const Button buttons[] = {
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
 	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = stcmd } },
+	{ ClkStatusText,        0,              Button1,        spawn,          {.v = statuscmd } },
+	{ ClkStatusText,        0,              Button2,        spawn,          {.v = statuscmd } },
+	{ ClkStatusText,        0,              Button3,        spawn,          {.v = statuscmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
@@ -319,4 +336,16 @@ static const Button buttons[] = {
 	{ ClkTagBar,            0,              Button3,        toggleview,     {0} },
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
+};
+
+/* X resources (dwm.*) that override the compiled fonts/colors at runtime.
+ * nirupi writes ~/.config/nirupi/xresources.noir and merges it via xrdb. */
+static const XResPref resources[] = {
+	{ "dwm.font",          STRING,  &fonts[0] },
+	{ "dwm.foreground",    STRING,  &colors[SchemeNorm][ColFg] },
+	{ "dwm.background",    STRING,  &colors[SchemeNorm][ColBg] },
+	{ "dwm.border",        STRING,  &colors[SchemeNorm][ColBorder] },
+	{ "dwm.foregroundSel", STRING,  &colors[SchemeSel][ColFg] },
+	{ "dwm.backgroundSel", STRING,  &colors[SchemeSel][ColBg] },
+	{ "dwm.borderSel",     STRING,  &colors[SchemeSel][ColBorder] },
 };
