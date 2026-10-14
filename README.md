@@ -14,6 +14,9 @@ launchers and an optional SDDM theme.
 **License:** MIT (see `LICENSE`). The bundled Suckless tools and third-party
 themes are **not** mine and keep their own licenses (also listed in `LICENSE`).
 
+**Manual:** a short day-to-day guide is in [`docs/USAGE.md`](docs/USAGE.md).
+Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.md).
+
 ## What it does
 
 - Installs and builds patched `dwm`/`dmenu`/`st`/`slock` into `~/.local`
