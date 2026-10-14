@@ -16,7 +16,7 @@ if [[ $(id -u) -ne 0 ]]; then
 fi
 
 # Alpha regression guards.
-grep -Eq '^0\.2\.0-beta\.[0-9]+$' "$ROOT/VERSION"
+grep -Eq '^0\.3\.0-beta\.[0-9]+$' "$ROOT/VERSION"
 grep -q 'Exec=/usr/local/bin/nirupi-session' "$ROOT/lib/install.sh"
 grep -Fq 'pacman -Syu --needed' "$ROOT/lib/packages.sh" && ! grep -Fq 'xbps-install -Su' "$ROOT/lib/packages.sh"
 for distro in arch cachyos debian void; do grep -q "$distro" "$ROOT/lib/packages.sh"; done
@@ -83,3 +83,9 @@ printf 'PASS: build-stage cleanup guard\n'
 "$ROOT/tests/beta2-features.sh"
 
 "$ROOT/tests/beta5-void.sh"
+
+"$ROOT/tests/theme.sh"
+
+"$ROOT/tests/migrate-engine.sh"
+
+"$ROOT/tests/custom-apps.sh"

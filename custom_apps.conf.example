@@ -1,0 +1,24 @@
+# NIRUPI custom application configuration (optional)
+#
+# Copy this file to ~/.config/nirupi/apps.conf and edit it, or pass a path via
+# the NIRUPI_APPS_CONF environment variable. When the file is absent the
+# installer continues non-interactively with the default package set.
+#
+# Comments start with '#'. One directive per line.
+#
+# Extra package on every supported distribution:
+#package=htop
+#
+# Extra packages for one distribution only:
+#package-debian=foo bar
+#package-arch=baz
+#package-void=qux
+#
+# External Git repository. Format: repo=URL|DESTINATION|BUILD COMMAND
+# DESTINATION defaults to ~/.local/src/<name>. The build command is optional
+# and is executed with bash inside the cloned directory.
+#repo=https://github.com/user/dotfiles.git|~/Git/dotfiles|
+#repo=https://github.com/user/somerepo.git|~/Git/somerepo|make && sudo make install
+#
+# Only HTTPS and SSH (git@) URLs are accepted. Package names are validated;
+# invalid tokens are skipped with a warning instead of being executed.
