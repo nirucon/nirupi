@@ -1,5 +1,44 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+# Best-effort, safe provisioning for `nirupi doctor --fix`.
+niru_doctor_fix(){
+  local changed=0 fam dir tmp
+  if command -v fc-match >/dev/null 2>&1; then
+    fam="$(fc-match -f '%{family}' 'JetBrainsMono Nerd Font' 2>/dev/null || :)"
+    case "$fam" in
+      *Nerd*) printf 'OK   Nerd Font already present (%s)\n' "$fam";;
+      *)
+        if command -v curl >/dev/null 2>&1 && command -v unzip >/dev/null 2>&1; then
+          printf 'FIX  installing JetBrainsMono Nerd Font to ~/.local/share/fonts\n'
+          dir="$HOME/.local/share/fonts/JetBrainsMonoNerd"; mkdir -p "$dir"
+          tmp="$(mktemp -d)"
+          if curl -fsSL "${NIRUPI_NERD_FONT_URL:-https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip}" -o "$tmp/f.zip" \
+             && unzip -oq "$tmp/f.zip" -d "$dir"; then
+            command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$dir" >/dev/null 2>&1 || :
+            changed=1
+          else printf 'WARN Nerd Font download failed (offline?)\n' >&2; fi
+          rm -rf -- "$tmp"
+        else printf 'WARN install curl+unzip to provision the Nerd Font\n' >&2; fi;;
+    esac
+  fi
+
+  if ! command -v xidlehook >/dev/null 2>&1 && ! command -v xautolock >/dev/null 2>&1 && ! command -v xss-lock >/dev/null 2>&1; then
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      printf 'FIX  installing xss-lock\n'
+      if command -v pacman >/dev/null 2>&1; then sudo pacman -S --needed --noconfirm xss-lock && changed=1
+      elif command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y xss-lock && changed=1
+      elif command -v xbps-install >/dev/null 2>&1; then sudo xbps-install -Sy xss-lock && changed=1
+      else printf 'WARN unknown package manager; install xss-lock manually\n' >&2; fi
+    else
+      printf 'HINT no passwordless sudo; install xss-lock, xidlehook or xautolock for auto-lock\n' >&2
+    fi
+  else
+    printf 'OK   idle-lock tool present\n'
+  fi
+  (( changed )) && printf 'FIX  applied\n' || printf 'OK   nothing to fix\n'
+}
+
 cmd="${1:-help}"; shift || :
 case "$cmd" in
   version|--version|-V)
@@ -21,6 +60,7 @@ case "$cmd" in
     esac
     printf 'Session: %s\nDisplay: %s\n' "${XDG_SESSION_TYPE:-unknown}" "${DISPLAY:-none}"; pgrep -af '[d]wm-status.sh' || :;;
   doctor)
+    if [[ "${1:-}" == --fix ]]; then shift || :; niru_doctor_fix; fi
     failures=0
     for app in dwm dmenu st nirupi-session dwm-status.sh nirupi-updates nirupi-browser; do
       if [[ -x "$HOME/.local/bin/$app" ]]; then printf 'OK   %s\n' "$app"; else printf 'FAIL %s\n' "$app"; failures=$((failures+1)); fi

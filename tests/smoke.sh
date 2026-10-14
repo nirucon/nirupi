@@ -103,3 +103,5 @@ printf 'PASS: build-stage cleanup guard\n'
 "$ROOT/tests/custom-apps.sh"
 
 "$ROOT/tests/webapps.sh"
+
+"$ROOT/tests/ops.sh"
