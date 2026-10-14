@@ -4,7 +4,7 @@
 # 5 scroll down). Each action shows info or opens a small menu.
 set -Eeuo pipefail
 action="${1:-}"
-ns(){ command -v notify-send >/dev/null 2>&1 && notify-send "NIRUPI" "$@" || printf 'NIRUPI: %s\n' "$*"; }
+ns(){ if command -v notify-send >/dev/null 2>&1; then notify-send -a NIRUPI "$@"; else printf 'NIRUPI: %s\n' "$*"; fi; }
 open_dir(){ command -v pcmanfm >/dev/null 2>&1 && exec pcmanfm "$1" ; command -v xdg-open >/dev/null 2>&1 && exec xdg-open "$1"; }
 
 case "$action" in
