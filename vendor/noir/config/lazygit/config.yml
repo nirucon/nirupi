@@ -1,0 +1,26 @@
+# NIRU Noir — lazygit theme
+gui:
+  theme:
+    activeBorderColor:
+      - '#819eb5'
+      - bold
+    inactiveBorderColor:
+      - '#2a2a2d'
+    optionsTextColor:
+      - '#a8a8a8'
+    selectedLineBgColor:
+      - '#3a3a3d'
+    selectedRangeBgColor:
+      - '#3a3a3d'
+    cherryPickedCommitBgColor:
+      - '#83a9a7'
+    cherryPickedCommitFgColor:
+      - '#0f0f10'
+    unstagedChangesColor:
+      - '#b87878'
+    defaultFgColor:
+      - '#e5e5e5'
+    searchingActiveBorderColor:
+      - '#d2c092'
+  authorColors:
+    '*': '#a4bfd3'

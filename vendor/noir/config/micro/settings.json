@@ -1,0 +1,10 @@
+{
+  "colorscheme": "simple",
+  "truecolor": true,
+  "syntax": true,
+  "hlsearch": true,
+  "cursorline": true,
+  "tabstospaces": true,
+  "tabsize": 4,
+  "autosave": 0
+}
