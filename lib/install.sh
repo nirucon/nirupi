@@ -114,8 +114,12 @@ install_helpers(){
  managed_helper_install nirupi-maintenance "$ROOT/runtime/nirupi-maintenance" "$HOME/.local/bin/nirupi-maintenance"
  managed_helper_install nirupi-gc "$ROOT/runtime/nirupi-gc.sh" "$HOME/.local/bin/nirupi-gc.sh"
  managed_helper_install nirupi-update "$ROOT/runtime/nirupi-update.sh" "$HOME/.local/bin/nirupi-update.sh"
- # Back-compat: dwm builds on some earlier versions invoked this without .sh
- ln -sf nirupi-status-click.sh "$HOME/.local/bin/nirupi-status-click"
+ # Remove the legacy no-extension compatibility symlink: dwm now calls the .sh
+ # helper directly (the old symlink is no longer needed).
+ if [[ -L $HOME/.local/bin/nirupi-status-click ]]; then
+  rm -f -- "$HOME/.local/bin/nirupi-status-click"
+  log 'Removed legacy nirupi-status-click compatibility symlink'
+ fi
  for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then

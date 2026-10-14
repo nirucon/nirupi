@@ -31,6 +31,21 @@ Options:
   -h, --help              Show this help.
 EOF
 }
+# Optional whiptail installer TUI. Non-fatal: silently skipped when whiptail is
+# absent, stdin is not a TTY, or the user cancels.
+installer_tui(){
+  command -v whiptail >/dev/null 2>&1 || return 0
+  [[ -t 0 ]] || return 0
+  local choice
+  choice="$(whiptail --title 'NIRUPI — NIRU Noir' --menu 'Login session target:' 15 64 2 \
+      startx 'Minimal X session from a text TTY (.xinitrc)' \
+      sddm   'Use the SDDM display manager (theme provided)' 3>&1 1>&2 2>&3)" || return 0
+  case "$choice" in startx|sddm) SESSION="$choice";; esac
+  if whiptail --title 'NIRUPI — NIRU Noir' --yesno \
+      'Install optional helpers (screenshots, compositor, wallpapers, idle tools)?' 10 64; then
+    NIRUPI_INSTALL_OPTIONAL=1
+  fi
+}
 while (($#)); do
  case "$1" in
  --plan) ACTION=plan;; --apply) ACTION=apply;; --doctor) ACTION=doctor;; --audit) ACTION=audit;; --verify) ACTION=verify;; --history) ACTION=history;; --rollback) ACTION=rollback;;
@@ -41,6 +56,8 @@ while (($#)); do
  shift
 done
 [[ $SESSION == sddm || $SESSION == startx ]] || die 'Invalid session'
+# Optional interactive TUI (session target + optional packages). Non-fatal.
+if [[ $ACTION == plan || $ACTION == apply ]]; then installer_tui; fi
 if [[ $ACTION == verify ]]; then exec "$ROOT/tests/post-install-verify.sh"; fi
 if [[ $ACTION == history ]]; then release_history; exit 0; fi
 if [[ $ACTION == rollback ]]; then release_rollback; exit 0; fi

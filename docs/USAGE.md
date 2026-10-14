@@ -22,11 +22,15 @@ startup, run `nirupi theme apply`.
 | `Super+a` | **Agent** (opencode) |
 | `Super+Shift+h` | **Keybinding palette** (search everything) |
 | `Super+Shift+m` | **Control center** |
-| `Super+Esc` | Lock (slock) |
+| `Super+Esc` | Lock (`nirupi lock` → slock) |
+| `Super+Shift+q` | **Log out** (asks for confirmation) |
+| `Super+n` | **Night light** toggle (gammastep/redshift) |
+| `Super+F11` | Toggle real fullscreen |
+| `Super+Ctrl+,` / `Super+Ctrl+.` | Cycle layouts |
+| `Super+Shift+u` | Jump to the urgent window |
 | `Super+Shift+w` | Next wallpaper |
 | `Super+F5` | Reload theme colors (Xresources) |
 | `Super+q` | Close focused window |
-| `Super+Shift+q` | Quit dwm (end session) |
 
 The full, searchable list is `Super+Shift+h` (or `nirupi keys`; `Super+/` on US layouts). It clearly marks
 **apps** vs **keybindings**: pressing Enter on an app launches it, on a
@@ -89,22 +93,50 @@ API keys/accounts stay in opencode's own config — never in this repo.
 ## Theme
 
 - Static Noir (default): `nirupi theme apply` or `./install.sh --theme-only`.
+- Built-in palettes: `nirupi theme list`, `nirupi theme preview warm`, and
+  `nirupi theme set noir|warm|cool` to apply one.
 - Follow the wallpaper (opt-in): `nirupi theme wallpaper /path/to/image.jpg`
   (uses ImageMagick, then reloads terminals and the bar). `Super+F5` re-applies
   the dwm colors. Back to static: `nirupi theme mode noir`.
+
+`st` and `dmenu` read the palette from Xresources at startup, so they match the
+active theme without a rebuild. **rofi, dunst and the SDDM theme are generated
+from `vendor/noir/theme/tokens.env`** whenever the theme is applied.
 
 Noir is monochrome: the status bar uses no colour codes in noir mode. Colour is
 applied automatically only in wallpaper mode (or force it with `BAR_COLOR=1` in
 `~/.config/nirupi/status.conf`).
 
-## Screen lock & idle
+## Screen lock, idle & effects
 
-The screen locks with `slock` after **10 minutes** of inactivity. Change or
-disable it in `~/.config/nirupi/session.conf`:
+The idle ladder in `~/.config/nirupi/session.conf` runs (each step optional):
+
+```
+dim  ->  lock  ->  DPMS off  ->  suspend
+```
 
 ```sh
-IDLE_LOCK_MINUTES=10   # 0 disables
+IDLE_DIM_MINUTES=5        # dim (brightnessctl) or blank; 0 = off
+IDLE_LOCK_MINUTES=10      # slock; 0 = off
+IDLE_DPMS_MINUTES=20      # display off; 0 = off
+IDLE_SUSPEND_MINUTES=0    # suspend; 0 = off (opt in)
 IDLE_WARN_SECONDS=30
+LOCK_ON_SUSPEND=1         # lock before the machine sleeps (xss-lock/logind)
+```
+
+The full ladder needs `xidlehook`; `xautolock` and `xss-lock` lock only.
+`Super+Shift+q` asks before logging out, and `Super+n` toggles the night light.
+
+## Web apps
+
+Web apps open in **Helium** (Chromium `--app` mode), falling back to
+brave/chromium. Manage them so they appear in dmenu/rofi/palette:
+
+```sh
+nirupi webapp add "Work Mail" https://mail.example.com/
+nirupi webapp add "Teams" https://teams.microsoft.com/ --separate
+nirupi webapp list
+nirupi webapp remove "Work Mail"
 ```
 
 ## Customize
@@ -116,6 +148,7 @@ IDLE_WARN_SECONDS=30
 | `~/.config/nirupi/status.conf` | Status bar segments, weather, cache |
 | `~/.config/nirupi/agents.conf` | opencode profiles |
 | `~/.config/nirupi/browser.conf` | Default browser (`nirupi browser set X`) |
+| `~/.config/nirupi/tokens.env` | Active palette (from `nirupi theme set`) |
 
 DWM keybindings/colors are compiled in `vendor/suckless/dwm/config.h`; rebuild
 after editing with `nirupi migrate dwm --rebuild`.
@@ -144,6 +177,9 @@ nirupi gc --dry-run           # show old versions/snapshots/backups to prune
 nirupi gc --yes               # prune (keeps current + N newest)
 nirupi gc --yes --legacy      # also prune old legacy archives
 nirupi status --once|--json   # bar for scripts
+nirupi backup                 # back up user config now
+nirupi backup --schedule      # weekly backup (systemd user timer or cron)
+nirupi backup --unschedule    # disable the scheduled backup
 ```
 
 Rollback (local TTY only; touches only `$HOME` and `~/.local/state/nirupi/`):
@@ -158,11 +194,12 @@ nirupi rollback --binaries            # binary links only
 
 ```sh
 nirupi doctor            # fonts, tools, agent, theme
+nirupi doctor --fix      # best-effort: Nerd Font + idle-lock tool
 bash ./install.sh --verify
 ```
 
 - Missing status icons? Install the Nerd Font (answered during install) or
-  re-run `./install.sh --theme-only`.
+  re-run `./install.sh --theme-only`. `nirupi doctor --fix` can fetch it.
 - A segment doesn't click? Confirm dwm was rebuilt with the patches:
   `bash tests/dwm-patches.sh` in the source tree.
 - Upgrading kept your old config on purpose. New versions are offered as

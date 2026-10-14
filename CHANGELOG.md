@@ -2,6 +2,22 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.6.0
+- dwm 6.8 bar/session patch set: statusallmons, barpadding (vertpad/sidepad),
+  tagicons (Nerd glyphs), swallow (xcb-res), actualfullscreen (Super+F11),
+  focusurgent (Super+Shift+u) and cyclelayouts (Super+Ctrl+,/.).
+- Theme depth: `st`/`dmenu` read Xresources at runtime; rofi, dunst and the SDDM
+  theme are generated from `tokens.env`; built-in palettes
+  (`nirupi theme list|preview|set`); Noir slock colors and `nirupi lock`.
+- Session effects: idle ladder (dim → lock → DPMS → suspend), lock on suspend,
+  logout confirmation (`Super+Shift+q`) and night light (`Super+n`).
+- Web apps: Helium-first launchers and `nirupi webapp add|list|remove`.
+- Ops: GitHub Actions CI (smoke on Debian + Arch, shellcheck), `nirupi doctor
+  --fix`, and scheduled backups (`nirupi backup --schedule`).
+- Docs: generated `docs/KEYBINDINGS.md`, optional whiptail installer TUI.
+- Dependencies: libxcb/libx11-xcb/libxcb-res (swallow), gammastep/redshift,
+  xss-lock added to install sets.
+
 ## 0.5.1
 - `nirupi gc`: version directories referenced by retained release snapshots are
   never removed, so `nirupi rollback` keeps working.

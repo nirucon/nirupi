@@ -23,6 +23,19 @@ grep -q 'systemd\|crontab' "$B" || fail 'backup scheduler missing'
 [[ -f "$ROOT/runtime/nirupi-update.sh" ]] || fail 'nirupi update helper missing'
 grep -q 'update)' "$ROOT/runtime/nirupi" || fail 'nirupi update CLI missing'
 
+# R7: optional whiptail installer TUI + keybindings generator.
+grep -q 'whiptail' "$ROOT/install.sh" || fail 'installer TUI missing'
+[[ -x "$ROOT/tools/gen-keybindings.sh" ]] || fail 'keybindings generator missing'
+[[ -f "$ROOT/docs/KEYBINDINGS.md" ]] || fail 'KEYBINDINGS.md missing'
+
+# Leftovers: no legacy no-extension status-click symlink is created; the old
+# overhaul roadmap docs are pruned.
+! grep -q 'ln -sf nirupi-status-click.sh' "$ROOT/lib/install.sh" || fail 'legacy status-click symlink still created'
+grep -q 'Removed legacy nirupi-status-click' "$ROOT/lib/install.sh" || fail 'legacy symlink cleanup missing'
+for d in ROADMAP-v0.4.md V0.3-OVERHAUL.md V0.4-OVERHAUL.md; do
+  [[ ! -e "$ROOT/docs/$d" ]] || fail "obsolete doc still present: $d"
+done
+
 # Bash syntax of the CI-adjacent scripts.
 for f in "$ROOT/runtime/nirupi" "$B" "$ROOT/runtime/nirupi-update.sh"; do bash -n "$f"; done
-echo 'PASS: ops (CI workflow, doctor --fix, scheduled backup)'
+echo 'PASS: ops (CI workflow, doctor --fix, scheduled backup, leftovers)'

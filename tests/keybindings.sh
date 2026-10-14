@@ -33,3 +33,11 @@ PYTEST
 for f in vendor/noir/local/bin/nirupi-keys.sh vendor/noir/local/bin/nirupi-menu.sh; do
   [[ -f "$ROOT/$f" ]] || { echo "FAIL missing $f" >&2; exit 1; }
 done
+# docs/KEYBINDINGS.md must not drift from config.h.
+tmp="$(mktemp)"
+if ! bash "$ROOT/tools/gen-keybindings.sh" > "$tmp" || ! diff -u "$ROOT/docs/KEYBINDINGS.md" "$tmp" >/dev/null; then
+  echo 'FAIL: docs/KEYBINDINGS.md is out of date; run tools/gen-keybindings.sh' >&2
+  rm -f "$tmp"; exit 1
+fi
+rm -f "$tmp"
+echo 'PASS: docs/KEYBINDINGS.md matches config.h'

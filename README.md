@@ -21,17 +21,31 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
 
 - Installs and builds patched `dwm`/`dmenu`/`st`/`slock` into `~/.local`
   (`/usr/local/bin/dwm` stays untouched).
+- dwm 6.8 with a hand-integrated bar/session patch set: **status on all
+  monitors**, **bar padding**, **tag glyphs**, **terminal swallow**,
+  **actual fullscreen**, **jump to urgent** and **layout cycling** (plus the
+  existing pertag/gaps/scratchpad/centered-master).
 - Status bar with **Noir colors and clickable segments** (agent, volume,
   weather, network, updates, Nextcloud); Nextcloud status without a tray.
 - Applies the NIRU Noir dark theme everywhere: terminals, fish, TUI tools
   (`tmux`, `lazygit`, `micro`, `aerc`), GTK/Qt, browsers and the status bar.
-  Opt-in **wallpaper-driven theme** (`nirupi theme wallpaper IMAGE`).
-- Automatic **screen lock** after 10 min idle (configurable).
+  `st`/`dmenu` follow the theme live via **Xresources**, and **rofi, dunst and
+  the SDDM theme are generated from the tokens**. Opt-in **wallpaper-driven
+  theme** (`nirupi theme wallpaper IMAGE`) and built-in palettes
+  (`nirupi theme list|preview|set noir|warm|cool`).
+- **Idle ladder**: dim → lock → DPMS off → suspend (each optional), lock on
+  suspend, and a Noir lock wrapper (`nirupi lock`).
+- **Logout confirmation** (`Super+Shift+q`) and a **night light** toggle
+  (`Super+n`, gammastep/redshift).
+- Web apps open in **Helium** (Chromium app mode); manage them with
+  `nirupi webapp add|list|remove NAME URL`.
 - Installs **opencode** and wires `nirupi agent` + a control center / keybinding
   cheat-sheet (`Super+a`, `Super+/`, ``Super+` ``).
 - Migrates an existing system **non-destructively**: configs are merged, foreign
   binaries are archived (never deleted), customized files are preserved.
 - Provides safe, manifest-based rollback of configs and binary links.
+- **CI** (smoke on Debian + Arch, shellcheck), `nirupi doctor --fix`, and
+  optional scheduled backups (`nirupi backup --schedule`).
 - Optional extra packages and Git repositories via `~/.config/nirupi/apps.conf`.
 
 ## Requirements
@@ -90,19 +104,24 @@ nirupi rollback --binaries            # binary links only
 ```
 ./install.sh --plan|--apply|--doctor|--verify|--diff|--history|--rollback
 ./install.sh --theme-only|--update-dots|--migrate|--dry-run
-nirupi theme apply|status|diff|wallpaper IMAGE|mode noir|wallpaper
+nirupi theme apply|status|diff|list|preview PALETTE|set PALETTE
+nirupi theme wallpaper IMAGE|mode noir|wallpaper|palette
 nirupi migrate plan|dwm --rebuild     nirupi agent [profile]
-nirupi menu | nirupi keys | nirupi backup
+nirupi menu | nirupi keys | nirupi lock | nirupi webapp add|list|remove
+nirupi backup [--schedule|--unschedule]
 nirupi status --once|--json          nirupi gc --dry-run|--yes
 nirupi update
+nirupi doctor [--fix]
 nirupi rollback --all|--configs RUN|--binaries
 nirupi browser status|set|reset       nirupi updates --refresh
 ```
 
 Keybindings: `Super+Return` terminal, `Super+b` browser, `Super+a` agent,
 `Super+Shift+h` keybinding palette, `Super+Shift+m` control center, `Super+Esc` lock,
-`Super+Shift+w` next wallpaper, `Super+F5` reload theme colors.
-(On US layouts `Super+/` and ``Super+` `` also work.)
+`Super+Shift+q` log out, `Super+n` night light, `Super+F11` fullscreen,
+`Super+Ctrl+,`/`Super+Ctrl+.` cycle layouts, `Super+Shift+w` next wallpaper,
+`Super+F5` reload theme colors. (On US layouts `Super+/` and ``Super+` `` also work.)
+The full list is generated in [`docs/KEYBINDINGS.md`](docs/KEYBINDINGS.md).
 
 ## Development
 
