@@ -1094,6 +1094,8 @@ build_status_line() {
   [[ -n "${volume:-}" ]] && volume="$(sect 6 "$volume")"
   [[ -n "${network:-}" ]] && network="$(sect 8 "$network")"
   [[ -n "${nextcloud:-}" ]] && nextcloud="$(sect 7 "$nextcloud")"
+  [[ -n "${battery:-}" ]] && battery="$(sect 9 "$battery")"
+  [[ -n "${temp:-}" ]] && temp="$(sect 10 "$temp")"
   [[ -n "${updates:-}" ]] && updates="$(sect 5 "$updates")"
   [[ -n "${weather:-}" ]] && weather="$(sect 4 "$weather")"
   if bar_color_on; then

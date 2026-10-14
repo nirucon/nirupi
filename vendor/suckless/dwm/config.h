@@ -108,6 +108,8 @@ static const StatusCmd statuscmds[] = {
 	{ "$HOME/.local/bin/nirupi-status-click.sh volume",    6 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh nextcloud", 7 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh network",   8 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh battery",   9 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh temp",     10 },
 };
 static const char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
 static const char *dmenucmd[] = {

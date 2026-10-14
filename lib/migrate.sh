@@ -126,7 +126,11 @@ archive_legacy_path(){
   if [[ -L $path ]]; then
     [[ -L $dest ]] || die "Archive verification failed for symlink: $path"
   elif [[ -f $path ]]; then
-    cmp -s -- "$path" "$dest" || die "Archive verification failed: $path"
+    if command -v cmp >/dev/null 2>&1; then
+      cmp -s -- "$path" "$dest" || die "Archive verification failed: $path"
+    elif [[ "$(wc -c < "$path")" != "$(wc -c < "$dest")" ]]; then
+      die "Archive verification failed (size mismatch): $path"
+    fi
   fi
   printf '%s\t%s\n' "$path" "$dest" >> "$base/manifest.tsv"
   rm -f -- "$path"
