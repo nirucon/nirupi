@@ -21,7 +21,7 @@ case "$cmd" in
     for app in dwm dmenu st nirupi-session dwm-status.sh nirupi-updates nirupi-browser; do
       if [[ -x "$HOME/.local/bin/$app" ]]; then printf 'OK   %s\n' "$app"; else printf 'FAIL %s\n' "$app"; failures=$((failures+1)); fi
     done
-    for app in Xorg xsetroot kitty rofi; do
+    for app in Xorg xsetroot kitty rofi opencode slock xss-lock xidlehook xautolock nextcloud; do
       if command -v "$app" >/dev/null 2>&1; then printf 'OK   %s\n' "$app"; else printf 'WARN %s missing\n' "$app"; fi
     done
     [[ -e /usr/share/xsessions/nirupi-dwm.desktop ]] && echo 'OK   X11 session' || echo 'WARN X11 session missing'
