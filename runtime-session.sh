@@ -22,10 +22,16 @@ fi
 # ── User session preferences ──────────────────────────────────────────────────
 SESSION_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/session.conf"
 [ -r "$SESSION_CONF" ] && . "$SESSION_CONF"
+IDLE_DIM_MINUTES="${IDLE_DIM_MINUTES:-5}"
 IDLE_LOCK_MINUTES="${IDLE_LOCK_MINUTES:-10}"
+IDLE_DPMS_MINUTES="${IDLE_DPMS_MINUTES:-0}"
+IDLE_SUSPEND_MINUTES="${IDLE_SUSPEND_MINUTES:-0}"
 IDLE_WARN_SECONDS="${IDLE_WARN_SECONDS:-30}"
+LOCK_ON_SUSPEND="${LOCK_ON_SUSPEND:-1}"
 START_DUNST="${START_DUNST:-1}"
 START_PICOM="${START_PICOM:-1}"
+LOCKER="$HOME/.local/bin/nirupi-lock.sh"
+[ -x "$LOCKER" ] || LOCKER=slock
 
 [ -r "$HOME/.Xresources" ] && command -v xrdb >/dev/null 2>&1 && xrdb -merge "$HOME/.Xresources"
 [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/xresources.noir" ] && command -v xrdb >/dev/null 2>&1 && xrdb -merge "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/xresources.noir"
@@ -41,7 +47,7 @@ export COLORTERM=truecolor
 command -v setxkbmap >/dev/null 2>&1 && setxkbmap se
 command -v xsetroot >/dev/null 2>&1 && xsetroot -solid '#0f0f10'
 
-STATUS_PID= WALL_PID= DUNST_PID= PICOM_PID= IDLE_PID=
+STATUS_PID= WALL_PID= DUNST_PID= PICOM_PID= IDLE_PID= LOCK_PID=
 if [ "$START_PICOM" = 1 ] && command -v picom >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x picom >/dev/null 2>&1; then
   picom & PICOM_PID=$!
 fi
@@ -61,24 +67,72 @@ if command -v wallrotate.sh >/dev/null 2>&1; then
   fi
 fi
 
-# ── Automatic screen lock (slock) after inactivity ────────────────────────────
-if [ "${IDLE_LOCK_MINUTES:-10}" -gt 0 ] 2>/dev/null; then
-  idle_secs=$((IDLE_LOCK_MINUTES * 60))
+# ── Idle ladder: dim -> lock -> DPMS off -> suspend ───────────────────────────
+# Each step is optional; deltas are computed for xidlehook (which chains timers).
+idle_dim_cmd='command -v brightnessctl >/dev/null 2>&1 && brightnessctl -s set 20% || xset dpms force off'
+idle_undim_cmd='command -v brightnessctl >/dev/null 2>&1 && brightnessctl -r || xset dpms force on'
+idle_suspend_cmd='command -v systemctl >/dev/null 2>&1 && systemctl suspend || { command -v loginctl >/dev/null 2>&1 && loginctl suspend || { command -v zzz >/dev/null 2>&1 && zzz; }; }'
+
+start_idle() {
   if command -v xidlehook >/dev/null 2>&1; then
-    xidlehook --not-when-fullscreen --not-when-audio --timer "$idle_secs" '' slock & IDLE_PID=$!
-  elif command -v xautolock >/dev/null 2>&1; then
-    xautolock -time "$IDLE_LOCK_MINUTES" -locker slock -notify "$IDLE_WARN_SECONDS" \
+    set --
+    prev=0
+    if [ "$IDLE_DIM_MINUTES" -gt 0 ] 2>/dev/null; then
+      d=$((IDLE_DIM_MINUTES - prev)); [ "$d" -lt 1 ] && d=1
+      set -- "$@" --timer "$((d * 60))" "$idle_dim_cmd" "$idle_undim_cmd"
+      prev=$IDLE_DIM_MINUTES
+    fi
+    if [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null; then
+      d=$((IDLE_LOCK_MINUTES - prev)); [ "$d" -lt 1 ] && d=1
+      set -- "$@" --timer "$((d * 60))" "$LOCKER" ""
+      prev=$IDLE_LOCK_MINUTES
+    fi
+    if [ "$IDLE_DPMS_MINUTES" -gt 0 ] 2>/dev/null; then
+      d=$((IDLE_DPMS_MINUTES - prev)); [ "$d" -lt 1 ] && d=1
+      set -- "$@" --timer "$((d * 60))" 'xset dpms force off' 'xset dpms force on'
+      prev=$IDLE_DPMS_MINUTES
+    fi
+    if [ "$IDLE_SUSPEND_MINUTES" -gt 0 ] 2>/dev/null; then
+      d=$((IDLE_SUSPEND_MINUTES - prev)); [ "$d" -lt 1 ] && d=1
+      set -- "$@" --timer "$((d * 60))" "$idle_suspend_cmd" ""
+      prev=$IDLE_SUSPEND_MINUTES
+    fi
+    if [ "$prev" -gt 0 ]; then
+      xidlehook --not-when-fullscreen --not-when-audio "$@" & IDLE_PID=$!
+      return 0
+    fi
+  fi
+  if [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null && command -v xautolock >/dev/null 2>&1; then
+    xautolock -time "$IDLE_LOCK_MINUTES" -locker "$LOCKER" -notify "$IDLE_WARN_SECONDS" \
       -notifier "notify-send -u normal 'NIRUPI' 'Screen locks in ${IDLE_WARN_SECONDS}s'" & IDLE_PID=$!
-  elif command -v xss-lock >/dev/null 2>&1; then
-    xset s "$idle_secs" "$idle_secs" 2>/dev/null || :
-    xss-lock -- slock & IDLE_PID=$!
-  else
-    printf '%s\n' '[NIRUPI] No idle-lock tool found (xidlehook/xautolock/xss-lock)' >&2
+    return 0
+  fi
+  if [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null && command -v xss-lock >/dev/null 2>&1; then
+    xset s "$((IDLE_LOCK_MINUTES * 60))" "$((IDLE_LOCK_MINUTES * 60))" 2>/dev/null || :
+    xss-lock -- "$LOCKER" & IDLE_PID=$!
+    return 0
+  fi
+  printf '%s\n' '[NIRUPI] No idle tool found (xidlehook/xautolock/xss-lock)' >&2
+}
+start_idle
+
+# ── Lock on suspend (logind) ──────────────────────────────────────────────────
+# xss-lock with --transfer-sleep-lock locks the session before the machine sleeps
+# (lid close / suspend key / loginctl). Skipped when xss-lock is already the idle
+# locker, to avoid running two lockers.
+idle_locker_is_xsslock() {
+  [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null \
+    && ! command -v xidlehook >/dev/null 2>&1 \
+    && ! command -v xautolock >/dev/null 2>&1
+}
+if [ "$LOCK_ON_SUSPEND" = 1 ] && command -v xss-lock >/dev/null 2>&1; then
+  if ! idle_locker_is_xsslock; then
+    xss-lock --transfer-sleep-lock -- "$LOCKER" & LOCK_PID=$!
   fi
 fi
 
 cleanup() {
-  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID"; do
+  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID"; do
     [ -z "$pid" ] || kill "$pid" 2>/dev/null || :
   done
 }

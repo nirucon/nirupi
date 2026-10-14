@@ -116,7 +116,7 @@ install_helpers(){
  managed_helper_install nirupi-update "$ROOT/runtime/nirupi-update.sh" "$HOME/.local/bin/nirupi-update.sh"
  # Back-compat: dwm builds on some earlier versions invoked this without .sh
  ln -sf nirupi-status-click.sh "$HOME/.local/bin/nirupi-status-click"
- for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
+ for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-nightlight.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
    dest="$HOME/.local/bin/$app"

@@ -1,11 +1,22 @@
 # NIRUPI session preferences (sourced by ~/.local/bin/nirupi-session).
 # This file is user-owned and never overwritten during upgrades.
 
-# Lock the screen with slock after N minutes of inactivity. 0 disables.
-IDLE_LOCK_MINUTES=10
+# ── Idle ladder ──────────────────────────────────────────────────────────────
+# The steps below run in order (dim -> lock -> DPMS off -> suspend). Each value
+# is the TOTAL idle time in minutes before that step; steps are chained with the
+# correct deltas for xidlehook. 0 disables a step.
+# With xidlehook the full ladder is available; xautolock and xss-lock provide the
+# lock step only (and xss-lock additionally locks on suspend).
+IDLE_DIM_MINUTES=5        # dim the screen (brightnessctl) or blank it; 0 = off
+IDLE_LOCK_MINUTES=10      # lock the screen with slock after N minutes; 0 = off
+IDLE_DPMS_MINUTES=20      # turn the display off (DPMS); 0 = off
+IDLE_SUSPEND_MINUTES=0    # suspend the machine; 0 = off (opt in)
 
 # Warn this many seconds before locking (xautolock only; 0 disables warning).
 IDLE_WARN_SECONDS=30
+
+# Lock the session before the machine suspends (needs xss-lock or loginctl).
+LOCK_ON_SUSPEND=1
 
 # Start the notification daemon (dunst) with the session.
 START_DUNST=1

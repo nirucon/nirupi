@@ -55,6 +55,8 @@ printf 'PASS: build-stage cleanup guard\n'
 
 "$ROOT/tests/session-runtime.sh"
 
+"$ROOT/tests/session-effects.sh"
+
 "$ROOT/tests/system-session.sh"
 
 "$ROOT/tests/noir-consistency.sh"

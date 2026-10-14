@@ -24,10 +24,10 @@ term_run(){ [[ -n "$term" ]] || { notify "No terminal found"; return 1; }; "$ter
 
 power(){
   case "$1" in
-    suspend) command -v systemctl >/dev/null 2>&1 && systemctl suspend || { command -v loginctl >/dev/null 2>&1 && loginctl suspend || command -v zzz >/dev/null 2>&1 && zzz; };;
+    suspend) exec "$HOME/.local/bin/sleep-suspend.sh";;
     reboot) command -v loginctl >/dev/null 2>&1 && loginctl reboot || sudo reboot;;
     poweroff) command -v loginctl >/dev/null 2>&1 && loginctl poweroff || sudo poweroff;;
-    logout) pkill -x dwm || true;;
+    logout) exec "$HOME/.local/bin/nirupi-logout.sh";;
   esac
 }
 
@@ -70,6 +70,7 @@ Shut down
 Apply Noir theme
 Wallpaper mode: toggle
 Next wallpaper
+Night light: toggle
 Wi-Fi
 Bluetooth
 Weather
@@ -93,6 +94,7 @@ case "$action" in
   'Apply Noir theme') exec nirupi theme apply;;
   'Wallpaper mode: toggle') theme_toggle;;
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
+  'Night light: toggle') exec "$HOME/.local/bin/nirupi-nightlight.sh";;
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;
   Weather) exec xdg-open "https://www.yr.no/en/forecast/daily-table/2-2694503/Sweden/V%C3%A4stra%20G%C3%B6taland/Ljungskile" 2>/dev/null || true;;

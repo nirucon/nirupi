@@ -204,8 +204,12 @@ static const char *clipsavecmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/clip-sav
 static const char *clipmenucmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/clip-menu.sh", NULL };
 
 /* System / security */
-static const char *lockcmd[]      = { "slock", NULL };     /* Super+Esc */
+static const char *lockcmd[]      = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-lock.sh", NULL }; /* Super+Esc */
 static const char *fmcmd[]        = { "pcmanfm", NULL };   /* Super+Shift+f */
+/* Logout confirmation (Super+Shift+q) instead of quitting immediately. */
+static const char *logoutcmd[]    = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-logout.sh", NULL };
+/* Night light toggle (gammastep/redshift). */
+static const char *nightlightcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-nightlight.sh", NULL };
 
 /* Display configuration (F1 screen button) */
 static const char *arandrcmd[] = { "arandr", NULL };
@@ -334,8 +338,11 @@ static const Key keys[] = {
 
 	/* Kill active window & restart dwm */
 	{ MODKEY,                       XK_q,                     killclient,     {0} },          /* Super+q -> kill focused */
-	{ MODKEY|ShiftMask,             XK_q,                     quit,           {0} },          /* Super+Shift+q -> quit */
-	/* Super+Ctrl+Shift+Q deliberately unbound: use logout/login for safe restart. */
+	{ MODKEY|ShiftMask,             XK_q,                     spawn,          {.v = logoutcmd } },  /* Super+Shift+q -> logout (confirm) */
+	{ MODKEY|ControlMask|ShiftMask, XK_q,                     quit,           {0} },          /* Super+Ctrl+Shift+q -> quit immediately */
+
+	/* Night light */
+	{ MODKEY,                       XK_n,                     spawn,          {.v = nightlightcmd } }, /* Super+n -> night light toggle */
 
 	/* Zoom (vanilla) */
 	{ MODKEY|ShiftMask,             XK_z,                     zoom,           {0} },
