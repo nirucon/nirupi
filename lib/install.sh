@@ -91,6 +91,19 @@ check_user_install_conflicts() {
   [[ ! -L $path ]] || die "Unsafe manifest symlink: $path"
  done
 }
+restart_statusbar_if_running(){
+ command -v pgrep >/dev/null 2>&1 || return 0
+ local dp display xauth
+ dp="$(pgrep -x dwm 2>/dev/null | head -n1 || true)"
+ [[ -n $dp && -r /proc/$dp/environ ]] || return 0
+ display="$(tr '\0' '\n' < "/proc/$dp/environ" 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n1 || true)"
+ xauth="$(tr '\0' '\n' < "/proc/$dp/environ" 2>/dev/null | sed -n 's/^XAUTHORITY=//p' | head -n1 || true)"
+ [[ -n $display ]] || return 0
+ pkill -f '[d]wm-status.sh' 2>/dev/null || true
+ sleep 1
+ setsid env DISPLAY="$display" ${xauth:+XAUTHORITY="$xauth"} "$HOME/.local/bin/dwm-status.sh" </dev/null >/dev/null 2>&1 &
+ log 'Restarted the running status bar with the updated script'
+}
 install_helpers(){
  local app src dest updates_dest="$HOME/.local/bin/nirupi-updates"
  managed_helper_install nirupi-updates "$ROOT/runtime/nirupi-updates" "$updates_dest"
@@ -388,8 +401,20 @@ install_opencode(){
  fi
  if command -v curl >/dev/null 2>&1; then
   if curl -fsSL https://opencode.ai/install | bash; then
-   log 'opencode installed via the official installer'; return 0
+   log 'opencode installed via the official installer'
+   opencode_link
+   return 0
   fi
  fi
+ command -v opencode >/dev/null 2>&1 && opencode_link
  warn 'opencode could not be installed automatically; install it manually (https://opencode.ai)'
+}
+# Make opencode reachable from the session and from fish.
+opencode_link(){
+ [[ -x "$HOME/.opencode/bin/opencode" ]] || return 0
+ mkdir -p "$HOME/.local/bin" "$HOME/.config/fish/conf.d"
+ ln -sf "$HOME/.opencode/bin/opencode" "$HOME/.local/bin/opencode"
+ [[ -f "$HOME/.config/fish/conf.d/nirupi-opencode.fish" ]] || \
+   printf 'fish_add_path $HOME/.opencode/bin\n' > "$HOME/.config/fish/conf.d/nirupi-opencode.fish"
+ log "opencode linked into ~/.local/bin"
 }

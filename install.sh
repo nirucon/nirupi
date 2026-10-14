@@ -71,6 +71,7 @@ if [[ $ACTION == theme || $ACTION == dots ]]; then
   fi
   NIRUPI_NOIR_DIR="$ROOT/vendor/noir" theme_apply
   write_installed_state
+  restart_statusbar_if_running
   exit 0
 fi
 if [[ $ACTION == doctor ]]; then
@@ -84,7 +85,7 @@ if [[ $ACTION == doctor ]]; then
  else
   printf ' --  fc-match unavailable; cannot verify preferred font\n'
  fi
- for cmd in bash sudo make cc git pkg-config Xorg startx sddm kitty feh xsetroot setxkbmap gawk fzf rofi alacritty pcmanfm playerctl brightnessctl wpctl; do
+ for cmd in bash sudo make cc git pkg-config Xorg startx sddm kitty feh xsetroot setxkbmap gawk fzf rofi alacritty pcmanfm playerctl brightnessctl wpctl opencode slock xss-lock nextcloud; do
   if command -v "$cmd" >/dev/null 2>&1; then printf ' OK  %s\n' "$cmd"; else printf ' --  %s\n' "$cmd"; fi
  done
  printf '\nDWM shortcut dependencies (optional items are not auto-installed):\n'
