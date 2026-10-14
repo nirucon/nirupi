@@ -28,6 +28,16 @@ grep -q 'whiptail' "$ROOT/install.sh" || fail 'installer TUI missing'
 [[ -x "$ROOT/tools/gen-keybindings.sh" ]] || fail 'keybindings generator missing'
 [[ -f "$ROOT/docs/KEYBINDINGS.md" ]] || fail 'KEYBINDINGS.md missing'
 
+# Default personal repositories + Helium provisioning.
+for r in nirupresence nirunote nplay; do
+  grep -q "$r" "$ROOT/lib/apps.sh" || fail "default repo $r missing"
+done
+grep -q 'install_default_repos' "$ROOT/install.sh" || fail 'install_default_repos not wired (dots path)'
+grep -q 'install_default_repos' "$ROOT/lib/install.sh" || fail 'install_default_repos not wired (apply path)'
+grep -q 'ensure_helium' "$ROOT/lib/install.sh" || fail 'ensure_helium missing'
+grep -q 'pkg.helium.computer' "$ROOT/lib/install.sh" || fail 'Helium Debian repo missing'
+grep -q 'helium.tar.xz' "$ROOT/lib/install.sh" || fail 'Helium tarball fallback missing'
+
 # Leftovers: no legacy no-extension status-click symlink is created; the old
 # overhaul roadmap docs are pruned.
 ! grep -q 'ln -sf nirupi-status-click.sh' "$ROOT/lib/install.sh" || fail 'legacy status-click symlink still created'

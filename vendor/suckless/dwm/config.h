@@ -59,15 +59,15 @@ static const char *tags[] = { "1","2","3","4","5","6","7","8","9" };
  * numeric label. The numeric tags[] labels remain the source for EWMH desktop
  * names and keybindings (Super+1..9). Empty entries fall back to tags[]. */
 static const char *tagicons[] = {
-	"\uf120", /* 1 terminal */
-	"\uf07b", /* 2 folder */
-	"\uf121", /* 3 code */
-	"\uf0f6", /* 4 file */
-	"\uf001", /* 5 music */
-	"\uf03d", /* 6 video */
-	"\uf0ac", /* 7 globe */
-	"\uf0e0", /* 8 mail */
-	"\uf013", /* 9 settings */
+	"\uf0ac",     /* 1 browser / internet (globe) */
+	"\U000f06a9", /* 2 AI agent (robot) */
+	"\U000f06a9", /* 3 AI agent (robot) */
+	"\U000f06a9", /* 4 AI agent (robot) */
+	"\uf07b",     /* 5 folder */
+	"\uf120",     /* 6 terminal */
+	"\uf120",     /* 7 terminal */
+	"\uf120",     /* 8 terminal */
+	"\uf075",     /* 9 chat */
 };
 
 /* Keep rules minimal/vanilla; no app auto-tagging needed for your asks.

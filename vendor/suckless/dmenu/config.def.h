@@ -36,4 +36,5 @@ static const XResPref resources[] = {
 	{ "dmenu.backgroundOut", STRING,  &colors[SchemeOut][ColBg] },
 	{ "dmenu.topbar",        INTEGER, &topbar },
 	{ "dmenu.lines",         INTEGER, &lines },
+	{ "dmenu.yoffset",      INTEGER, &yoffset },
 };

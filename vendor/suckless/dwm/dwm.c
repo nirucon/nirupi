@@ -2052,6 +2052,12 @@ setup(void)
 	updatebars();
 	updatestatus();
 	updatebarpos(selmon);
+	/* Publish the top-bar offset so every dmenu opens just below the bar. */
+	{
+		char dmenuy[16];
+		snprintf(dmenuy, sizeof dmenuy, "%d", topbar ? (int)vertpad + bh : 0);
+		setenv("NIRUPI_DMENU_Y", dmenuy, 1);
+	}
 	/* supporting window for NetWMCheck */
 	wmcheckwin = XCreateSimpleWindow(dpy, root, 0, 0, 1, 1, 0, 0, 0);
 	XChangeProperty(dpy, wmcheckwin, netatom[NetWMCheck], XA_WINDOW, 32,

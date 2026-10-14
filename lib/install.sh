@@ -126,7 +126,11 @@ install_helpers(){
    dest="$HOME/.local/bin/$app"
    managed_helper_install "$app" "$src" "$dest"
   fi
- done
+   done
+ # sxiv was renamed to nsxiv on Arch; keep the script's `sxiv` name working.
+ if ! command -v sxiv >/dev/null 2>&1 && command -v nsxiv >/dev/null 2>&1; then
+  ln -sf "$(command -v nsxiv)" "$HOME/.local/bin/sxiv"
+ fi
 }
 install_desktop() (
  local app stage bin_dir="$HOME/.local/lib/nirupi/$VERSION/bin" src dest desktop
@@ -210,6 +214,9 @@ install_desktop() (
   warn 'Slock not activated; lock keybinding will not be functional without a secure system slock'
  fi
  install_helpers
+ # Preferred browser + the personal default Git repositories in ~/Git.
+ ensure_helium
+ install_default_repos
  # Only initialize GTK on clean profiles; upgrades preserve LXAppearance choices.
  "$HOME/.local/bin/nirupi-appearance" default || warn "GTK appearance setup skipped; use nirupi appearance status"
  # Keep user preferences separate from the managed status script.
@@ -391,6 +398,66 @@ migrate_dwm_rebuild(){
  rm -rf -- "$stage"
  log 'DWM rebuilt and relinked'
 }
+# Best-effort Helium browser provisioning. Helium is the preferred browser and
+# has no distro package on Void/Arch. Debian uses the official apt repository,
+# Arch uses an AUR helper when present, and any distro can use the official
+# binary tarball (user-local, no sudo). Never fatal: the resolver falls back to
+# firefox/brave/chromium/xdg-open.
+HELIUM_DEB_REPO="${NIRUPI_HELIUM_DEB_REPO:-https://pkg.helium.computer/deb}"
+HELIUM_KEY_URL="${NIRUPI_HELIUM_KEY_URL:-https://raw.githubusercontent.com/imputnet/helium-linux/main/pubkey.asc}"
+HELIUM_API="${NIRUPI_HELIUM_API:-https://api.github.com/repos/imputnet/helium-linux/releases/latest}"
+
+ensure_helium_tarball(){
+  command -v curl >/dev/null 2>&1 && command -v tar >/dev/null 2>&1 || { warn 'curl/tar missing; cannot fetch Helium'; return 0; }
+  local json url tmp appdir bin
+  json="$(curl -fsSL "$HELIUM_API" 2>/dev/null)" || { warn 'Could not query Helium releases'; return 0; }
+  url="$(printf '%s' "$json" | grep -oE 'https://[^"]*x86_64_linux\.tar\.xz' | head -n1)"
+  [[ -n $url ]] || { warn 'No Helium tarball URL found'; return 0; }
+  tmp="$(mktemp -d)"
+  log "Downloading Helium tarball ($(basename "$url"))"
+  if ! curl -fL "$url" -o "$tmp/helium.tar.xz"; then warn 'Helium download failed'; rm -rf -- "$tmp"; return 0; fi
+  if ! tar -xJf "$tmp/helium.tar.xz" -C "$tmp" 2>/dev/null && ! tar -xf "$tmp/helium.tar.xz" -C "$tmp" 2>/dev/null; then
+    warn 'Helium extraction failed'; rm -rf -- "$tmp"; return 0
+  fi
+  bin="$(find "$tmp" -maxdepth 4 -type f -name helium -print -quit 2>/dev/null)"
+  [[ -n $bin && -x $bin ]] || { warn 'Helium binary not found in archive'; rm -rf -- "$tmp"; return 0; }
+  appdir="$(dirname "$bin")"
+  rm -rf -- "$HOME/.local/opt/helium"; mkdir -p "$HOME/.local/opt"
+  mv "$appdir" "$HOME/.local/opt/helium"
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$HOME/.local/opt/helium/helium" "$HOME/.local/bin/helium"
+  ln -sf "$HOME/.local/opt/helium/helium" "$HOME/.local/bin/helium-browser"
+  rm -rf -- "$tmp"
+  log 'Helium installed to ~/.local/opt/helium'
+}
+
+ensure_helium(){
+  if command -v helium >/dev/null 2>&1 || command -v helium-browser >/dev/null 2>&1; then
+    log 'Helium browser already installed'; return 0
+  fi
+  case "$DISTRO" in
+   debian)
+    if command -v curl >/dev/null 2>&1 && command -v gpg >/dev/null 2>&1; then
+      log 'Installing Helium from the official apt repository'
+      if curl -fsSL "$HELIUM_KEY_URL" | sudo gpg --dearmor -o /usr/share/keyrings/helium.gpg 2>/dev/null \
+         && printf 'deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/helium.gpg] %s stable main\n' "$HELIUM_DEB_REPO" | sudo tee /etc/apt/sources.list.d/helium.list >/dev/null \
+         && sudo apt-get update >/dev/null 2>&1 \
+         && sudo apt-get install -y helium-bin; then
+        log 'Helium installed'; return 0
+      fi
+      warn 'Helium apt install failed; trying the binary tarball'
+    fi;;
+   arch|cachyos)
+    if command -v yay >/dev/null 2>&1; then
+      yay -S --needed --noconfirm helium-browser-bin && { log 'Helium installed (AUR)'; return 0; }
+    elif command -v paru >/dev/null 2>&1; then
+      paru -S --needed --noconfirm helium-browser-bin && { log 'Helium installed (AUR)'; return 0; }
+    fi
+    warn 'No AUR helper (yay/paru); using the Helium binary tarball';;
+  esac
+  ensure_helium_tarball
+}
+
 # Best-effort Nerd Font provisioning; never fatal. Package availability differs
 # wildly per distro, so install the official release into ~/.local/share/fonts.
 NERD_FONT_URL="${NIRUPI_NERD_FONT_URL:-https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip}"

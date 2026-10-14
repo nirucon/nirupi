@@ -12,6 +12,48 @@
 #   repo=URL|DESTINATION|BUILD COMMAND   # destination and build command optional
 # Sourced after lib/common.sh.
 
+# Default Git repositories cloned to ~/Git on every clean install and update.
+# Format: URL|DESTINATION|BUILD COMMAND (build optional).
+DEFAULT_REPOS=(
+  "https://github.com/nirucon/nirupresence.git|$HOME/Git/nirupresence|"
+  "https://github.com/nirucon/nirunote.git|$HOME/Git/nirunote|"
+  "https://github.com/nirucon/nplay.git|$HOME/Git/nplay|"
+)
+
+# Clone a repository on first sight, otherwise fast-forward it. Best effort.
+clone_or_update_repo(){
+  local url="$1" dest="${2:-}" build="${3:-}"
+  [[ -n $dest ]] || dest="$HOME/Git/$(basename "${url%.git}")"
+  dest="${dest/#\~/$HOME}"
+  [[ $url =~ ^https:// || $url =~ ^git@ ]] || { warn "Refusing non-HTTPS/SSH repo URL: $url"; return 0; }
+  [[ -e $dest && ! -d $dest ]] && { warn "Refusing non-directory repo destination: $dest"; return 0; }
+  if [[ -d $dest/.git ]]; then
+    log "Updating repository: $dest"
+    git -C "$dest" pull --ff-only || warn "git pull failed for $dest"
+  else
+    log "Cloning $url -> $dest"
+    mkdir -p "$(dirname "$dest")"
+    git clone --depth 1 -- "$url" "$dest" || { warn "git clone failed: $url"; return 0; }
+  fi
+  if [[ -n $build ]]; then
+    log "Building $dest: $build"
+    ( cd "$dest" && bash -lc "$build" ) || warn "Build command failed in $dest"
+  fi
+}
+
+# Always provision the personal default repositories (nirupresence/nirunote/nplay).
+install_default_repos(){
+  (( ${#DEFAULT_REPOS[@]} )) || return 0
+  log "Ensuring default repositories in ~/Git (${#DEFAULT_REPOS[@]})"
+  local spec url dest build
+  for spec in "${DEFAULT_REPOS[@]}"; do
+    url="${spec%%|*}"; spec="${spec#*|}"
+    dest="${spec%%|*}"
+    if [[ $spec == "$dest" ]]; then build=''; else build="${spec#*|}"; fi
+    clone_or_update_repo "$url" "$dest" "$build"
+  done
+}
+
 apps_conf_path(){
   local candidate
   for candidate in \
@@ -83,22 +125,8 @@ install_custom_repos(){
     url="${spec%%|*}"; spec="${spec#*|}"
     dest="${spec%%|*}"
     if [[ $spec == "$dest" ]]; then build=''; else build="${spec#*|}"; fi
-    [[ $url =~ ^https:// || $url =~ ^git@ ]] || { warn "Refusing non-HTTPS/SSH repo URL: $url"; continue; }
     [[ -n $dest ]] || dest="$HOME/.local/src/$(basename "${url%.git}")"
-    dest="${dest/#\~/$HOME}"
-    if [[ -e $dest && ! -d $dest ]]; then warn "Refusing non-directory repo destination: $dest"; continue; fi
-    if [[ -d $dest/.git ]]; then
-      log "Updating repository: $dest"
-      git -C "$dest" pull --ff-only || warn "git pull failed for $dest"
-    else
-      log "Cloning $url -> $dest"
-      mkdir -p "$(dirname "$dest")"
-      git clone --depth 1 -- "$url" "$dest" || { warn "git clone failed: $url"; continue; }
-    fi
-    if [[ -n $build ]]; then
-      log "Building $dest: $build"
-      ( cd "$dest" && bash -lc "$build" ) || warn "Build command failed in $dest"
-    fi
+    clone_or_update_repo "$url" "$dest" "$build"
   done < "$conf"
 }
 

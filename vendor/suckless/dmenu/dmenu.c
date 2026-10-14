@@ -51,6 +51,7 @@ static struct item *items = NULL;
 static struct item *matches, *matchend;
 static struct item *prev, *curr, *next, *sel;
 static int mon = -1, screen;
+static int yoffset = 0; /* vertical offset (px) so dmenu clears the top bar */
 
 static Atom clip, utf8;
 static Display *dpy;
@@ -687,6 +688,8 @@ setup(void)
 		y = topbar ? 0 : wa.height - mh;
 		mw = wa.width;
 	}
+	if (topbar)
+		y += yoffset; /* clear the NIRU Noir top bar (and its padding) */
 	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
 	inputw = mw / 3; /* input width: ~33% of monitor width */
 	match();
@@ -725,7 +728,7 @@ setup(void)
 static void
 usage(void)
 {
-	die("usage: dmenu [-bfiv] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
+	die("usage: dmenu [-bfiv] [-l lines] [-p prompt] [-fn font] [-m monitor] [-y offset]\n"
 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
 }
 
@@ -779,9 +782,13 @@ main(int argc, char *argv[])
 {
 	XWindowAttributes wa;
 	int i, fast = 0;
+	char *env_y;
 
 	XrmInitialize();
 	xresupdate();
+	/* dwm exports the bar height here so every dmenu appears under the bar. */
+	if ((env_y = getenv("NIRUPI_DMENU_Y")) && *env_y)
+		yoffset = atoi(env_y);
 
 	for (i = 1; i < argc; i++)
 		/* these options take no arguments */
@@ -802,6 +809,8 @@ main(int argc, char *argv[])
 			lines = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "-m"))
 			mon = atoi(argv[++i]);
+		else if (!strcmp(argv[i], "-y"))   /* top offset in pixels */
+			yoffset = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "-p"))   /* adds prompt to left of input field */
 			prompt = argv[++i];
 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */

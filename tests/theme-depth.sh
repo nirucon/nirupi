@@ -17,6 +17,11 @@ grep -q 'st.font' "$ROOT/lib/theme.sh" || fail 'st.font not generated'
 
 # rofi/dunst/SDDM generated from tokens.
 grep -q 'theme_render_rofi' "$ROOT/lib/theme.sh" || fail 'rofi generator missing'
+# The generated rofi theme must set element-text explicitly (rofi otherwise
+# inherits a dark default foreground and the list becomes unreadable).
+grep -q 'element-text { background-color: transparent; text-color: @normal-foreground; }' "$ROOT/lib/theme.sh" \
+  || fail 'rofi theme lacks explicit element-text text-color'
+grep -q 'text-color:                  #%s;' "$ROOT/lib/theme.sh" || fail 'rofi theme lacks global text-color'
 grep -q 'theme_render_dunst' "$ROOT/lib/theme.sh" || fail 'dunst generator missing'
 grep -q 'theme_render_sddm' "$ROOT/lib/theme.sh" || fail 'sddm generator missing'
 grep -q 'BEGIN NIRU-NOIR-COLORS' "$ROOT/vendor/sddm/Main.qml" || fail 'sddm color markers missing'

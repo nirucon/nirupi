@@ -94,9 +94,11 @@ if [[ $ACTION == theme || $ACTION == dots ]]; then
    NIRUPI_FORCE_CONFIGS=1 managed_config_install 'dwm/config.h' "$ROOT/vendor/suckless/dwm/config.h" "$HOME/.config/suckless/dwm/config.h"
    log 'Adopted the bundled dwm config.h (previous file backed up)'
   fi
-  write_installed_state
-  restart_statusbar_if_running
-  exit 0
+   install_default_repos
+   ensure_helium
+   write_installed_state
+   restart_statusbar_if_running
+   exit 0
 fi
 if [[ $ACTION == doctor ]]; then
  if command -v fc-match >/dev/null 2>&1; then
