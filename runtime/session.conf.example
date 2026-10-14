@@ -18,6 +18,10 @@ IDLE_WARN_SECONDS=30
 # Lock the session before the machine suspends (needs xss-lock or loginctl).
 LOCK_ON_SUSPEND=1
 
+# Super+Shift+Esc: lock the screen, wait this many seconds, then suspend.
+# Unlocking during the wait cancels the suspend. 0 suspends immediately.
+SUSPEND_DELAY_SECONDS=3
+
 # Start the notification daemon (dunst) with the session.
 START_DUNST=1
 

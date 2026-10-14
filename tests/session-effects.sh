@@ -33,6 +33,10 @@ grep -q 'Night light: toggle' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fa
 SS="$ROOT/vendor/noir/local/bin/sleep-suspend.sh"
 grep -q 'pgrep -x slock' "$SS" || fail 'sleep-suspend.sh does not use pgrep'
 ! grep -q 'kill -0' "$SS" || fail 'sleep-suspend.sh still uses kill -0 (fails on a nobody-owned slock)'
+# Lock, wait SUSPEND_DELAY_SECONDS, and cancel the suspend if the user unlocks.
+grep -q 'SUSPEND_DELAY_SECONDS' "$SS" || fail 'sleep-suspend.sh ignores SUSPEND_DELAY_SECONDS'
+grep -q 'Suspend cancelled' "$SS" || fail 'sleep-suspend.sh does not cancel on unlock'
+grep -q 'SUSPEND_DELAY_SECONDS' "$ROOT/runtime/session.conf.example" || fail 'session.conf.example lacks SUSPEND_DELAY_SECONDS'
 
 # Lock wrapper deployed and setuid slock provisioned on install/update.
 grep -q 'nirupi-lock.sh' "$ROOT/lib/install.sh" || fail 'lock wrapper not deployed'

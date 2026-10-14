@@ -20,6 +20,10 @@ All notable changes to NIRUPI. Versions are the `VERSION` file value.
   `~/Git/` on install and updated on `--update-dots`.
 - Extra optional apps added for a familiar setup (bat/eza/ripgrep/zoxide/cava/
   librespot/PySide6/nextcloud/GIMP/VLC/meld/…).
+- Suspend (`Super+Shift+Esc`) now locks the screen, waits `SUSPEND_DELAY_SECONDS`
+  (default 3s) and then suspends; unlocking during the wait cancels it. Fixed the
+  liveness check that made suspend refuse to run (slock drops to an unprivileged
+  user, so a signal-0 probe returned EPERM).
 
 ## 0.6.0
 - dwm 6.8 bar/session patch set: statusallmons, barpadding (vertpad/sidepad),
