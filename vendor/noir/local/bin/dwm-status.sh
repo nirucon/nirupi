@@ -44,13 +44,11 @@ SHOW_WEATHER=1
 SHOW_DATE=1
 SHOW_TIME=1
 
-# Bar colour: NIRU Noir is monochrome. Colours are only used in wallpaper mode
-# (or if you set BAR_COLOR=1 in status.conf).
+# Bar colour: monochrome in Noir; colour only in wallpaper mode, unless the
+# user explicitly sets BAR_COLOR=1 in status.conf (then that always wins).
 BAR_COLOR=0
+BAR_COLOR_EXPLICIT=0
 _theme_mode_file="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/theme.mode"
-if [[ -r "$_theme_mode_file" ]] && [[ "$(tr -d '[:space:]' < "$_theme_mode_file" 2>/dev/null)" == wallpaper ]]; then
-  BAR_COLOR=1
-fi
 
 # ── Weather (default: Ljungskile, Sweden) ─────────────────────────────────────
 WEATHER_CITY="Ljungskile"
@@ -79,6 +77,9 @@ NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox
 NIRUPI_STATUS_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf"
 if [[ -f "$NIRUPI_STATUS_CONFIG" && ! -L "$NIRUPI_STATUS_CONFIG" ]]; then
   source "$NIRUPI_STATUS_CONFIG"
+fi
+if [[ -f "$NIRUPI_STATUS_CONFIG" ]] && grep -q '^[[:space:]]*BAR_COLOR=' "$NIRUPI_STATUS_CONFIG" 2>/dev/null; then
+  BAR_COLOR_EXPLICIT=1
 fi
 
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/dwm-status"
@@ -126,6 +127,13 @@ sect() {
 }
 # colorc RRGGBB TEXT -> status2d coloured text (resets to SchemeNorm afterwards)
 colorc() { printf '^c#%s^%s^d^' "$1" "$2"; }
+bar_color_on(){
+  if [[ "${BAR_COLOR_EXPLICIT:-0}" -eq 1 ]]; then
+    [[ "${BAR_COLOR:-0}" -eq 1 ]]
+  else
+    [[ "$(tr -d '[:space:]' < "$_theme_mode_file" 2>/dev/null)" == wallpaper ]]
+  fi
+}
 # Keep exactly one bar writer per user/X display, including concurrent startx/SDDM starts.
 if command -v flock >/dev/null 2>&1; then
   display_key="${DISPLAY:-no-display}"
@@ -1088,7 +1096,7 @@ build_status_line() {
   [[ -n "${nextcloud:-}" ]] && nextcloud="$(sect 7 "$nextcloud")"
   [[ -n "${updates:-}" ]] && updates="$(sect 5 "$updates")"
   [[ -n "${weather:-}" ]] && weather="$(sect 4 "$weather")"
-  if [[ "${BAR_COLOR:-0}" -eq 1 ]]; then
+  if bar_color_on; then
     [[ "$recording" == *"$(icon_rec)"* ]] && recording="$(colorc b87878 "$recording")"
     [[ "$dnd" == *"$(icon_dnd)"* ]] && dnd="$(colorc a8a8a8 "$dnd")"
     [[ "$battery" == *"!"* ]] && battery="$(colorc b87878 "$battery")"
@@ -1120,7 +1128,7 @@ build_status_line() {
   [[ -n "${datepart:-}" ]] && parts+=("$datepart")
   [[ -n "${timepart:-}" ]] && parts+=("$timepart")
 
-  if [[ "${BAR_COLOR:-0}" -eq 1 ]]; then
+  if bar_color_on; then
     parts=("$(colorc 83a9a7 "$(sect 1 "$(icon_agent)")")" "${parts[@]}")
   else
     parts=("$(sect 1 "$(icon_agent)")" "${parts[@]}")
