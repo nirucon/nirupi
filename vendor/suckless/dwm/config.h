@@ -110,6 +110,21 @@ static const StatusCmd statuscmds[] = {
 	{ "$HOME/.local/bin/nirupi-status-click.sh network",   8 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh battery",   9 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh temp",     10 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh media",    11 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh nowplaying", 12 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh mic",      13 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh dnd",      14 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh recording",15 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh memory",   16 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh uptime",   17 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh disk",     18 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh cpu",      19 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh load",     20 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh bluetooth",21 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh kernel",   22 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh host",     23 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh date",     24 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh time",     25 },
 };
 static const char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
 static const char *dmenucmd[] = {
