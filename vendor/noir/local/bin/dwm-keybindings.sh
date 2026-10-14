@@ -517,7 +517,8 @@ if [[ $INTERACTIVE -eq 1 ]]; then
     "$CONFIG")
   
   # Launch fzf with preview
-  selection=$(echo "$tsv_data" | fzf \
+  # fzf runs --preview with $SHELL; force bash because the preview uses $'\t'.
+  selection=$(echo "$tsv_data" | SHELL=/bin/bash fzf \
     --delimiter='\t' \
     --with-nth=1,2,3,4,5 \
     --header="DWM Keybindings - Search and filter (ESC to quit)" \

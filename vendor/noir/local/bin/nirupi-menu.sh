@@ -8,6 +8,18 @@ dmenu_bin="$(command -v dmenu || true)"
 term="$(command -v kitty || command -v alacritty || command -v st || true)"
 
 notify(){ command -v notify-send >/dev/null 2>&1 && notify-send "NIRUPI" "$*" || printf 'NIRUPI: %s\n' "$*"; }
+theme_toggle(){
+  local mf tf
+  mf="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/theme.mode"
+  tf="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/tokens.env"
+  if [[ "$(cat "$mf" 2>/dev/null)" == wallpaper ]]; then
+    exec nirupi theme mode noir
+  elif [[ -f "$tf" ]]; then
+    exec nirupi theme mode wallpaper
+  else
+    exec nirupi theme wallpaper
+  fi
+}
 term_run(){ [[ -n "$term" ]] || { notify "No terminal found"; return 1; }; "$term" -- "$@"; }
 
 power(){
@@ -79,7 +91,7 @@ case "$action" in
   Reboot) power reboot;;
   'Shut down') power poweroff;;
   'Apply Noir theme') exec nirupi theme apply;;
-  'Wallpaper mode: toggle') exec nirupi theme mode "$([[ "$(cat "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/theme.mode" 2>/dev/null)" == wallpaper ]] && echo noir || echo wallpaper)";;
+  'Wallpaper mode: toggle') theme_toggle;;
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;
