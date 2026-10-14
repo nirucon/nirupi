@@ -299,6 +299,13 @@ static Window root, wmcheckwin;
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
+#ifndef NIRUPI_CONFIG_VERSION
+#error "This dwm config.h is out of date. A newer version is written as config.h.nirupi-new. Merge it (or run: nirupi migrate dwm --rebuild)."
+#endif
+#if NIRUPI_CONFIG_VERSION < 2
+#error "This dwm config.h is too old for this dwm. Merge config.h.nirupi-new and rebuild."
+#endif
+
 struct Pertag {
 	unsigned int curtag, prevtag; /* current and previous tag */
 	int nmasters[LENGTH(tags) + 1]; /* number of windows in master area */

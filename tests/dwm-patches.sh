@@ -19,6 +19,9 @@ grep -q 'XResPref' "$DWM/dwm.c" && grep -q 'xresupdate' "$DWM/dwm.c" || { echo '
 grep -q 'resources\[\]' "$DWM/config.h" || { echo 'FAIL resources missing' >&2; exit 1; }
 # 6.8 getatomprop regression fix
 grep -q 'unsigned long nitems, dl;' "$DWM/dwm.c" || { echo 'FAIL getatomprop fix missing' >&2; exit 1; }
+# config schema marker + compile-time guard
+grep -q 'NIRUPI_CONFIG_VERSION' "$DWM/config.h" || { echo 'FAIL config marker missing' >&2; exit 1; }
+grep -q 'NIRUPI_CONFIG_VERSION' "$DWM/dwm.c" || { echo 'FAIL config guard missing' >&2; exit 1; }
 # slock 1.7 ctrl-u clear
 grep -q "buf\[0\] == '\\\\025'" "$SLOCK/slock.c" || { echo 'FAIL slock ctrl-u fix missing' >&2; exit 1; }
 

@@ -59,17 +59,6 @@ select_dwm_build_config() {
   cp -- "$bundled" "$staged"
  fi
 }
-# True when the user's DWM config is a NIRUPI-managed file that still matches
-# the last recorded checksum (safe to upgrade in place).
-dwm_config_is_managed_unmodified(){
- local dest="$HOME/.config/suckless/dwm/config.h" manifest="$STATE/managed-configs.tsv"
- local prev cur
- [[ -f $dest && ! -L $dest ]] || return 1
- prev="$(_manifest_hash "$manifest" 'dwm/config.h')"
- [[ -n $prev ]] || return 1
- cur="$(sha256sum -- "$dest" | cut -d ' ' -f 1)"
- [[ $cur == "$prev" ]]
-}
 # Preflight all known local collisions before any package-manager transaction.
 # Keep this read-only: do not create directories or modify existing files.
 check_user_install_conflicts() {
@@ -119,10 +108,21 @@ install_desktop() (
   stage="$(mktemp -d "$stage_root/build.XXXXXXXX")"; stages+=("$stage")
   cp -a "$ROOT/vendor/suckless/$app/." "$stage/"
   if [[ $app == dwm ]]; then
-   # Atomic build source: an unmodified managed config is upgraded to the
-   # bundled version; a modified or untracked config is used as-is and kept.
+   # Build source must match the bundled dwm.c. Only a config that carries the
+   # current NIRUPI_CONFIG_VERSION marker is safe to compile; older user configs
+   # are preserved as config.h.nirupi-new and the bundled config is built instead.
    local dwm_build_custom="$HOME/.config/suckless/dwm/config.h"
-   if dwm_config_is_managed_unmodified; then dwm_build_custom=""; fi
+   if [[ -e $dwm_build_custom || -L $dwm_build_custom ]]; then
+    if [[ -L $dwm_build_custom || ! -f $dwm_build_custom ]]; then
+     die "Unsafe DWM configuration path: $dwm_build_custom"
+    fi
+    if ! grep -q 'NIRUPI_CONFIG_VERSION' "$dwm_build_custom"; then
+     warn "Existing DWM config.h predates the new patches; building the bundled config (your file is preserved as config.h.nirupi-new)"
+     dwm_build_custom=""
+    fi
+   else
+    dwm_build_custom=""
+   fi
    select_dwm_build_config "$ROOT/vendor/suckless/dwm/config.h" \
      "$dwm_build_custom" "$stage/config.h"
   fi
@@ -327,7 +327,11 @@ migrate_dwm_rebuild(){
  cp -a -- "$src_root/dwm/." "$stage/"
  local user_cfg="$HOME/.config/suckless/dwm/config.h"
  if [[ -f $user_cfg && ! -L $user_cfg ]]; then
-  cp -- "$user_cfg" "$stage/config.h"
+  if grep -q 'NIRUPI_CONFIG_VERSION' "$user_cfg"; then
+   cp -- "$user_cfg" "$stage/config.h"
+  else
+   warn "Ignoring out-of-date DWM config.h; building the bundled config (merge config.h.nirupi-new first)"
+  fi
  fi
  log "Rebuilding DWM ($VERSION)"
  if ! make -C "$stage" -j "$(nproc)"; then

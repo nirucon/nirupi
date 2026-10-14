@@ -1,5 +1,10 @@
 /* DWM config by Nicklas Rudolfsson - https://github.com/nirucon */
-/* Vanilla base (dwm 6.6). Requires: brightnessctl, PipeWire, maim, flameshot, rofi, st, alacritty, brave, arandr, playerctl */
+/* Vanilla base (dwm 6.8 + status2d/statuscmd/xresources). Requires: brightnessctl, PipeWire, maim, flameshot, rofi, st, alacritty, brave, arandr, playerctl */
+
+/* Config schema marker. dwm.c refuses to build with an older config.h.
+ * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
+ * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
+#define NIRUPI_CONFIG_VERSION 2
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
