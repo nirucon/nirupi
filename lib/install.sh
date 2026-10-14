@@ -172,20 +172,7 @@ install_desktop() (
  else
   warn 'Slock not activated; lock keybinding will not be functional without a secure system slock'
  fi
- # beta.1 shipped nirupi-updates outside the managed-helper manifest.
- # Enroll only the byte-for-byte known beta.1 helper; preserve user edits.
  local updates_dest="$HOME/.local/bin/nirupi-updates"
- local beta1_hash="$(sha256sum "$ROOT/compat/nirupi-updates-beta1" | cut -d ' ' -f 1)"
- if [[ -f $updates_dest && ! -L $updates_dest ]] &&
-    [[ $(sha256sum "$updates_dest" | cut -d ' ' -f 1) == "$beta1_hash" ]]; then
-   mkdir -p "$STATE"
-   if [[ ! -e "$STATE/managed-helpers.tsv" ]]; then
-     : > "$STATE/managed-helpers.tsv"
-   fi
-   if ! grep -q '^nirupi-updates[[:space:]]' "$STATE/managed-helpers.tsv"; then
-     printf 'nirupi-updates\t%s\n' "$beta1_hash" >> "$STATE/managed-helpers.tsv"
-   fi
- fi
  managed_helper_install nirupi-updates "$ROOT/runtime/nirupi-updates" "$updates_dest"
  managed_helper_install nirupi "$ROOT/runtime/nirupi" "$HOME/.local/bin/nirupi"
  managed_helper_install nirupi-appearance "$ROOT/runtime/nirupi-appearance" "$HOME/.local/bin/nirupi-appearance"

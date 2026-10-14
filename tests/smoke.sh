@@ -75,8 +75,6 @@ printf 'PASS: build-stage cleanup guard\n'
 
 "$ROOT/tests/install-readiness.sh"
 
-"$ROOT/tests/migration.sh"
-
 "$ROOT/tests/bare-metal-guards.sh"
 
 "$ROOT/tests/release-management.sh"
