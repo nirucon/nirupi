@@ -20,6 +20,11 @@ All notable changes to NIRUPI. Versions are the `VERSION` file value.
   new `Super+Ctrl+t` theme keybinding actually reaches the running DWM without
   silently building the old keymap. The user's file is preserved as
   `config.h.nirupi-new`. `nirupi migrate dwm --rebuild` applies the same check.
+- **Dunst** now follows the theme without touching your settings: the colours
+  (and font) are generated into `~/.config/dunst/dunstrc.d/90-nirupi.conf`, a
+  dunst drop-in (dunst ≥ 1.8) that outranks the base `dunstrc`. Your padding,
+  stacking and icon preferences are preserved; the bundled `dunstrc` is
+  settings-only and deployed as the base.
 - **CI:** the Arch container job installs `diffutils`, so `tests/features-v07.sh`
   (and `cmp`-based checks) no longer fail with `diff: command not found`. The
   Arch smoke job had been red on every push because the minimal container lacked

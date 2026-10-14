@@ -23,6 +23,7 @@ grep -q 'element-text { background-color: transparent; text-color: @normal-foreg
   || fail 'rofi theme lacks explicit element-text text-color'
 grep -q 'text-color:                  #%s;' "$ROOT/lib/theme.sh" || fail 'rofi theme lacks global text-color'
 grep -q 'theme_render_dunst' "$ROOT/lib/theme.sh" || fail 'dunst generator missing'
+grep -q 'dunstrc.d/90-nirupi.conf' "$ROOT/lib/theme.sh" || fail 'dunst drop-in path missing'
 grep -q 'theme_render_sddm' "$ROOT/lib/theme.sh" || fail 'sddm generator missing'
 grep -q 'BEGIN NIRU-NOIR-COLORS' "$ROOT/vendor/sddm/Main.qml" || fail 'sddm color markers missing'
 grep -q 'vendor/sddm' "$ROOT/lib/install.sh" || fail 'sddm not deployed with the bundle'

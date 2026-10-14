@@ -17,6 +17,7 @@ for f in \
   .config/tmux/tmux.conf .config/lazygit/config.yml .config/micro/settings.json \
   .config/aerc/aerc.conf .config/brave-flags.conf .config/chromium-flags.conf \
   .config/environment.d/90-nirupi.conf .config/gtk-4.0/settings.ini \
+  .config/dunst/dunstrc .config/dunst/dunstrc.d/90-nirupi.conf \
   .config/nirupi/xresources.noir; do
   [[ -f "$HOME/$f" ]] || { echo "FAIL missing $f" >&2; exit 1; }
 done

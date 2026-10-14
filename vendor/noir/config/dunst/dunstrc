@@ -1,9 +1,10 @@
+# NIRU — dunst base settings.
+# Colours (font, frame/separator colour and urgency palettes) are generated from
+# the active theme into dunstrc.d/90-nirupi.conf, which outranks this file.
+# Do not set colours here; run `nirupi theme apply` after changing themes.
 [global]
-    font = JetBrainsMono Nerd Font 10
     frame_width = 2
-    frame_color = "#222222"
     separator_height = 1
-    separator_color = "#444444"
     transparency = 0
     corner_radius = 4
     padding = 10
@@ -19,23 +20,3 @@
     stack_duplicates = true
     hide_duplicate_count = true
     show_indicators = no
-
-# Matte Black färgpalett
-[urgency_low]
-    background = "#0f0f10"
-    foreground = "#cccccc"
-    frame_color = "#1a1a1a"
-    timeout = 5
-
-[urgency_normal]
-    background = "#0f0f10"
-    foreground = "#ffffff"
-    frame_color = "#222222"
-    timeout = 7
-
-[urgency_critical]
-    background = "#1a1a1a"
-    foreground = "#d69a9a"
-    frame_color = "#b87878"
-    timeout = 0
-

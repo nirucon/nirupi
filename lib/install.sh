@@ -246,7 +246,7 @@ install_desktop() (
   # version that was just built; a modified/untracked config is preserved and
   # receives a sibling *.nirupi-new proposal. Binary and config never diverge.
   managed_config_install 'dwm/config.h' "$ROOT/vendor/suckless/dwm/config.h" "$dwm_cfg"
-  for app in kitty fish picom rofi alacritty gtk-3.0 cmus tmux lazygit micro aerc; do
+  for app in kitty fish picom rofi alacritty gtk-3.0 cmus tmux lazygit micro aerc dunst; do
   [[ -d $ROOT/vendor/noir/config/$app ]] || continue
   if [[ -L $HOME/.config/$app ]]; then warn "Preserving symlink ~/.config/$app"; continue; fi
   if [[ -e $HOME/.config/$app && ! -d $HOME/.config/$app ]]; then

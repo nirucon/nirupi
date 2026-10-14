@@ -33,6 +33,7 @@ grep -q 'colorscheme nirupi' "$HOME/.config/cmus/rc" || fail 'cmus rc missing'
 grep -q 'set -g fish_color_normal dcdcdc' "$HOME/.config/nirupi/theme/fish.fish" || fail 'fish not Satie'
 grep -q 'bg=#1a1a1c' "$HOME/.config/nirupi/theme/tmux.conf" || fail 'tmux not Satie'
 grep -q 'NIRUPI_C_RED=b08a86' "$HOME/.config/nirupi/theme/status.env" || fail 'status accents not Satie'
+grep -q 'background = "#1a1a1c"' "$HOME/.config/dunst/dunstrc.d/90-nirupi.conf" || fail 'dunst drop-in not Satie'
 
 theme_set carl-larsson >/dev/null
 [[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#241a16' ]] || fail 'kitty not Carl Larsson'
@@ -69,3 +70,11 @@ theme_set Satie >/dev/null
 grep -q '# user edit' "$HOME/.config/lazygit/config.yml" || fail 'lazygit user edit was lost'
 [[ -f "$HOME/.config/lazygit/config.yml.nirupi-new" ]] || fail 'lazygit proposal missing'
 echo 'PASS: user-edited lazygit config preserved'
+
+# The user's dunst base config is preserved; colours live in the drop-in.
+printf '# my dunst tweak\n' >> "$HOME/.config/dunst/dunstrc"
+theme_set Satie >/dev/null
+grep -q '# my dunst tweak' "$HOME/.config/dunst/dunstrc" || fail 'dunst base edit was lost'
+[[ -f "$HOME/.config/dunst/dunstrc.nirupi-new" ]] || fail 'dunst proposal missing'
+grep -q 'background = "#1a1a1c"' "$HOME/.config/dunst/dunstrc.d/90-nirupi.conf" || fail 'dunst drop-in not themed'
+echo 'PASS: dunst settings preserved, colours themed via drop-in'
