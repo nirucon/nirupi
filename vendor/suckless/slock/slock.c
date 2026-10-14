@@ -352,9 +352,13 @@ main(int argc, char **argv) {
 		    errno ? strerror(errno) : "user entry not found");
 	duid = pwd->pw_uid;
 	errno = 0;
-	if (!(grp = getgrnam(group)))
-		die("slock: getgrnam %s: %s\n", group,
-		    errno ? strerror(errno) : "group entry not found");
+	if (!(grp = getgrnam(group))) {
+		/* Some systems (e.g. Void) have no "nobody" group. Fall back to the
+		 * drop-user's primary group instead of refusing to lock. */
+		if (!(grp = getgrgid(pwd->pw_gid)))
+			die("slock: getgrnam %s: %s\n", group,
+			    errno ? strerror(errno) : "group entry not found");
+	}
 	dgid = grp->gr_gid;
 
 #ifdef __linux__

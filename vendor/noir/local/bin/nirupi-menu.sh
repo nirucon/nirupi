@@ -86,7 +86,7 @@ if [[ -z "$action" ]]; then
   action="$(menu | choose)" || exit 0
 fi
 case "$action" in
-  'Lock screen') exec slock;;
+  'Lock screen') exec "$HOME/.local/bin/nirupi-lock.sh";;
   Suspend) power suspend;;
   'Log out') power logout;;
   Reboot) power reboot;;

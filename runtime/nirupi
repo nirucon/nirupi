@@ -36,6 +36,23 @@ niru_doctor_fix(){
   else
     printf 'OK   idle-lock tool present\n'
   fi
+
+  # setuid slock: the lock keybinding needs a privileged locker.
+  local slock_path built
+  slock_path="$(command -v slock 2>/dev/null || true)"
+  if [[ -n $slock_path && -u $slock_path ]]; then
+    printf 'OK   slock is setuid (%s)\n' "$slock_path"
+  else
+    built="$(ls "$HOME"/.local/lib/nirupi/*/bin/slock 2>/dev/null | tail -n1)"
+    if [[ -n $built && -x $built ]] && command -v sudo >/dev/null 2>&1; then
+      printf 'FIX  installing setuid slock to /usr/local/bin/slock\n'
+      if sudo install -o root -g root -m 4755 "$built" /usr/local/bin/slock; then changed=1
+      else printf 'WARN could not install setuid slock\n' >&2; fi
+    else
+      printf 'HINT a setuid slock is required for the lock keybinding (NIRUPI --apply does this)\n'
+    fi
+  fi
+
   (( changed )) && printf 'FIX  applied\n' || printf 'OK   nothing to fix\n'
 }
 

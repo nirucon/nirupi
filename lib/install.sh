@@ -199,21 +199,10 @@ install_desktop() (
   put_file "$src" "$dest" 0755
   link_binary "$dest" "$HOME/.local/bin/$app"
  done
- # slock needs privileged installation, and is never silently made setuid-root.
- put_file "${stages[3]}/slock" "$bin_dir/slock" 0755
- printf '\nEnable Slock (requires setuid-root binary at /usr/local/bin/slock)? Type SLOCK to approve: '
- local lock_answer; read -r lock_answer
- if [[ $lock_answer == SLOCK ]]; then
-  if [[ -e /usr/local/bin/slock || -L /usr/local/bin/slock ]]; then
-   warn 'Existing /usr/local/bin/slock not replaced; inspect it manually'
-  else
-   sudo install -o root -g root -m 4755 "$bin_dir/slock" /usr/local/bin/slock
-   log 'Slock installed with setuid-root; review before production use'
-  fi
- else
-  warn 'Slock not activated; lock keybinding will not be functional without a secure system slock'
- fi
- install_helpers
+  # slock needs a setuid-root copy to read the password database.
+  put_file "${stages[3]}/slock" "$bin_dir/slock" 0755
+  ensure_slock "$bin_dir/slock"
+  install_helpers
  # Preferred browser + the personal default Git repositories in ~/Git.
  ensure_helium
  install_default_repos
@@ -432,7 +421,9 @@ ensure_helium_tarball(){
 }
 
 ensure_helium(){
-  if command -v helium >/dev/null 2>&1 || command -v helium-browser >/dev/null 2>&1; then
+  if command -v helium >/dev/null 2>&1 || command -v helium-browser >/dev/null 2>&1 \
+     || [[ -x "$HOME/.local/bin/helium" || -x "$HOME/.local/bin/helium-browser" \
+           || -x "$HOME/.local/opt/helium/helium" ]]; then
     log 'Helium browser already installed'; return 0
   fi
   case "$DISTRO" in
@@ -456,6 +447,32 @@ ensure_helium(){
     warn 'No AUR helper (yay/paru); using the Helium binary tarball';;
   esac
   ensure_helium_tarball
+}
+
+# Install a working, setuid-root slock at /usr/local/bin/slock. Our slock build
+# tolerates the "nobody" group being absent (Void uses "nogroup"). We replace an
+# existing regular file (backup kept) so upgrades actually take effect.
+ensure_slock(){
+  local built="${1:-}"
+  [[ -n $built && -x $built ]] || built="$HOME/.local/lib/nirupi/$VERSION/bin/slock"
+  [[ -x $built ]] || built="$ROOT/vendor/suckless/slock/slock"
+  local dest=/usr/local/bin/slock
+  [[ -x $built ]] || { warn 'No slock binary to install; the lock keybinding will not work'; return 0; }
+  if [[ -e $dest && ! -f $dest ]]; then
+    warn "Refusing to replace non-regular $dest"; return 0
+  fi
+  if [[ -f $dest ]] && cmp -s -- "$built" "$dest" && [[ $(stat -c %a -- "$dest" 2>/dev/null) == 4755 ]]; then
+    log 'setuid slock already installed'; return 0
+  fi
+  if [[ -f $dest ]]; then
+    local bak="$dest.nirupi-$(date +%Y%m%d-%H%M%S).bak"
+    sudo cp -a -- "$dest" "$bak" 2>/dev/null || warn "Could not back up $dest"
+  fi
+  if sudo install -o root -g root -m 4755 "$built" "$dest"; then
+    log 'Installed setuid slock to /usr/local/bin/slock'
+  else
+    warn 'Could not install setuid slock; the lock keybinding may not work'
+  fi
 }
 
 # Best-effort Nerd Font provisioning; never fatal. Package availability differs

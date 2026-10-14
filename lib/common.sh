@@ -10,7 +10,7 @@ source /etc/os-release
 case "${ID:-}" in
  arch) DISTRO=arch;; cachyos) DISTRO=cachyos;; debian) DISTRO=debian;; void) DISTRO=void;;
  *)
-  # Accept Arch/Debian derivatives (Omarchy, EndeavourOS, ...) via ID_LIKE.
+  # Accept Arch/Debian derivatives (e.g. EndeavourOS) via ID_LIKE.
   case "${ID_LIKE:-}" in
    *arch*) DISTRO=arch; warn "Treating '${ID:-unknown}' (ID_LIKE=${ID_LIKE:-}) as Arch";;
    *debian*|*ubuntu*) DISTRO=debian; warn "Treating '${ID:-unknown}' (ID_LIKE=${ID_LIKE:-}) as Debian";;

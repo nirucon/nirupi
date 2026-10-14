@@ -96,6 +96,7 @@ if [[ $ACTION == theme || $ACTION == dots ]]; then
   fi
    install_default_repos
    ensure_helium
+   ensure_slock
    write_installed_state
    restart_statusbar_if_running
    exit 0

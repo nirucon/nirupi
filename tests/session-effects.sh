@@ -29,6 +29,9 @@ grep -q 'gammastep' "$ROOT/vendor/noir/local/bin/nirupi-nightlight.sh" || fail '
 grep -q 'redshift' "$ROOT/lib/packages.sh" || fail 'redshift not in OPTIONAL_PKGS'
 grep -q 'Night light: toggle' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'menu night light missing'
 
-# Lock wrapper deployed.
+# Lock wrapper deployed and setuid slock provisioned on install/update.
 grep -q 'nirupi-lock.sh' "$ROOT/lib/install.sh" || fail 'lock wrapper not deployed'
-echo 'PASS: session effects (idle ladder, lock-on-suspend, logout confirm, night light)'
+grep -q 'ensure_slock' "$ROOT/lib/install.sh" || fail 'ensure_slock missing'
+grep -q 'ensure_slock' "$ROOT/install.sh" || fail 'ensure_slock not wired into install/dots'
+grep -q 'nirupi-lock.sh' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'control center does not use nirupi-lock.sh'
+echo 'PASS: session effects (idle ladder, lock-on-suspend, logout confirm, night light, setuid slock)'

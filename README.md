@@ -1,6 +1,6 @@
 # NIRUPI — NIRU Noir
 
-A personal, minimal **Suckless** X11 desktop for **Arch/CachyOS/Omarchy**,
+A personal, minimal **Suckless** X11 desktop for **Arch/CachyOS**,
 **Void Linux (glibc)** and **Debian**. It bundles patched `dwm`, `dmenu`, `st`
 and `slock`, one unified dark **NIRU Noir** theme, an X11 session, a status bar,
 launchers and an optional SDDM theme.

@@ -1,4 +1,4 @@
-# Statusbar upgrades (Arch/Omarchy, Debian, Void)
+# Statusbar upgrades (Arch, Debian, Void)
 
 NIRUPI ships the same Bash statusbar on all three distributions. The user-owned
 `~/.config/nirupi/status.conf` is never replaced by this updater.
