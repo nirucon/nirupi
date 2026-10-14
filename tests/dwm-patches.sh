@@ -22,6 +22,16 @@ grep -q 'unsigned long nitems, dl;' "$DWM/dwm.c" || { echo 'FAIL getatomprop fix
 # config schema marker + compile-time guard
 grep -q 'NIRUPI_CONFIG_VERSION' "$DWM/config.h" || { echo 'FAIL config marker missing' >&2; exit 1; }
 grep -q 'NIRUPI_CONFIG_VERSION' "$DWM/dwm.c" || { echo 'FAIL config guard missing' >&2; exit 1; }
+# statuscmd section ids must avoid whitespace control chars (tab/LF/VT/FF/CR)
+ids=$(grep -oE 'nirupi-status-click\.sh [a-z]+", *[0-9]+' "$DWM/config.h" | grep -oE '[0-9]+$' | sort -n)
+for id in $ids; do
+  if [ "$id" -ge 9 ] && [ "$id" -le 13 ]; then echo "FAIL unsafe statuscmd id: $id" >&2; exit 1; fi
+done
+# also the shell script must use the same ids (no 9..13)
+if grep -oE 'sect ([0-9]+)' "$ROOT/vendor/noir/local/bin/dwm-status.sh" | grep -oE '[0-9]+' | awk '$1>=9 && $1<=13' | grep -q .; then
+  echo 'FAIL dwm-status.sh uses an unsafe section id (9..13)' >&2; exit 1
+fi
+
 # slock 1.7 ctrl-u clear
 grep -q "buf\[0\] == '\\\\025'" "$SLOCK/slock.c" || { echo 'FAIL slock ctrl-u fix missing' >&2; exit 1; }
 
