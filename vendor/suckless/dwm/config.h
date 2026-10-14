@@ -100,14 +100,14 @@ static char dmenumon[2] = "0";
  * prints the section id as a raw byte before and after each clickable segment.
  * The pressed button is exported to the command as $BUTTON. */
 static const StatusCmd statuscmds[] = {
-	{ "$HOME/.local/bin/nirupi-status-click agent",     1 },
-	{ "$HOME/.local/bin/nirupi-status-click menu",      2 },
-	{ "$HOME/.local/bin/nirupi-status-click keys",      3 },
-	{ "$HOME/.local/bin/nirupi-status-click weather",   4 },
-	{ "$HOME/.local/bin/nirupi-status-click updates",   5 },
-	{ "$HOME/.local/bin/nirupi-status-click volume",    6 },
-	{ "$HOME/.local/bin/nirupi-status-click nextcloud", 7 },
-	{ "$HOME/.local/bin/nirupi-status-click network",   8 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh agent",     1 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh menu",      2 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh keys",      3 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh weather",   4 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh updates",   5 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh volume",    6 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh nextcloud", 7 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh network",   8 },
 };
 static const char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
 static const char *dmenucmd[] = {

@@ -583,28 +583,27 @@ get_battery() {
 get_temp_high() {
   [[ "$SHOW_TEMP" -eq 1 ]] || return 0
 
+  # Glob (not find): /sys/class/hwmon/hwmonN are symlinks that find will not
+  # descend into by default.
   local best=0 file raw temp_c
-  # Prefer hwmon sensors (coretemp/k10temp/amdgpu) over ACPI thermal zones.
-  while IFS= read -r file; do
-    [[ -r "$file" ]] || continue
+  local -a files=()
+  for file in /sys/class/hwmon/hwmon*/temp*_input; do
+    [[ -r "$file" ]] && files+=("$file")
+  done
+  if (( ${#files[@]} == 0 )); then
+    for file in /sys/class/thermal/thermal_zone*/temp; do
+      [[ -r "$file" ]] && files+=("$file")
+    done
+  fi
+
+  for file in "${files[@]}"; do
     raw="$(tr -d '[:space:]' < "$file" 2>/dev/null)"
     [[ "$raw" =~ ^-?[0-9]+$ ]] || continue
     temp_c=$((raw / 1000))
     (( temp_c > best )) && best="$temp_c"
-  done < <(find /sys/class/hwmon -maxdepth 2 -type f -name 'temp*_input' 2>/dev/null)
-
-  if (( best == 0 )); then
-    while IFS= read -r file; do
-      [[ -r "$file" ]] || continue
-      raw="$(tr -d '[:space:]' < "$file" 2>/dev/null)"
-      [[ "$raw" =~ ^[0-9]+$ ]] || continue
-      temp_c=$((raw / 1000))
-      (( temp_c > best )) && best="$temp_c"
-    done < <(find /sys/class/thermal -type f -name temp -not -path '*/cooling_device*' 2>/dev/null)
-  fi
+  done
 
   (( best > 0 )) || return 0
-
   local suffix=""
   (( best >= TEMP_WARN )) && suffix='!'
   printf '%s %s°C%s' "$(icon_temp)" "$best" "$suffix"
