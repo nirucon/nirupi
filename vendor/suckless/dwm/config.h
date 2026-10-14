@@ -24,8 +24,11 @@
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int gappx     = 15;       /* gaps between windows */
 static const unsigned int snap      = 32;       /* snap pixel */
+static const int swallowfloating    = 0;        /* 1 = terminal also swallows floating windows */
 static const int showbar            = 1;        /* 0 hides bar */
 static const int topbar             = 1;        /* 0 bottom bar */
+static const unsigned int vertpad   = 8;        /* vertical padding of the bar */
+static const unsigned int sidepad   = 8;        /* horizontal padding of the bar */
 
 static const char *fonts[]          = {
 	"JetBrainsMono Nerd Font:size=11",
@@ -52,10 +55,31 @@ static const char *colors[][3]      = {
 =========================*/
 static const char *tags[] = { "1","2","3","4","5","6","7","8","9" };
 
-/* Keep rules minimal/vanilla; no app auto-tagging needed for your asks */
+/* tagicons: an optional Nerd Font glyph per tag, shown in the bar instead of the
+ * numeric label. The numeric tags[] labels remain the source for EWMH desktop
+ * names and keybindings (Super+1..9). Empty entries fall back to tags[]. */
+static const char *tagicons[] = {
+	"\uf120", /* 1 terminal */
+	"\uf07b", /* 2 folder */
+	"\uf121", /* 3 code */
+	"\uf0f6", /* 4 file */
+	"\uf001", /* 5 music */
+	"\uf03d", /* 6 video */
+	"\uf0ac", /* 7 globe */
+	"\uf0e0", /* 8 mail */
+	"\uf013", /* 9 settings */
+};
+
+/* Keep rules minimal/vanilla; no app auto-tagging needed for your asks.
+ * isterminal marks terminals that may swallow windows they spawn (swallow patch);
+ * noswallow opts a window out. Add isfullscreen=1 to launch a rule fullscreen. */
 static const Rule rules[] = {
-	/* class      instance  title       tags mask  isfloating  monitor */
-	{ "Gimp",     NULL,     NULL,       0,         1,          -1 },
+	/* class      instance  title         tags mask  isfloating  isterminal  noswallow  isfullscreen  monitor */
+	{ "Gimp",     NULL,     NULL,         0,         1,          0,          0,         0,            -1 },
+	{ "kitty",    NULL,     NULL,         0,         0,          1,          0,         0,            -1 },
+	{ "Alacritty",NULL,     NULL,         0,         0,          1,          0,         0,            -1 },
+	{ "st",       NULL,     NULL,         0,         0,          1,          0,         0,            -1 },
+	{ NULL,       NULL,     "scratchpad", 0,         0,          1,          0,         0,            -1 },
 };
 
 /* === Custom layout funcs === */
@@ -77,6 +101,7 @@ static const Layout layouts[] = {
     { "[M]",      monocle },                   /* [3] monocle */
     { "|M|",      centeredmaster },            /* [4] centered master */
     { ">M>",      centeredfloatingmaster },    /* [5] centered floating master */
+    { NULL,       NULL },                      /* sentinel: required last for cyclelayouts */
 };
 
 /*========================
@@ -278,6 +303,12 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_m,                     setlayout,      {.v = &layouts[3]} },    /* Super+m -> monocle */
 	{ MODKEY,                       XK_c,                     setlayout,      {.v = &layouts[4]} },    /* Super+c -> centered master */
 	{ MODKEY,                       XK_u,                     setlayout,      {.v = &layouts[5]} },    /* Super+u -> centered floating master */
+	{ MODKEY|ControlMask,           XK_comma,                 cyclelayout,    {.i = -1 } },            /* Super+Ctrl+, -> previous layout */
+	{ MODKEY|ControlMask,           XK_period,                cyclelayout,    {.i = +1 } },            /* Super+Ctrl+. -> next layout */
+
+	/* Fullscreen / urgent */
+	{ MODKEY,                       XK_F11,                   togglefullscr,  {0} },                   /* Super+F11 -> actual fullscreen */
+	{ MODKEY|ShiftMask,             XK_u,                     focusurgent,    {0} },                   /* Super+Shift+u -> jump to urgent */
 
 	/* Monitors */
 	{ MODKEY,                       XK_comma,                 focusmon,       {.i = -1 } },

@@ -22,8 +22,9 @@ FREETYPEINC = /usr/include/freetype2
 #MANPREFIX = ${PREFIX}/man
 
 # includes and libs
+# libX11-xcb + xcb-res are required by the swallow patch (winpid via X-Resource).
 INCS = -I${X11INC} -I${FREETYPEINC}
-LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS}
+LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS} -lX11-xcb -lxcb -lxcb-res
 
 # flags
 CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700L -DVERSION=\"${VERSION}\" ${XINERAMAFLAGS}

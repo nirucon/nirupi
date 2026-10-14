@@ -2,13 +2,13 @@
 packages(){
  case "$DISTRO" in
  arch|cachyos)
-  PKGS=(base-devel git xorg-server xorg-xinit xorg-xsetroot xorg-xrandr xorg-xrdb xorg-setxkbmap libx11 libxft libxinerama imlib2 fontconfig freetype2 pkgconf fish kitty feh dunst xorg-xauth libxext libxrandr libxcrypt curl jq gawk fzf util-linux rofi alacritty pcmanfm arandr playerctl brightnessctl maim xclip libnotify flameshot pipewire wireplumber pipewire-pulse dbus glib2)
+  PKGS=(base-devel git xorg-server xorg-xinit xorg-xsetroot xorg-xrandr xorg-xrdb xorg-setxkbmap libx11 libxcb libxft libxinerama imlib2 fontconfig freetype2 pkgconf fish kitty feh dunst xorg-xauth libxext libxrandr libxcrypt curl jq gawk fzf util-linux rofi alacritty pcmanfm arandr playerctl brightnessctl maim xclip libnotify flameshot pipewire wireplumber pipewire-pulse dbus glib2)
   OPTIONAL_PKGS=(xss-lock xautolock xidlehook xdotool imagemagick unzip wmctrl papirus-icon-theme xdg-utils);;
  debian)
-  PKGS=(build-essential git xorg xinit x11-xserver-utils x11-xkb-utils libx11-dev libxft-dev libxinerama-dev libimlib2-dev libfontconfig1-dev libfreetype-dev pkg-config fish kitty feh dunst xauth libxext-dev libxrandr-dev libcrypt-dev curl jq gawk fzf util-linux rofi alacritty pcmanfm arandr playerctl brightnessctl maim xclip libnotify-bin flameshot pipewire wireplumber pipewire-pulse dbus dbus-x11 libglib2.0-bin)
+  PKGS=(build-essential git xorg xinit x11-xserver-utils x11-xkb-utils libx11-dev libxcb1-dev libx11-xcb-dev libxcb-res0-dev libxft-dev libxinerama-dev libimlib2-dev libfontconfig1-dev libfreetype-dev pkg-config fish kitty feh dunst xauth libxext-dev libxrandr-dev libcrypt-dev curl jq gawk fzf util-linux rofi alacritty pcmanfm arandr playerctl brightnessctl maim xclip libnotify-bin flameshot pipewire wireplumber pipewire-pulse dbus dbus-x11 libglib2.0-bin)
   OPTIONAL_PKGS=(xss-lock xautolock xidlehook xdotool imagemagick unzip wmctrl papirus-icon-theme xdg-utils);;
  void)
-  PKGS=(base-devel git xorg xinit xsetroot xrandr xrdb setxkbmap libX11-devel libXft-devel libXinerama-devel imlib2-devel fontconfig-devel freetype-devel pkg-config fish-shell kitty feh dunst xauth libXext-devel libXrandr-devel libxcrypt-devel curl jq gawk fzf util-linux rofi alacritty pcmanfm arandr playerctl brightnessctl pipewire wireplumber dbus glib)
+  PKGS=(base-devel git xorg xinit xsetroot xrandr xrdb setxkbmap libX11-devel libxcb-devel libXft-devel libXinerama-devel imlib2-devel fontconfig-devel freetype-devel pkg-config fish-shell kitty feh dunst xauth libXext-devel libXrandr-devel libxcrypt-devel curl jq gawk fzf util-linux rofi alacritty pcmanfm arandr playerctl brightnessctl pipewire wireplumber dbus glib)
   OPTIONAL_PKGS=(xss-lock xautolock xdotool ImageMagick unzip wmctrl papirus-icon-theme xdg-utils);;
  esac
  # Default profile keeps desktop install smaller; optional programs are inspected through doctor.
