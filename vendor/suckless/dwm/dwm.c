@@ -1412,6 +1412,13 @@ manage(Window w, XWindowAttributes *wa)
 	c->y = MAX(c->y, c->mon->wy);
 	c->bw = borderpx;
 
+	/* Centre the NIRUPI helper pop-ups (calendar, system update). */
+	if (!strcmp(c->name, "nirupi-calendar") || !strcmp(c->name, "nirupi-update")) {
+		c->isfloating = True;
+		c->x = c->mon->wx + (c->mon->ww - WIDTH(c)) / 2;
+		c->y = c->mon->wy + (c->mon->wh - HEIGHT(c)) / 2;
+	}
+
 	selmon->tagset[selmon->seltags] &= ~scratchtag;
 	if (!strcmp(c->name, scratchpadname)) {
 		c->mon->tagset[c->mon->seltags] |= c->tags = scratchtag;

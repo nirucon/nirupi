@@ -120,7 +120,7 @@ install_helpers(){
   rm -f -- "$HOME/.local/bin/nirupi-status-click"
   log 'Removed legacy nirupi-status-click compatibility symlink'
  fi
- for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-power.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh nirupi-clipd.sh nirupi-theme-auto.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
+ for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-power.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh nirupi-clipd.sh nirupi-theme-auto.sh nirupi-calendar.sh nirupi-calendar.py nirupi-sysupdate.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
    dest="$HOME/.local/bin/$app"

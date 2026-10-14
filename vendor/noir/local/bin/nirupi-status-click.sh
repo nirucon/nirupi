@@ -57,11 +57,11 @@ case "$action" in
   load)   ns "Load" "$(cat /proc/loadavg 2>/dev/null) ($(nproc 2>/dev/null) cores)";;
   kernel) ns "Kernel" "$(uname -sr)";;
   host)   ns "Host" "$(hostname) $(hostname -I 2>/dev/null)";;
-  date)   ns "$(date '+%A %Y-%m-%d')" "$(date '+%H:%M %Z')";;
+  date)   exec "$HOME/.local/bin/nirupi-calendar.sh";;
   time)   ns "$(date '+%H:%M')" "$(date '+%A %Y-%m-%d')";;
 
   # ── Updates / cloud / weather ──────────────────────────────────────────────
-  updates)   exec "$HOME/.local/bin/nirupi-menu.sh" 'Check updates';;
+  updates)   exec "$HOME/.local/bin/nirupi-sysupdate.sh";;
   nextcloud) command -v nextcloud >/dev/null 2>&1 && exec nextcloud || ns "Nextcloud" "client not installed";;
   weather)   exec "$HOME/.local/bin/nirupi-menu.sh" 'Weather';;
   *) exit 0;;

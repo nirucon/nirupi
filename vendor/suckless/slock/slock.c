@@ -284,25 +284,33 @@ drawscreensaver(Display *dpy, struct lock *lock, int force)
 
 	XClearWindow(dpy, lock->win);
 
-	if (phase == 0 && runicfont && runicfontsmall) {
-		char tR[32];
-		runify(tim, tR, sizeof tR);
+	/* clock: always normal digits (never runes) */
+	y = sh / 2 + clkfont->ascent / 2 - clkfont->descent;
+	centerline(dpy, lock, clkfont, &clkfg, y, tim);
+
+	/* hostname: runes <-> uppercase ASCII, rotating every 30 seconds */
+	if (phase == 0 && runicfontsmall) {
 		runify(hostnamebuf, hostR, sizeof hostR);
-		y = sh / 2 + runicfont->ascent / 2;
-		centerline(dpy, lock, runicfont, &clkfg, y, tR);
-		y += runicfontsmall->height + 12;
-		centerline(dpy, lock, runicfontsmall, &clkdim, y + runicfontsmall->ascent, hostR);
-	} else {
+		centerline(dpy, lock, runicfontsmall, &clkdim,
+		           y + clkfont->descent + runicfontsmall->height, hostR);
+	} else if (clkfontsmall) {
 		for (i = 0; hostnamebuf[i] && i < (int)sizeof(hostA) - 1; i++)
 			hostA[i] = toupper((unsigned char)hostnamebuf[i]);
 		hostA[i] = '\0';
-		y = sh / 2 + clkfont->ascent / 2;
-		centerline(dpy, lock, clkfont, &clkfg, y, tim);
-		if (clkfontsmall) {
-			y += 24;
-			centerline(dpy, lock, clkfontsmall, &clkdim, y + clkfontsmall->ascent, hostA);
-		}
+		centerline(dpy, lock, clkfontsmall, &clkdim,
+		           y + clkfont->descent + clkfontsmall->height + 4, hostA);
 	}
+}
+
+/* Switch the screensaver over to the blurred lock face (first input). */
+static void
+applyblur(Display *dpy, struct lock *lock)
+{
+	if (lock->bgmap)
+		XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
+	else
+		XSetWindowBackground(dpy, lock->win, lock->colors[INIT]);
+	XClearWindow(dpy, lock->win);
 }
 
 /* Choose the face: screensaver until the first input, then the lock. */
@@ -346,8 +354,10 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 		if (ev.type == KeyPress) {
 			if (screensaver && !woken) { /* any key wakes the lock */
 				woken = 1;
-				for (screen = 0; screen < nscreens; screen++)
+				for (screen = 0; screen < nscreens; screen++) {
+					applyblur(dpy, locks[screen]);
 					redraw(dpy, locks[screen], 1);
+				}
 				continue;
 			}
 			explicit_bzero(&buf, sizeof(buf));
@@ -413,8 +423,10 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 			}
 		} else if ((ev.type == ButtonPress || ev.type == ButtonRelease) && screensaver && !woken) {
 			woken = 1;
-			for (screen = 0; screen < nscreens; screen++)
+			for (screen = 0; screen < nscreens; screen++) {
+				applyblur(dpy, locks[screen]);
 				redraw(dpy, locks[screen], 1);
+			}
 		} else if (rr->active && ev.type == rr->evbase + RRScreenChangeNotify) {
 			rre = (XRRScreenChangeNotifyEvent*)&ev;
 			for (screen = 0; screen < nscreens; screen++) {
@@ -485,7 +497,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	                          CopyFromParent,
 	                          DefaultVisual(dpy, lock->screen),
 	                          CWOverrideRedirect | CWBackPixel | CWEventMask, &wa);
-    if(lock->bgmap)
+    if(lock->bgmap && !screensaver)
         XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
 	lock->xftdraw = XftDrawCreate(dpy, lock->win,
 	                              DefaultVisual(dpy, lock->screen),
@@ -611,8 +623,8 @@ main(int argc, char **argv) {
 	if (setuid(duid) < 0)
 		die("slock: setuid: %s\n", strerror(errno));
 
-	/* Lock: blur a screenshot of the root. Screensaver (-s): pure black. */
-	if (!screensaver) {
+	/* Blur a screenshot of the root; the lock face shows it (the screensaver
+	 * keeps it in reserve and switches to it once the user returns). */
 	Screen *scr = ScreenOfDisplay(dpy, DefaultScreen(dpy));
 	image = imlib_create_image(scr->width,scr->height);
 	imlib_context_set_image(image);
@@ -666,7 +678,6 @@ main(int argc, char **argv) {
 	
 	
 #endif
-	}
 	/* check for Xrandr support */
 	rr.active = XRRQueryExtension(dpy, &rr.evbase, &rr.errbase);
 

@@ -96,11 +96,13 @@ Tailscale: toggle
 Wi-Fi
 Bluetooth
 Weather
+Calendar
 Mute / unmute
 nirunote
 nplay
 nirupresence
 Agent (AI)
+System update
 Backup configs
 Check updates
 EOF
@@ -135,6 +137,8 @@ case "$action" in
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;
   Weather) exec xdg-open "https://www.smhi.se/vader/prognoser/ortsprognoser/?lat=58.2167&lon=11.9333" 2>/dev/null || true;;
+  Calendar) exec "$HOME/.local/bin/nirupi-calendar.sh";;
+  'System update') exec "$HOME/.local/bin/nirupi-sysupdate.sh";;
   'Mute / unmute') exec "$HOME/.local/bin/nirupi-osd.sh" volume mute;;
   nirunote) exec "$HOME/.local/bin/nirupi-app.sh" nirunote;;
   nplay) exec "$HOME/.local/bin/nirupi-app.sh" nplay;;

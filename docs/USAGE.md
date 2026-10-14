@@ -238,7 +238,10 @@ Full detail in [`FEATURES.md`](FEATURES.md). Quick keys:
 | `Super+x` | Screensaver (runes, locks on input) |
 | `Super+Shift+q` | Power menu (suspend/logout/reboot/shutdown + timers) |
 
-The **lock screen** (`Super+Esc`) shows a minimal clock, date and hostname.
+Clicking the **date** in the status bar opens a centred floating **calendar**
+(Swedish, Mon–Sun, ISO week numbers); clicking the **updates** count runs the
+distro's **system update** in a centred floating terminal. The **lock screen**
+(`Super+Esc`) shows a minimal clock, ISO date, hostname and AFK timer.
 **Suspend** (`Super+Shift+Esc`) locks, waits `SUSPEND_DELAY_SECONDS` (default 3s)
 and suspends — unlock within the wait to cancel. **Clipboard history is now
 automatic** (`Super+v`). The **control center** (`Super+Shift+m`) collects all of

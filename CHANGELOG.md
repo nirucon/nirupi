@@ -2,6 +2,18 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.7.2
+- **Screensaver**: the clock is now always normal digits — only the **hostname**
+  alternates between Elder Futhark runes and ASCII every 30 s. The first input
+  switches to the **blurred desktop lock** (clock + ISO date + hostname + AFK),
+  not a black screen.
+- **Calendar**: clicking the date in the status bar opens a centred floating TUI
+  (Swedish, Monday–Sunday, ISO week numbers; navigate months/years, `t` today).
+- **System update**: clicking the updates segment opens the distro's updater in a
+  centred floating terminal (apt / xbps / pacman). Also in the control center.
+- The bar **agent icon** now uses the same robot glyph as the AI workspace tag.
+- Control center: added **Calendar** and **System update**.
+
 ## 0.7.1
 - **Power menu** on `Super+Shift+q`: screensaver, lock, suspend/logout/reboot/
   shut down, each with optional 15/30/60-minute (or custom) timers and a cancel

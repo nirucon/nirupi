@@ -45,10 +45,11 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
 - Clones your default repositories (`nirupresence`, `nirunote`, `nplay`) into
   `~/Git/` on install and updates them on `--update-dots`.
 - **Window switcher**, **gaps toggle**, **real fullscreen**, a **lock-screen
-  clock with an AFK timer**, a **Noir screensaver** (Elder Futhark runes, locks on
-  input), a **power menu with timers** (`Super+Shift+q`), **caffeine** (stay
-  awake), **focus/DND**, **screen recording**, **automatic clipboard history**,
-  a **night-light cycle**, **keyboard-layout and touchpad toggles**, **day/night
+  clock with an AFK timer**, a **Noir screensaver** (runic hostname, locks to a
+  blurred screen on input), a **power menu with timers** (`Super+Shift+q`), a
+  **calendar** and **system-update** pop-up, **caffeine** (stay awake),
+  **focus/DND**, **screen recording**, **automatic clipboard history**, a
+  **night-light cycle**, **keyboard-layout and touchpad toggles**, **day/night
   theme**, and quick launch for `nirunote`/`nplay`. See
   [`docs/FEATURES.md`](docs/FEATURES.md).
 - Installs **opencode** and wires `nirupi agent` + a control center / keybinding

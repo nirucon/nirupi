@@ -26,13 +26,21 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - `nirupi lock` is the same wrapper.
 
 ## Screensaver (`slock -s`)
-- `Super+x` (and the power menu) shows a **pure-black** screensaver with the
-  clock and hostname in **Elder Futhark runes**, alternating with uppercase
-  ASCII every 30 seconds — so it feels alive. **Never automatic.**
-- The first key press or click locks the screen (you must then type your
-  password). Bundles `Noto Sans Runic` (OFL) so the runes always render; it
-  falls back to ASCII if the font is missing.
-- Tune in `vendor/suckless/slock/config.h` (`runefont`, `clockforeground`).
+- `Super+x` (and the power menu) shows a **pure-black** screensaver: the clock is
+  always normal digits, and only the **hostname** alternates between **Elder
+  Futhark runes** and uppercase ASCII every 30 seconds. **Never automatic.**
+- The first key press or click switches to the **blurred desktop lock** (clock +
+  ISO date + hostname + AFK), then you type your password. Bundles
+  `Noto Sans Runic` (OFL) so the runes always render; falls back to ASCII without
+  the font. Tune in `vendor/suckless/slock/config.h`.
+
+## Status-bar pop-ups
+- **Click the date** → a centred floating **calendar** TUI (Swedish,
+  Monday–Sunday, ISO week numbers; ←/→ months, ↑/↓ years, `t` today, `q` quit).
+- **Click the updates count** → the distro's **system update** runs in a centred
+  floating terminal (`apt-get` / `xbps-install` / `pacman`).
+- Both also live in the control center (`Super+Shift+m`). The bar **agent icon**
+  matches the AI workspace tag glyph.
 
 ## Power menu (`Super+Shift+q`)
 - Screensaver · Lock · **Suspend** (now / 15 / 30 / 60 min / custom) ·

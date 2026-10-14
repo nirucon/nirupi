@@ -42,4 +42,22 @@ grep -q 'runefont' "$SLOCK/config.h" || fail 'slock runic font config missing'
 [[ -f "$ROOT/vendor/noir/fonts/NotoSansRunic-Regular.ttf" ]] || fail 'runic font not bundled'
 grep -q 'theme_install_fonts' "$ROOT/lib/theme.sh" || fail 'fonts not installed by the theme engine'
 
-echo 'PASS: v0.7.1 (power menu, screensaver runes/ASCII, night-light cycle, current weather/SMHI, TUI apps)'
+# Screensaver: clock is never runes; the wake switches to the blurred lock.
+grep -q 'applyblur' "$SLOCK/slock.c" || fail 'screensaver wake does not restore the blur'
+awk '/^drawscreensaver/,/^}/' "$SLOCK/slock.c" | grep -q 'centerline(dpy, lock, clkfont' || fail 'screensaver clock is not normal digits'
+awk '/^drawscreensaver/,/^}/' "$SLOCK/slock.c" | grep -q 'runicfontsmall' || fail 'screensaver hostname runes missing'
+
+# Agent bar icon matches the AI workspace tag glyph.
+grep -A1 'icon_agent()' "$BIN/dwm-status.sh" | grep -q 'U000f06a9' || fail 'agent icon is not the AI robot glyph'
+
+# Calendar popup (centred) + system updater.
+[[ -f "$BIN/nirupi-calendar.py" && -x "$BIN/nirupi-calendar.sh" ]] || fail 'calendar helper missing'
+grep -q 'nirupi-calendar' "$ROOT/vendor/suckless/dwm/dwm.c" || fail 'calendar window not centred in dwm'
+grep -q 'nirupi-calendar.sh' "$BIN/nirupi-status-click.sh" || fail 'date click does not open the calendar'
+[[ -x "$BIN/nirupi-sysupdate.sh" ]] || fail 'system update helper missing'
+for d in 'apt-get' 'xbps-install' 'pacman'; do grep -q "$d" "$BIN/nirupi-sysupdate.sh" || fail "sysupdate missing $d"; done
+grep -q 'nirupi-sysupdate.sh' "$BIN/nirupi-status-click.sh" || fail 'updates click does not open the updater terminal'
+grep -q 'nirupi-calendar.sh' "$ROOT/lib/install.sh" || fail 'calendar not deployed'
+grep -q 'nirupi-sysupdate.sh' "$ROOT/lib/install.sh" || fail 'sysupdate not deployed'
+
+echo 'PASS: v0.7.2 (power menu, screensaver runes/ASCII + blur lock, night-light cycle, current weather/SMHI, TUI apps, calendar, system updater)'

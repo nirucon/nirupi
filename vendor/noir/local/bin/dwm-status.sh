@@ -252,7 +252,7 @@ icon_bluetooth() {
 }
 
 icon_agent() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf120' || printf 'AI'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '\U000f06a9' || printf 'AI'  # same robot as the AI tag
 }
 
 
