@@ -144,7 +144,9 @@ bar_color_on(){
   if [[ "${BAR_COLOR_EXPLICIT:-0}" -eq 1 ]]; then
     [[ "${BAR_COLOR:-0}" -eq 1 ]]
   else
-    [[ "$(tr -d '[:space:]' < "$_theme_mode_file" 2>/dev/null)" == wallpaper ]]
+    local _mode=""
+    [[ -r "$_theme_mode_file" ]] && _mode="$(tr -d '[:space:]' < "$_theme_mode_file" 2>/dev/null)"
+    [[ "$_mode" == wallpaper ]]
   fi
 }
 # Keep exactly one bar writer per user/X display, including concurrent startx/SDDM starts.
