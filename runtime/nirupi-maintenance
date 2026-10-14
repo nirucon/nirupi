@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# NIRUPI maintenance front-end.
+# Deployed to ~/.local/bin by the installer. Sources the runtime bundle under
+# ~/.local/lib/nirupi/lib and dispatches theme, dots, migrate, rollback and
+# custom-app commands. Never requires the original source checkout.
+set -Eeuo pipefail
+NIRUPI_LIB_ROOT="${NIRUPI_LIB_ROOT:-$HOME/.local/lib/nirupi}"
+LIB="$NIRUPI_LIB_ROOT/lib"
+if [[ ! -d $LIB ]]; then
+  printf 'NIRUPI maintenance library not installed at %s\n' "$LIB" >&2
+  exit 1
+fi
+for f in common.sh managed.sh migrate.sh theme.sh apps.sh release.sh install.sh rollback.sh; do
+  # shellcheck disable=SC1090
+  [[ -f $LIB/$f ]] && source "$LIB/$f"
+done
+cmd="${1:-help}"; shift || :
+case "$cmd" in
+  theme) nirupi_theme "$@";;
+  dots) nirupi_theme apply "$@";;
+  migrate) nirupi_migrate "$@";;
+  rollback) nirupi_rollback "$@";;
+  apps) nirupi_apps "$@";;
+  status) printf 'NIRUPI %s (%s) schema %s\n' "$VERSION" "$DISTRO" "$NIRUPI_SCHEMA";;
+  help|-h|--help)
+    printf 'nirupi maintenance: {theme apply|status|diff | dots | migrate plan|diff|dwm --rebuild | apps | rollback --all|--configs RUN|--binaries}\n';;
+  *) printf 'Unknown maintenance command: %s\n' "$cmd" >&2; exit 2;;
+esac

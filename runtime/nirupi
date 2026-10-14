@@ -47,8 +47,13 @@ case "$cmd" in
     [[ "$failures" == 0 ]];;
   config) printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf";;
   history) printf 'Use: bash ~/Git/nirupi/install.sh --history\n';;
-  rollback) printf 'For safety, use local TTY: bash ~/Git/nirupi/install.sh --rollback\n' >&2; exit 2;;
+  rollback|theme|dots|migrate|apps|maintenance)
+    if [[ -x "$HOME/.local/bin/nirupi-maintenance" ]]; then
+      exec "$HOME/.local/bin/nirupi-maintenance" "$cmd" "$@"
+    fi
+    printf 'NIRUPI maintenance library not installed; run install.sh --apply to deploy it.\n' >&2
+    exit 2;;
   keys) exec "$HOME/.local/bin/dwm-keybindings.sh";;
-  help|-h|--help) printf 'nirupi {version|--version|status|doctor|appearance|browser|updates [--refresh]|config|keys|history|rollback}\n';;
+  help|-h|--help) printf 'nirupi {version|--version|status|doctor|appearance|browser|updates [--refresh]|config|keys|theme apply|dots update|migrate plan|rollback --all|history}\n';;
   *) printf 'Unknown command: %s\n' "$cmd" >&2; exit 2;;
 esac

@@ -59,19 +59,33 @@ select_dwm_build_config() {
   cp -- "$bundled" "$staged"
  fi
 }
+# True when the user's DWM config is a NIRUPI-managed file that still matches
+# the last recorded checksum (safe to upgrade in place).
+dwm_config_is_managed_unmodified(){
+ local dest="$HOME/.config/suckless/dwm/config.h" manifest="$STATE/managed-configs.tsv"
+ local prev cur
+ [[ -f $dest && ! -L $dest ]] || return 1
+ prev="$(_manifest_hash "$manifest" 'dwm/config.h')"
+ [[ -n $prev ]] || return 1
+ cur="$(sha256sum -- "$dest" | cut -d ' ' -f 1)"
+ [[ $cur == "$prev" ]]
+}
 # Preflight all known local collisions before any package-manager transaction.
 # Keep this read-only: do not create directories or modify existing files.
 check_user_install_conflicts() {
- local app path target custom="$HOME/.config/suckless/dwm/config.h"
- for app in dwm dmenu st dmenu_run dmenu_path stest; do
-  path="$HOME/.local/bin/$app"
-  if [[ -L $path ]]; then
-   target="$(readlink -- "$path")"
-   [[ $target == "$HOME/.local/lib/nirupi/"* ]] || die "Unmanaged symlink blocks installation: $path -> $target"
-  elif [[ -e $path ]]; then
-   die "Existing executable blocks NIRUPI symlink: $path"
-  fi
- done
+  local app path target custom="$HOME/.config/suckless/dwm/config.h"
+  # Foreign binaries/symlinks are no longer fatal: an explicit --apply archives
+  # them under ~/.local/state/nirupi/legacy/ before linking (see lib/migrate.sh).
+  for app in dwm dmenu st dmenu_run dmenu_path stest slstatus; do
+   path="$HOME/.local/bin/$app"
+   if [[ -L $path ]]; then
+    target="$(readlink -- "$path")"
+    [[ $target == "$HOME/.local/lib/nirupi/"* ]] || warn "Legacy symlink will be archived: $path -> $target"
+   elif [[ -e $path ]]; then
+    [[ -f $path ]] || die "Unsafe executable path (not a regular file): $path"
+    warn "Legacy executable will be archived: $path"
+   fi
+  done
  if [[ -e $custom || -L $custom ]]; then
   [[ -f $custom && ! -L $custom ]] || die "Unsafe DWM configuration path: $custom"
  fi
@@ -89,7 +103,7 @@ check_user_install_conflicts() {
  done
 }
 install_desktop() (
- local app stage bin_dir="$HOME/.local/lib/nirupi/$VERSION/$RUN_ID/bin" src dest desktop
+ local app stage bin_dir="$HOME/.local/lib/nirupi/$VERSION/bin" src dest desktop
  local -a stages=()
  # Build stages are placed under a single temporary parent so they can be
  # cleaned deterministically on success and on compilation failure.
@@ -98,27 +112,19 @@ install_desktop() (
  trap 'rm -rf -- "$stage_root"' EXIT
  # Temporary build directories are removed after build/deployment or an ordinary function failure.
  mkdir -p "$bin_dir" "$HOME/.local/bin" "$HOME/.config" "$BACKUP_DIR"
- # Refuse unexpected collisions before any binary is linked.
- for app in dwm dmenu st dmenu_run dmenu_path stest; do
-  if [[ -e "$HOME/.local/bin/$app" && ! -L "$HOME/.local/bin/$app" ]]; then
-   die "Existing executable blocks NIRUPI symlink: ~/.local/bin/$app (not overwritten)"
-  fi
- done
- # Detect unmanaged symlinks before making changes to any user binary.
- for app in dwm dmenu st dmenu_run dmenu_path stest; do
-  local current="$HOME/.local/bin/$app" target
-  if [[ -L $current ]]; then
-   target="$(readlink -- "$current")"
-   [[ $target == "$HOME/.local/lib/nirupi/"* ]] || die "Unmanaged symlink blocks installation: $current -> $target"
-  fi
- done
+ # Archive (never delete) foreign binaries/symlinks that would block a link.
+ resolve_binary_conflicts "$RUN_ID"
  # Build all apps before installing any of them; avoid overwriting currently running binaries.
  for app in dwm dmenu st slock; do
   stage="$(mktemp -d "$stage_root/build.XXXXXXXX")"; stages+=("$stage")
   cp -a "$ROOT/vendor/suckless/$app/." "$stage/"
   if [[ $app == dwm ]]; then
+   # Atomic build source: an unmodified managed config is upgraded to the
+   # bundled version; a modified or untracked config is used as-is and kept.
+   local dwm_build_custom="$HOME/.config/suckless/dwm/config.h"
+   if dwm_config_is_managed_unmodified; then dwm_build_custom=""; fi
    select_dwm_build_config "$ROOT/vendor/suckless/dwm/config.h" \
-     "$HOME/.config/suckless/dwm/config.h" "$stage/config.h"
+     "$dwm_build_custom" "$stage/config.h"
   fi
   log "Building $app"
   if ! make -C "$stage" -j "$(nproc)"; then
@@ -184,6 +190,7 @@ install_desktop() (
  managed_helper_install nirupi "$ROOT/runtime/nirupi" "$HOME/.local/bin/nirupi"
  managed_helper_install nirupi-appearance "$ROOT/runtime/nirupi-appearance" "$HOME/.local/bin/nirupi-appearance"
  managed_helper_install nirupi-browser "$ROOT/runtime/nirupi-browser" "$HOME/.local/bin/nirupi-browser"
+ managed_helper_install nirupi-maintenance "$ROOT/runtime/nirupi-maintenance" "$HOME/.local/bin/nirupi-maintenance"
  for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
@@ -203,16 +210,13 @@ install_desktop() (
  local rofi_theme_src="$ROOT/vendor/noir/local/share/rofi/themes/Black-Metal.rasi"
  local rofi_theme_dest="$HOME/.local/share/rofi/themes/Black-Metal.rasi"
  managed_config_install 'rofi/Black-Metal.rasi' "$rofi_theme_src" "$rofi_theme_dest"
- mkdir -p "$HOME/.config/suckless/dwm"
- local dwm_cfg="$HOME/.config/suckless/dwm/config.h"
-  # Never silently change the DWM config after building a binary from it.
-  # A future explicit migration command can update and rebuild atomically.
-  if [[ -e $dwm_cfg || -L $dwm_cfg ]]; then
-   warn 'Existing DWM config preserved to match the just-built binary'
-  else
-   managed_config_install 'dwm/config.h' "$ROOT/vendor/suckless/dwm/config.h" "$dwm_cfg"
-  fi
- for app in kitty fish dunst picom rofi alacritty gtk-3.0 cmus; do
+  mkdir -p "$HOME/.config/suckless/dwm"
+  local dwm_cfg="$HOME/.config/suckless/dwm/config.h"
+  # Three-way merge: an unmodified managed config is upgraded to the bundled
+  # version that was just built; a modified/untracked config is preserved and
+  # receives a sibling *.nirupi-new proposal. Binary and config never diverge.
+  managed_config_install 'dwm/config.h' "$ROOT/vendor/suckless/dwm/config.h" "$dwm_cfg"
+  for app in kitty fish dunst picom rofi alacritty gtk-3.0 cmus tmux lazygit micro aerc; do
   [[ -d $ROOT/vendor/noir/config/$app ]] || continue
   if [[ -L $HOME/.config/$app ]]; then warn "Preserving symlink ~/.config/$app"; continue; fi
   if [[ -e $HOME/.config/$app && ! -d $HOME/.config/$app ]]; then
@@ -225,8 +229,14 @@ install_desktop() (
    managed_config_install "config/$app/${src#"$ROOT/vendor/noir/config/$app/"}" "$src" "$dest"
   done < <(find "$ROOT/vendor/noir/config/$app" -type f -print0)
  done
- managed_config_install dotfiles/Xresources "$ROOT/vendor/noir/dotfiles/.Xresources" "$HOME/.Xresources"
- local user_session="$HOME/.local/bin/nirupi-session"
+  managed_config_install dotfiles/Xresources "$ROOT/vendor/noir/dotfiles/.Xresources" "$HOME/.Xresources"
+  # Browser dark-mode flags, environment.d and GTK4 Noir defaults.
+  theme_apply_browser_flags "$ROOT/vendor/noir"
+  theme_apply_environment
+  theme_apply_gtk4
+  # Deploy the reusable bundle so `nirupi theme|dots|migrate` work after install.
+  deploy_bundle
+  local user_session="$HOME/.local/bin/nirupi-session"
  managed_config_install 'session/nirupi-session' "$ROOT/runtime-session.sh" "$user_session" 0755
  managed_config_install 'session/xinitrc' "$ROOT/runtime-xinitrc" "$HOME/.xinitrc" 0755
  check_system_session_conflicts
@@ -283,5 +293,86 @@ configure_sddm(){
  fi
  if [[ $DISTRO != void ]]; then
   sudo systemctl enable sddm.service || warn 'Failed to enable SDDM'
-fi
+ fi
+}
+# Copy the reusable runtime bundle into ~/.local/lib/nirupi so the deployed
+# `nirupi` CLI can re-apply the theme, update dotfiles or rebuild DWM without
+# the original source checkout.
+deploy_bundle(){
+ local dest="$HOME/.local/lib/nirupi" f rel
+ mkdir -p "$dest/lib" "$dest/noir" "$dest/src/suckless"
+ for f in "$ROOT"/lib/*.sh; do
+  put_file "$f" "$dest/lib/$(basename "$f")" 0644
+ done
+ put_file "$ROOT/VERSION" "$dest/VERSION" 0644
+ while IFS= read -r -d '' f; do
+  rel="${f#"$ROOT/vendor/noir/"}"
+  mkdir -p "$dest/noir/$(dirname "$rel")"
+  if [[ ! -f $dest/noir/$rel ]] || ! cmp -s -- "$f" "$dest/noir/$rel"; then
+   cp -f -- "$f" "$dest/noir/$rel"
+  fi
+ done < <(find "$ROOT/vendor/noir" -type f -print0)
+ while IFS= read -r -d '' f; do
+  rel="${f#"$ROOT/vendor/suckless/"}"
+  mkdir -p "$dest/src/suckless/$(dirname "$rel")"
+  if [[ ! -f $dest/src/suckless/$rel ]] || ! cmp -s -- "$f" "$dest/src/suckless/$rel"; then
+   cp -f -- "$f" "$dest/src/suckless/$rel"
+  fi
+ done < <(find "$ROOT/vendor/suckless" -type f -print0)
+ log 'Runtime bundle deployed to ~/.local/lib/nirupi'
+}
+# Rebuild DWM from the deployed sources with the effective user config, then
+# atomically re-link the binary. Both config and binary stay consistent.
+migrate_dwm_rebuild(){
+ local src_root="${NIRUPI_SUCKLESS_DIR:-}"
+ [[ -n $src_root ]] || src_root="$HOME/.local/lib/nirupi/src/suckless"
+ if [[ ! -d $src_root/dwm && -n ${ROOT:-} && -d $ROOT/vendor/suckless/dwm ]]; then
+  src_root="$ROOT/vendor/suckless"
+ fi
+ [[ -d $src_root/dwm ]] || die "Missing DWM sources for rebuild: $src_root"
+ local bin_dir="$HOME/.local/lib/nirupi/$VERSION/bin"
+ local stage; stage="$(mktemp -d "${TMPDIR:-/tmp}/nirupi-dwm.XXXXXXXX")"
+ cp -a -- "$src_root/dwm/." "$stage/"
+ local user_cfg="$HOME/.config/suckless/dwm/config.h"
+ if [[ -f $user_cfg && ! -L $user_cfg ]]; then
+  cp -- "$user_cfg" "$stage/config.h"
+ fi
+ log "Rebuilding DWM ($VERSION)"
+ if ! make -C "$stage" -j "$(nproc)"; then
+  rm -rf -- "$stage"; die 'DWM rebuild failed; existing binary left untouched'
+ fi
+ [[ -x $stage/dwm ]] || { rm -rf -- "$stage"; die 'DWM rebuild produced no executable'; }
+ mkdir -p "$bin_dir"
+ put_file "$stage/dwm" "$bin_dir/dwm" 0755
+ link_binary "$bin_dir/dwm" "$HOME/.local/bin/dwm"
+ rm -rf -- "$stage"
+ log 'DWM rebuilt and relinked'
+}
+# Best-effort Nerd Font provisioning; never fatal. Package availability differs
+# wildly per distro, so install the official release into ~/.local/share/fonts.
+NERD_FONT_URL="${NIRUPI_NERD_FONT_URL:-https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip}"
+ensure_nerd_font(){
+ local fam dir tmp ans
+ if command -v fc-match >/dev/null 2>&1; then
+  fam="$(fc-match -f '%{family}' 'JetBrainsMono Nerd Font' 2>/dev/null || :)"
+  case "$fam" in
+   *'JetBrainsMono Nerd Font'*|*'JetBrainsMono NF'*|*'Nerd'*) log "Nerd Font available: $fam"; return 0;;
+  esac
+ fi
+ warn 'JetBrainsMono Nerd Font not found; status bar icons may be missing'
+ if [[ ${NIRUPI_INSTALL_FONT:-} != 1 ]]; then
+  printf 'Download JetBrainsMono Nerd Font to ~/.local/share/fonts? Type FONT to download: '
+  read -r ans; [[ $ans == FONT ]] || { warn 'Skipping Nerd Font download'; return 0; }
+ fi
+ command -v curl >/dev/null 2>&1 || { warn 'curl missing; cannot download font'; return 0; }
+ command -v unzip >/dev/null 2>&1 || { warn 'unzip missing; install it and re-run nirupi theme apply'; return 0; }
+ dir="$HOME/.local/share/fonts/JetBrainsMonoNerd"; mkdir -p "$dir"
+ tmp="$(mktemp -d)"
+ if curl -fsSL "$NERD_FONT_URL" -o "$tmp/font.zip" && unzip -oq "$tmp/font.zip" -d "$dir"; then
+  command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$dir" >/dev/null 2>&1 || :
+  log "Nerd Font installed to $dir"
+ else
+  warn 'Nerd Font download or extraction failed; continuing without it'
+ fi
+ rm -rf -- "$tmp"
 }

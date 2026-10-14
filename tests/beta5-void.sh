@@ -15,5 +15,5 @@ DISTRO=arch; packages
 grep -q 'void_packages_preflight' "$ROOT/install.sh"
 grep -q 'void_packages_preflight' "$ROOT/lib/packages.sh"
 grep -q 'version|--version|-V' "$ROOT/runtime/nirupi"
-[[ "$(cat "$ROOT/VERSION")" == 0.2.0-beta.5 ]]
+grep -Eq '^0\.3\.0-beta\.[0-9]+$' "$ROOT/VERSION"
 echo 'PASS: beta.5 Void package mapping, preflight and version CLI; Debian/Arch preserved'

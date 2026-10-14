@@ -11,12 +11,14 @@ warn(){ :; }
 check_user_install_conflicts
 printf 'custom DWM\n' > "$HOME/.config/suckless/dwm/config.h"
 check_user_install_conflicts
+# Foreign binaries/symlinks are reported but no longer fatal (archived on apply).
 ln -s /bin/true "$HOME/.local/bin/dwm"
-if (check_user_install_conflicts) >/dev/null 2>&1; then echo 'FAIL: unmanaged DWM symlink accepted' >&2; exit 1; fi
+check_user_install_conflicts
 rm "$HOME/.local/bin/dwm"
 printf 'foreign\n' > "$HOME/.local/bin/dwm"
-if (check_user_install_conflicts) >/dev/null 2>&1; then echo 'FAIL: foreign DWM executable accepted' >&2; exit 1; fi
+check_user_install_conflicts
 rm "$HOME/.local/bin/dwm"
+# Unsafe DWM config paths are still rejected.
 ln -s /bin/true "$HOME/.config/suckless/dwm/config.h".link
 mv "$HOME/.config/suckless/dwm/config.h" "$HOME/.config/suckless/dwm/config.h".original
 mv "$HOME/.config/suckless/dwm/config.h".link "$HOME/.config/suckless/dwm/config.h"
@@ -28,4 +30,4 @@ if (check_user_install_conflicts) >/dev/null 2>&1; then echo 'FAIL: manifest sym
 rm "$STATE/managed-configs.tsv"
 mkdir -p "$HOME/.config/kitty"
 check_user_install_conflicts
-printf 'PASS: pre-package collision checks are read-only and reject unsafe inputs\n'
+printf 'PASS: pre-package collision checks archive-safe and reject unsafe inputs\n'

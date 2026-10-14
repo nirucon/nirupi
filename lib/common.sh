@@ -8,7 +8,14 @@ die(){ printf '[ERROR] %s\n' "$*" >&2; exit 1; }
 [[ -r /etc/os-release ]] || die 'Missing /etc/os-release'
 source /etc/os-release
 case "${ID:-}" in
- arch) DISTRO=arch;; cachyos) DISTRO=cachyos;; debian) DISTRO=debian;; void) DISTRO=void;; *) die "Unsupported distro: ${ID:-unknown}";;
+ arch) DISTRO=arch;; cachyos) DISTRO=cachyos;; debian) DISTRO=debian;; void) DISTRO=void;;
+ *)
+  # Accept Arch/Debian derivatives (Omarchy, EndeavourOS, ...) via ID_LIKE.
+  case "${ID_LIKE:-}" in
+   *arch*) DISTRO=arch; warn "Treating '${ID:-unknown}' (ID_LIKE=${ID_LIKE:-}) as Arch";;
+   *debian*|*ubuntu*) DISTRO=debian; warn "Treating '${ID:-unknown}' (ID_LIKE=${ID_LIKE:-}) as Debian";;
+   *) die "Unsupported distro: ${ID:-unknown}";;
+  esac;;
 esac
 [[ $(uname -m) == x86_64 ]] || die 'Only x86_64 supported'
 if [[ $DISTRO == void ]] && command -v ldd >/dev/null 2>&1 && ldd --version 2>&1 | grep -qi musl; then die 'Void musl not yet supported'; fi
