@@ -25,6 +25,12 @@ All notable changes to NIRUPI. Versions are the `VERSION` file value.
   dunst drop-in (dunst ≥ 1.8) that outranks the base `dunstrc`. Your padding,
   stacking and icon preferences are preserved; the bundled `dunstrc` is
   settings-only and deployed as the base.
+- **Fix:** the `Super+Alt+k` keybinding viewer now describes every binding —
+  it reads the `/* key -> text */` comments from `config.h` (so it never drifts)
+  and has labels for the named launchers, instead of showing raw C variable
+  names like `thememenu` or `agentcmd`. Media keys show `(none)` as the
+  modifier and `` ` ``/`/` decode correctly. `docs/USAGE.md` and
+  `docs/FEATURES.md` updated for the drop-in and the picker.
 - **CI:** the Arch container job installs `diffutils`, so `tests/features-v07.sh`
   (and `cmp`-based checks) no longer fail with `diff: command not found`. The
   Arch smoke job had been red on every push because the minimal container lacked

@@ -41,3 +41,12 @@ if ! bash "$ROOT/tools/gen-keybindings.sh" > "$tmp" || ! diff -u "$ROOT/docs/KEY
 fi
 rm -f "$tmp"
 echo 'PASS: docs/KEYBINDINGS.md matches config.h'
+
+# The Super+Alt+k viewer (dwm-keybindings.sh) must describe launchers from the
+# config comments instead of leaking raw C variable names.
+viewer_out="$(bash "$ROOT/vendor/noir/local/bin/dwm-keybindings.sh" "$CFG" 2>/dev/null)"
+grep -q 'theme picker' <<< "$viewer_out" || { echo 'FAIL: viewer lacks the theme picker description' >&2; exit 1; }
+if grep -qE '\| (thememenu|agentcmd|menucmd|keyscmd|nightlightcmd|media_play) ' <<< "$viewer_out"; then
+  echo 'FAIL: viewer leaks raw config variable names' >&2; exit 1
+fi
+echo 'PASS: keybinding viewer (Super+Alt+k) describes launchers'

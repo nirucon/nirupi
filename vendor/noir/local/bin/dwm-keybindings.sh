@@ -134,6 +134,7 @@ function trim(s) {
 }
 
 function pretty_mod(m) {
+  if (m == "0" || m == "") return "(none)"
   gsub(/MODKEY/, MODKEY_DEF, m)
   gsub(/Mod4Mask/, "Super", m)
   gsub(/ShiftMask/, "Shift", m)
@@ -152,6 +153,8 @@ function pretty_key(k) {
   if (k == "Escape") return "Esc"
   if (k == "Tab") return "Tab"
   if (k == "BackSpace") return "Backspace"
+  if (k == "grave") return "`"
+  if (k == "slash") return "/"
   if (k == "comma") return ","
   if (k == "period") return "."
   if (k == "semicolon") return ";"
@@ -160,42 +163,23 @@ function pretty_key(k) {
   return k
 }
 
-function simplify_arg(arg) {
+function simplify_arg(arg,   vname, num) {
   # Extract meaningful parts from arguments
   if (arg ~ /^\{\.v = /) {
-    sub(/^\{\.v = /, "", arg)
-    sub(/ \}$/, "", arg)
-    
-    # Handle command arrays
-    if (arg ~ /cmd/) {
-      if (arg ~ /stcmd/) return "st (terminal)"
-      if (arg ~ /alacrittycmd/) return "alacritty (terminal)"
-      if (arg ~ /bravecmd/) return "brave (browser)"
-      if (arg ~ /dmenucmd/) return "dmenu (launcher)"
-      if (arg ~ /rofiruncmd/) return "rofi run"
-      if (arg ~ /keybindingscmd/) return "keybindings viewer (interactive)"
-      if (arg ~ /lockcmd/) return "lock screen"
-      if (arg ~ /fmcmd/) return "file manager"
-      if (arg ~ /scratchpadcmd/) return "scratchpad terminal"
-      if (arg ~ /br_up/) return "brightness up"
-      if (arg ~ /br_down/) return "brightness down"
-      if (arg ~ /vol_up/) return "volume up"
-      if (arg ~ /vol_down/) return "volume down"
-      if (arg ~ /vol_toggle/) return "volume mute toggle"
-      if (arg ~ /mic_toggle/) return "mic mute toggle"
-      if (arg ~ /ss_select/) return "screenshot region"
-      if (arg ~ /ss_full/) return "screenshot fullscreen"
-      if (arg ~ /ss_flameshot/) return "screenshot flameshot"
-      if (arg ~ /wallnext/) return "next wallpaper"
-    }
-    
-    # Handle layout references
-    if (arg ~ /&layouts\[/) {
-      num = arg
+    vname = arg
+    sub(/^\{\.v = /, "", vname)
+    sub(/[ \t]*\}$/, "", vname)
+
+    # Layout references (cyclelayout) use &layouts[N].
+    if (vname ~ /^&layouts\[/) {
+      num = vname
       sub(/.*&layouts\[/, "", num)
       sub(/\].*/, "", num)
       return "layout " num
     }
+    # Named launcher/command variables -> friendly label.
+    if (vname in LABELS) return LABELS[vname]
+    return vname
   }
   
   # Handle SHCMD
@@ -233,6 +217,18 @@ function simplify_arg(arg) {
   if (arg == "{0}" || arg == "") return "—"
   
   return arg
+}
+
+# Human description written in a /* ... -> text */ trailing comment.
+function comment_desc(raw,   c, p) {
+  if (!match(raw, /\/\*[^*]*\*\//)) return ""
+  c = substr(raw, RSTART + 2, RLENGTH - 4)
+  gsub(/^[ \t]+|[ \t]+$/, "", c)
+  p = index(c, "->")
+  if (p == 0) return ""
+  c = substr(c, p + 2)
+  gsub(/^[ \t]+|[ \t]+$/, "", c)
+  return c
 }
 
 function category_of(fn, act) {
@@ -280,8 +276,9 @@ function print_header() {
 }
 
 function append_row(cat, mods, key, fn, arg) {
-  # Simplify argument for better readability
+  # Prefer the human description in the trailing /* ... -> text */ comment.
   simple_arg = simplify_arg(arg)
+  if (cur_desc != "") simple_arg = cur_desc
   
   # Store for table display
   store[cat] = store[cat] sprintf("| %-33s | %-23s | %-27s | %-40s |\n", 
@@ -371,6 +368,51 @@ function split_fields(inner, f1, f2, f3, f4,   i, c, depthB, depthP, depthS, dep
 
 BEGIN {
   total_count = 0
+
+  # Friendly labels for named launcher/command variables in config.h.
+  LABELS["stcmd"] = "st (terminal)"
+  LABELS["kittycmd"] = "kitty (terminal)"
+  LABELS["alacrittycmd"] = "alacritty (terminal)"
+  LABELS["bravecmd"] = "brave (browser)"
+  LABELS["browsercmd"] = "browser (resolver)"
+  LABELS["dmenucmd"] = "dmenu (launcher)"
+  LABELS["rofiruncmd"] = "rofi run"
+  LABELS["keybindingscmd"] = "keybindings viewer (interactive)"
+  LABELS["keyscmd"] = "keybinding palette (rofi)"
+  LABELS["menucmd"] = "control center"
+  LABELS["thememenu"] = "theme picker"
+  LABELS["agentcmd"] = "AI agent (opencode)"
+  LABELS["windowsmenu"] = "window switcher"
+  LABELS["clipsavecmd"] = "clipboard: save selection"
+  LABELS["clipmenucmd"] = "clipboard history menu"
+  LABELS["lockcmd"] = "lock screen"
+  LABELS["logoutcmd"] = "log out"
+  LABELS["fmcmd"] = "file manager"
+  LABELS["scratchpadcmd"] = "scratchpad terminal"
+  LABELS["screensavercmd"] = "screensaver (locks on input)"
+  LABELS["recordcmd"] = "toggle screen recording"
+  LABELS["focuscmd"] = "toggle do-not-disturb"
+  LABELS["caffeinecmd"] = "toggle caffeine (stay awake)"
+  LABELS["kblayoutcmd"] = "keyboard layout se/us"
+  LABELS["touchpadcmd"] = "toggle touchpad"
+  LABELS["nightlightcmd"] = "night-light cycle"
+  LABELS["nirunotecmd"] = "nirunote"
+  LABELS["nplaycmd"] = "nplay"
+  LABELS["arandrcmd"] = "display layout (arandr)"
+  LABELS["br_up"] = "brightness up"
+  LABELS["br_down"] = "brightness down"
+  LABELS["vol_up"] = "volume up"
+  LABELS["vol_down"] = "volume down"
+  LABELS["vol_toggle"] = "volume mute toggle"
+  LABELS["mic_toggle"] = "mic mute toggle"
+  LABELS["ss_select"] = "screenshot region"
+  LABELS["ss_full"] = "screenshot fullscreen"
+  LABELS["ss_flameshot"] = "screenshot flameshot"
+  LABELS["ss_browser"] = "browse screenshots"
+  LABELS["wallnext"] = "next wallpaper"
+  LABELS["media_play"] = "media play/pause"
+  LABELS["media_next"] = "media next"
+  LABELS["media_prev"] = "media previous"
   
   if (OUTPUT_FORMAT == "tsv") {
     # Skip header for TSV output (used by fzf)
@@ -399,7 +441,10 @@ inblock {
   raw = $0
   line = strip_comments(raw)
   gsub(/,[ \t]*\.\.\.[ \t]*/, ",", line)
-  
+
+  # Description carried in a trailing /* key -> text */ comment, if any.
+  cur_desc = comment_desc(raw)
+
   if (line ~ /^[ \t]*$/) next
   
   # Handle TAGKEYS macro expansion

@@ -78,7 +78,8 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **One palette drives everything.** Switching a theme restyles terminals
   (kitty, alacritty, st), fish, TUI tools (tmux, lazygit, micro, aerc, cmus),
   GTK/Qt, rofi, dunst, the SDDM theme and the status-bar accents — live, no
-  rebuild.
+  rebuild. Dunst colours live in a `dunstrc.d` drop-in, so your own
+  notification settings are preserved.
 - **Theme picker** `Super+Ctrl+t` (`nirupi theme menu`): rofi with colour
   swatches per theme.
 - Shipped themes: `noir` (default), `Satie` (monochrome graphite, one muted-gold

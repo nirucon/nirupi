@@ -22,6 +22,7 @@ startup, run `nirupi theme apply`.
 | `Super+a` | **Agent** (opencode) |
 | `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson…) |
 | `Super+Shift+h` | **Keybinding palette** (search everything) |
+| `Super+Alt+k` | Full keybinding table (interactive TUI) |
 | `Super+Shift+m` | **Control center** |
 | `Super+Esc` | Lock (`nirupi lock` → slock) |
 | `Super+Shift+q` | **Log out** (asks for confirmation) |
@@ -73,7 +74,7 @@ re-read it.
 
 ## Control center — `Super+Shift+m`
 
-One menu for: lock, suspend, log out, reboot, shut down, apply Noir theme,
+One menu for: lock, suspend, log out, reboot, shut down, choose a theme,
 toggle wallpaper mode, next wallpaper, Wi‑Fi, Bluetooth, weather, mute, agent,
 backup, check updates.
 
@@ -117,8 +118,11 @@ Shipped themes:
 | `warm` / `cool` | Noir with a warm or cool cast |
 
 `st`/`dmenu`/dwm read the palette from Xresources at startup (and on `SIGUSR1`);
-**kitty, alacritty, fish, tmux, lazygit, micro, aerc, cmus, rofi, dunst and SDDM
-are generated from the active palette** on every `nirupi theme apply`.
+**kitty, alacritty, fish, tmux, lazygit, micro, aerc, cmus, rofi and SDDM are
+generated from the active palette** on every `nirupi theme apply`. **Dunst**
+colours are written to `~/.config/dunst/dunstrc.d/90-nirupi.conf`, a drop-in
+that outranks your base `dunstrc` — so your own notification settings stay
+yours and still follow the theme.
 
 Add your own theme: copy `vendor/noir/theme/Satie.env` to
 `vendor/noir/theme/MyTheme.env`, edit the hex values, and
@@ -171,6 +175,7 @@ nirupi webapp remove "Work Mail"
 | `~/.config/nirupi/browser.conf` | Default browser (`nirupi browser set X`) |
 | `~/.config/nirupi/tokens.env` | Active palette (from `nirupi theme set`) |
 | `~/.config/nirupi/theme/` | Generated colour fragments (do not edit) |
+| `~/.config/dunst/dunstrc.d/90-nirupi.conf` | Generated dunst colours (do not edit) |
 
 DWM keybindings/colors are compiled in `vendor/suckless/dwm/config.h`; rebuild
 after editing with `nirupi migrate dwm --rebuild`.
