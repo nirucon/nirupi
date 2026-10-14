@@ -87,10 +87,6 @@ theme_apply_gtk4(){
   [[ -L $(cfgdir)/gtk-4.0 ]] && { warn 'Preserving symlinked gtk-4.0'; return 0; }
   mkdir -p "$(cfgdir)/gtk-4.0"
   if [[ -e $dest && ! -f $dest ]]; then warn "Preserving non-regular $dest"; return 0; fi
-  if [[ -e $dest ]] && ! grep -q '^gtk-theme-name=Adwaita-dark' "$dest" 2>/dev/null; then
-    warn "Preserving existing $dest"
-    return 0
-  fi
   tmp="$(mktemp "$(cfgdir)/gtk-4.0/.nirupi-gtk4.XXXXXXXX")"
   if [[ -f $dest ]]; then cp -p -- "$dest" "$tmp"; else printf '[Settings]\n' > "$tmp"; fi
   if grep -q '^gtk-theme-name=' "$tmp"; then
