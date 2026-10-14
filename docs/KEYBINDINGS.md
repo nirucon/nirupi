@@ -2,7 +2,7 @@
 
 <!-- Generated from vendor/suckless/dwm/config.h by tools/gen-keybindings.sh. Do not edit by hand. -->
 
-113 bindings. `Super` is the Mod4/Win key.
+114 bindings. `Super` is the Mod4/Win key.
 
 | Keys | Action |
 | --- | --- |
@@ -88,7 +88,7 @@
 | `Super+Shift+0` | tag |
 | `Super+Ctrl+B` | togglebar |
 | `Super+Q` | kill focused |
-| `Super+Shift+Q` | logout (confirm) |
+| `Super+Shift+Q` | power menu |
 | `Super+Ctrl+Shift+Q` | quit immediately |
 | `Super+N` | night light toggle |
 | `Super+W` | window switcher (rofi) |
@@ -101,6 +101,7 @@
 | `Super+Shift+N` | nirunote |
 | `Super+Shift+O` | nplay |
 | `Super+Shift+R` | reload theme colours |
+| `Super+X` | screensaver (locks on input) |
 | `Super+Shift+Z` | zoom |
 | `Super+Shift+S` | togglescratch scratchpadcmd |
 | `(none)+MonBrightnessUp` | spawn br_up |

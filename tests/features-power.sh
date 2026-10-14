@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# v0.7.1: power menu, screensaver (runes/ASCII), night-light cycle, current
+# weather (SMHI click), TUI apps in a terminal.
+set -Eeuo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CFG="$ROOT/vendor/suckless/dwm/config.h"
+SLOCK="$ROOT/vendor/suckless/slock"
+BIN="$ROOT/vendor/noir/local/bin"
+fail(){ echo "FAIL: $*" >&2; exit 1; }
+
+# Screensaver binding + power menu
+grep -q 'screensavercmd' "$CFG" || fail 'screensaver command missing'
+grep -q 'XK_x,.*screensavercmd' "$CFG" || fail 'Super+x screensaver binding missing'
+grep -q 'nirupi-power.sh' "$CFG" || fail 'power menu not bound to Super+Shift+q'
+grep -q 'nirupi-power.sh' "$ROOT/lib/install.sh" || fail 'power script not deployed'
+
+# Power menu features + distro portability
+P="$BIN/nirupi-power.sh"
+[[ -x $P ]] || fail 'nirupi-power.sh missing'
+for s in 'Suspend in 15' 'Suspend in …' 'Reboot in 60' 'Shut down' 'Cancel scheduled' 'loginctl' 'systemctl' 'cancel_timer'; do
+  grep -qF "$s" "$P" || fail "power menu missing: $s"
+done
+
+# Night-light cycle 4500/3500/2500 + off + gamma reset
+N="$BIN/nirupi-nightlight.sh"
+for s in 4500 3500 2500 'reset_gamma' 'off|reset'; do grep -qF "$s" "$N" || fail "night light missing: $s"; done
+
+# Weather: current conditions + SMHI click
+grep -q 'current=temperature_2m' "$BIN/dwm-status.sh" || fail 'weather is not current'
+grep -q 'smhi.se' "$BIN/nirupi-menu.sh" || fail 'weather click is not SMHI'
+
+# TUI apps open in a terminal
+grep -q 'nirupresence' "$BIN/nirupi-app.sh" || fail 'app TUI list missing'
+grep -qF -- '-e "$app"' "$BIN/nirupi-app.sh" || fail 'TUI apps are not opened in a terminal'
+
+# slock screensaver mode + runic font
+grep -q 'screensaver = 1' "$SLOCK/slock.c" || fail 'slock -s flag missing'
+grep -q 'drawscreensaver' "$SLOCK/slock.c" || fail 'slock screensaver face missing'
+grep -q 'runify' "$SLOCK/slock.c" || fail 'slock runic transliteration missing'
+grep -q 'afk ' "$SLOCK/slock.c" || fail 'slock AFK timer missing'
+grep -q 'runefont' "$SLOCK/config.h" || fail 'slock runic font config missing'
+[[ -f "$ROOT/vendor/noir/fonts/NotoSansRunic-Regular.ttf" ]] || fail 'runic font not bundled'
+grep -q 'theme_install_fonts' "$ROOT/lib/theme.sh" || fail 'fonts not installed by the theme engine'
+
+echo 'PASS: v0.7.1 (power menu, screensaver runes/ASCII, night-light cycle, current weather/SMHI, TUI apps)'

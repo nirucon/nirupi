@@ -17,18 +17,38 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - Scratchpad (`Super+Shift+s`), zoom (`Super+Shift+z`), bar toggle (`Super+Ctrl+b`).
 
 ## Lock screen (`slock`)
-- `Super+Esc` locks immediately. The screen is blurred and shows a minimal
-  **clock + date + hostname** centred, in the Noir palette
-  (`clockfont`, `clockforeground`, `clockdim` in `vendor/suckless/slock/config.h`).
+- `Super+Esc` locks immediately. The screen is blurred and shows an ISO **date**
+  (`2026-10-14`), the **clock**, the **hostname** and an **AFK timer** (how long
+  the lock has been up), in the Noir palette (`clockfont` etc. in
+  `vendor/suckless/slock/config.h`).
 - **Suspend** `Super+Shift+Esc` locks, waits `SUSPEND_DELAY_SECONDS` (default 3)
   and then suspends; unlocking during the wait cancels it.
 - `nirupi lock` is the same wrapper.
+
+## Screensaver (`slock -s`)
+- `Super+x` (and the power menu) shows a **pure-black** screensaver with the
+  clock and hostname in **Elder Futhark runes**, alternating with uppercase
+  ASCII every 30 seconds — so it feels alive. **Never automatic.**
+- The first key press or click locks the screen (you must then type your
+  password). Bundles `Noto Sans Runic` (OFL) so the runes always render; it
+  falls back to ASCII if the font is missing.
+- Tune in `vendor/suckless/slock/config.h` (`runefont`, `clockforeground`).
+
+## Power menu (`Super+Shift+q`)
+- Screensaver · Lock · **Suspend** (now / 15 / 30 / 60 min / custom) ·
+  Log out · **Reboot** (now / 15 / 30 / 60 / custom) · **Shut down**
+  (now / 15 / 30 / 60 / custom) · Cancel · Cancel scheduled.
+- Portable across Debian/Arch/Void via `loginctl` → `systemctl` → `sudo`.
 
 ## Focus & presence
 - **Caffeine** `Super+Shift+c` — keeps the screen awake (no idle lock/DPMS) until
   toggled off. A small cup glyph appears in the bar while active.
 - **Focus / do-not-disturb** `Super+Shift+d` — pauses notifications (`dunstctl`).
-- **Night light** `Super+n` — warm screen via `gammastep` (or `redshift`).
+- **Night light** `Super+n` — cycles **4500 → 3500 → 2500 K → off** (via
+  `gammastep`/`redshift`). `nirupi-nightlight.sh off|reset` turns it off and
+  resets gamma; toggling never stacks.
+- **Weather** — current temperature, refreshed every 15 minutes; clicking the
+  segment opens **SMHI for Ljungskile**.
 
 ## Media & indicators
 - **Volume / brightness / mic** hardware keys show a minimal monochrome OSD bar

@@ -27,7 +27,7 @@ grep -q 'nirupi-logout.sh' "$ROOT/lib/install.sh" || fail 'logout helper not dep
 grep -q 'nightlightcmd' "$CFG" || fail 'nightlight binding missing'
 grep -q 'gammastep' "$ROOT/vendor/noir/local/bin/nirupi-nightlight.sh" || fail 'gammastep missing'
 grep -q 'redshift' "$ROOT/lib/packages.sh" || fail 'redshift not in OPTIONAL_PKGS'
-grep -q 'Night light: toggle' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'menu night light missing'
+grep -q 'Night light: cycle' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'menu night light missing'
 
 # Suspend helper must detect the (privilege-dropping) locker with pgrep, not kill -0.
 SS="$ROOT/vendor/noir/local/bin/sleep-suspend.sh"

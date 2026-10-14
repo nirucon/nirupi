@@ -27,3 +27,7 @@ static const char *clockforeground    = "#e5e5e5";
 static const char *clockdim           = "#8a8a8a";
 
 static const char *clockshadow        = "#0f0f10";
+
+/* Screensaver (slock -s): Elder Futhark runes alternating with ASCII. */
+static const char *runefont           = "Noto Sans Runic:size=54";
+static const char *runefontsmall      = "Noto Sans Runic:size=16";

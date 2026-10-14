@@ -235,6 +235,8 @@ Full detail in [`FEATURES.md`](FEATURES.md). Quick keys:
 | `Super+Shift+n` | nirunote |
 | `Super+Shift+o` | nplay |
 | `Super+Shift+r` | Reload theme colours |
+| `Super+x` | Screensaver (runes, locks on input) |
+| `Super+Shift+q` | Power menu (suspend/logout/reboot/shutdown + timers) |
 
 The **lock screen** (`Super+Esc`) shows a minimal clock, date and hostname.
 **Suspend** (`Super+Shift+Esc`) locks, waits `SUSPEND_DELAY_SECONDS` (default 3s)

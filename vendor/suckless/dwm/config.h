@@ -207,8 +207,9 @@ static const char *clipmenucmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/clip-men
 /* System / security */
 static const char *lockcmd[]      = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-lock.sh", NULL }; /* Super+Esc */
 static const char *fmcmd[]        = { "pcmanfm", NULL };   /* Super+Shift+f */
-/* Logout confirmation (Super+Shift+q) instead of quitting immediately. */
-static const char *logoutcmd[]    = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-logout.sh", NULL };
+/* Power menu (Super+Shift+q): screensaver, lock, suspend/logout/reboot/shutdown
+ * (with optional timers). */
+static const char *logoutcmd[]    = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-power.sh", NULL };
 /* Night light toggle (gammastep/redshift). */
 static const char *nightlightcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-nightlight.sh", NULL };
 
@@ -221,6 +222,7 @@ static const char *kblayoutcmd[]  = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-
 static const char *touchpadcmd[]  = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-touchpad.sh", NULL };      /* Super+Shift+t */
 static const char *nirunotecmd[]  = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-app.sh nirunote", NULL };  /* Super+Shift+n */
 static const char *nplaycmd[]     = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-app.sh nplay", NULL };     /* Super+Shift+o */
+static const char *screensavercmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-lock.sh -s", NULL };     /* Super+x */
 
 /* Display configuration (F1 screen button) */
 static const char *arandrcmd[] = { "arandr", NULL };
@@ -349,7 +351,7 @@ static const Key keys[] = {
 
 	/* Kill active window & restart dwm */
 	{ MODKEY,                       XK_q,                     killclient,     {0} },          /* Super+q -> kill focused */
-	{ MODKEY|ShiftMask,             XK_q,                     spawn,          {.v = logoutcmd } },  /* Super+Shift+q -> logout (confirm) */
+	{ MODKEY|ShiftMask,             XK_q,                     spawn,          {.v = logoutcmd } },  /* Super+Shift+q -> power menu */
 	{ MODKEY|ControlMask|ShiftMask, XK_q,                     quit,           {0} },          /* Super+Ctrl+Shift+q -> quit immediately */
 
 	/* Night light */
@@ -366,6 +368,7 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_n,                     spawn,          {.v = nirunotecmd } },   /* Super+Shift+n -> nirunote */
 	{ MODKEY|ShiftMask,             XK_o,                     spawn,          {.v = nplaycmd } },      /* Super+Shift+o -> nplay */
 	{ MODKEY|ShiftMask,             XK_r,                     xresreload,     {0} },                   /* Super+Shift+r -> reload theme colours */
+	{ MODKEY,                       XK_x,                     spawn,          {.v = screensavercmd } }, /* Super+x -> screensaver (locks on input) */
 
 	/* Zoom (vanilla) */
 	{ MODKEY|ShiftMask,             XK_z,                     zoom,           {0} },

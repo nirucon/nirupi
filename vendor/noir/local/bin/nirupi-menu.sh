@@ -25,9 +25,9 @@ theme_toggle(){
 power(){
   case "$1" in
     suspend) exec "$HOME/.local/bin/sleep-suspend.sh";;
-    reboot) command -v loginctl >/dev/null 2>&1 && loginctl reboot || sudo reboot;;
-    poweroff) command -v loginctl >/dev/null 2>&1 && loginctl poweroff || sudo poweroff;;
-    logout) exec "$HOME/.local/bin/nirupi-logout.sh";;
+    reboot) exec "$HOME/.local/bin/nirupi-power.sh" reboot;;
+    poweroff) exec "$HOME/.local/bin/nirupi-power.sh" poweroff;;
+    logout) exec "$HOME/.local/bin/nirupi-power.sh" logout;;
   esac
 }
 
@@ -72,7 +72,9 @@ bluetooth(){
 
 menu(){
   cat <<'EOF'
+Screensaver
 Lock screen
+Power menu…
 Suspend
 Log out
 Reboot
@@ -84,7 +86,8 @@ Window switcher
 Gaps: toggle
 Keyboard layout (se/us)
 Touchpad: toggle
-Night light: toggle
+Night light: cycle
+Night light: off
 Apply Noir theme
 Wallpaper mode: toggle
 Next wallpaper
@@ -108,7 +111,9 @@ if [[ -z "$action" ]]; then
   action="$(menu | choose)" || exit 0
 fi
 case "$action" in
+  Screensaver) exec "$HOME/.local/bin/nirupi-lock.sh" -s;;
   'Lock screen') exec "$HOME/.local/bin/nirupi-lock.sh";;
+  'Power menu…') exec "$HOME/.local/bin/nirupi-power.sh";;
   Suspend) power suspend;;
   'Log out') power logout;;
   Reboot) power reboot;;
@@ -120,7 +125,8 @@ case "$action" in
   'Gaps: toggle') [[ -n "$xdo" ]] && "$xdo" key --clearmodifiers super+g || notify 'xdotool missing';;
   'Keyboard layout (se/us)') exec "$HOME/.local/bin/nirupi-keyboard.sh";;
   'Touchpad: toggle') exec "$HOME/.local/bin/nirupi-touchpad.sh";;
-  'Night light: toggle') exec "$HOME/.local/bin/nirupi-nightlight.sh";;
+  'Night light: cycle') exec "$HOME/.local/bin/nirupi-nightlight.sh";;
+  'Night light: off') exec "$HOME/.local/bin/nirupi-nightlight.sh" off;;
   'Apply Noir theme') exec nirupi theme apply;;
   'Wallpaper mode: toggle') theme_toggle;;
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
@@ -128,7 +134,7 @@ case "$action" in
   'Tailscale: toggle') tailscale_toggle;;
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;
-  Weather) exec xdg-open "https://www.yr.no/en/forecast/daily-table/2-2694503/Sweden/V%C3%A4stra%20G%C3%B6taland/Ljungskile" 2>/dev/null || true;;
+  Weather) exec xdg-open "https://www.smhi.se/vader/prognoser/ortsprognoser/?lat=58.2167&lon=11.9333" 2>/dev/null || true;;
   'Mute / unmute') exec "$HOME/.local/bin/nirupi-osd.sh" volume mute;;
   nirunote) exec "$HOME/.local/bin/nirupi-app.sh" nirunote;;
   nplay) exec "$HOME/.local/bin/nirupi-app.sh" nplay;;

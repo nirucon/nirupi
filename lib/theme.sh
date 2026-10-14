@@ -116,6 +116,24 @@ theme_apply_gtk4(){
   mv -f -- "$tmp" "$dest"
 }
 
+# Install bundled fonts (e.g. Noto Sans Runic for the lock screensaver).
+theme_install_fonts(){
+  local noir; noir="$(noir_dir)"
+  [[ -d $noir/fonts ]] || return 0
+  [[ -L $HOME/.local/share/fonts ]] && { warn 'Preserving symlinked fonts dir'; return 0; }
+  local dest="$HOME/.local/share/fonts/nirupi" f changed=0
+  mkdir -p "$dest"
+  for f in "$noir"/fonts/*; do
+    [[ -f $f && ! -L $f ]] || continue
+    if [[ ! -f $dest/$(basename "$f") ]] || ! cmp -s -- "$f" "$dest/$(basename "$f")"; then
+      cp -f -- "$f" "$dest/$(basename "$f")"; changed=1
+    fi
+  done
+  if (( changed )) && command -v fc-cache >/dev/null 2>&1; then
+    fc-cache -f "$dest" >/dev/null 2>&1 || :
+  fi
+}
+
 # ── Generated assets (rofi, dunst, SDDM) — produced from tokens.env ──────────
 # Rofi theme is regenerated from the palette so it always matches the active
 # theme (tokens.env), instead of the static Black-Metal.rasi.
@@ -310,6 +328,7 @@ theme_apply(){
   theme_apply_browser_flags "$noir"
   theme_apply_environment
   theme_apply_gtk4
+  theme_install_fonts
   theme_render_rofi
   theme_render_dunst
   theme_render_sddm

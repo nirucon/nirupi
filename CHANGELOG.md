@@ -2,6 +2,23 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.7.1
+- **Power menu** on `Super+Shift+q`: screensaver, lock, suspend/logout/reboot/
+  shut down, each with optional 15/30/60-minute (or custom) timers and a cancel
+  option. Distro-portable (`loginctl` → `systemctl` → `sudo`).
+- **Noir screensaver** on `Super+x` (and in the power menu): pure black with the
+  clock and hostname in **Elder Futhark runes**, alternating with ASCII every
+  30 s; the first key/click locks with slock. Runs only when invoked (never
+  automatic). Bundles Noto Sans Runic so runes render everywhere.
+- **Lock screen** (`slock`) now shows an ISO date (`2026-10-14`), the clock, the
+  hostname and an **AFK timer**; no weekday/month. The screensaver blurs nothing.
+- **Night light** (`Super+n`) cycles 4500 → 3500 → 2500 K → off, plus a direct
+  off/reset. Toggling can no longer stack (kills the shifter and resets gamma).
+- **Weather** is now the current temperature (Open-Meteo `current`), refreshed
+  every 15 minutes; clicking opens **SMHI for Ljungskile** instead of Yr.
+- `nplay` and `nirupresence` (terminal UIs) open inside kitty.
+- Clipboard history cap unified (40) and the menu shows the last 12.
+
 ## 0.7.0
 - **Lock screen clock**: `slock` now draws a minimal clock + date + hostname
   (Xft) over the blur, in the Noir palette.

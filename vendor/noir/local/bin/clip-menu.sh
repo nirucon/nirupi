@@ -22,7 +22,7 @@ trap 'rm -f "$MENU_FILE"' EXIT
 
   # Get all text entries (newest first, max 5)
   if [ -s "$CLIP_HISTORY" ]; then
-    tac "$CLIP_HISTORY" | while IFS='|' read -r timestamp text; do
+    tac "$CLIP_HISTORY" | head -n 12 | while IFS='|' read -r timestamp text; do
       # Trim whitespace from text
       text=$(echo "$text" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 

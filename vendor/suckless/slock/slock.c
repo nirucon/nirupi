@@ -45,7 +45,7 @@ struct lock {
 	Pixmap bgmap;
 	unsigned long colors[NUMCOLS];
 	XftDraw *xftdraw;
-	char lastclock[48];
+	char lastclock[128];
 };
 
 struct xrandr {
@@ -60,8 +60,12 @@ Imlib_Image image;
 
 /* NIRU Noir lock-screen clock (Xft). */
 static XftFont *clkfont, *clkfontsmall;
+static XftFont *runicfont, *runicfontsmall;
 static XftColor clkfg, clkdim, clkshadow;
 static char hostnamebuf[HOST_NAME_MAX + 1];
+static int screensaver = 0;   /* -s: show the screensaver first, lock on input */
+static int woken = 0;         /* set once the screensaver receives its first input */
+static time_t lockstart;      /* start time for the AFK timer */
 
 static void
 die(const char *errstr, ...)
@@ -149,6 +153,8 @@ initclock(Display *dpy)
 	if (!(clkfont = XftFontOpenName(dpy, screen, clockfont)))
 		return;
 	clkfontsmall = XftFontOpenName(dpy, screen, clockfontsmall);
+	runicfont = XftFontOpenName(dpy, screen, runefont);
+	runicfontsmall = XftFontOpenName(dpy, screen, runefontsmall);
 	XftColorAllocName(dpy, DefaultVisual(dpy, screen),
 	                  DefaultColormap(dpy, screen), clockforeground, &clkfg);
 	XftColorAllocName(dpy, DefaultVisual(dpy, screen),
@@ -167,44 +173,146 @@ drawtext(struct lock *lock, XftFont *f, XftColor *c, int x, int y, const char *s
 	XftDrawStringUtf8(lock->xftdraw, c, f, x, y, (FcChar8 *)s, n);
 }
 
-/* Draw time (big) + date + hostname (dim) centred on the locked window. */
-static void
-drawclock(Display *dpy, struct lock *lock, int force)
+/* Elder Futhark mapping for the screensaver (ASCII -> rune, UTF-8). */
+static const char *
+rune_for(unsigned char c)
 {
-	char tim[8], date[32], stamp[48];
+	switch (tolower(c)) {
+	case 'a': return "\u16a8"; case 'b': return "\u16d2"; case 'c': return "\u16b2";
+	case 'd': return "\u16de"; case 'e': return "\u16d6"; case 'f': return "\u16a0";
+	case 'g': return "\u16b7"; case 'h': return "\u16bb"; case 'i': return "\u16c1";
+	case 'j': return "\u16c3"; case 'k': return "\u16b2"; case 'l': return "\u16da";
+	case 'm': return "\u16d7"; case 'n': return "\u16be"; case 'o': return "\u16df";
+	case 'p': return "\u16c8"; case 'q': return "\u16b2"; case 'r': return "\u16b1";
+	case 's': return "\u16ca"; case 't': return "\u16cf"; case 'u': return "\u16a2";
+	case 'v': return "\u16b9"; case 'w': return "\u16b9"; case 'x': return "\u16ca";
+	case 'y': return "\u16c3"; case 'z': return "\u16c9";
+	case '0': return "\u16a0"; case '1': return "\u16a2"; case '2': return "\u16a6";
+	case '3': return "\u16a8"; case '4': return "\u16b1"; case '5': return "\u16b2";
+	case '6': return "\u16b7"; case '7': return "\u16b9"; case '8': return "\u16ba";
+	case '9': return "\u16be"; case ':': return "\u16ec";
+	case '-': case '.': return "\u16eb"; case ' ': return " ";
+	default: return NULL;
+	}
+}
+
+static void
+runify(const char *in, char *out, size_t outsz)
+{
+	const char *r;
+	size_t o = 0;
+	for (; *in && o + 4 < outsz; in++) {
+		r = rune_for((unsigned char)*in);
+		if (r) {
+			size_t l = strlen(r);
+			memcpy(out + o, r, l);
+			o += l;
+		} else {
+			out[o++] = *in;
+		}
+	}
+	out[o] = '\0';
+}
+
+/* Centre one line of text horizontally at baseline y. */
+static void
+centerline(Display *dpy, struct lock *lock, XftFont *f, XftColor *c, int y, const char *s)
+{
+	XGlyphInfo ext;
+	if (!f || !s || !*s)
+		return;
+	XftTextExtentsUtf8(dpy, f, (FcChar8 *)s, strlen(s), &ext);
+	drawtext(lock, f, c, (DisplayWidth(dpy, lock->screen) - ext.xOff) / 2, y, s);
+}
+
+/* Lock face: time, ISO date, hostname and an AFK timer. */
+static void
+drawlock(Display *dpy, struct lock *lock, int force)
+{
+	char tim[8], date[16], afk[32], stamp[64];
 	time_t t = time(NULL);
 	struct tm *tm = localtime(&t);
-	XGlyphInfo ext;
-	int sw, sh, y;
+	long secs = (long)(t - lockstart);
+	int sh, y;
 
 	if (!lock->xftdraw || !clkfont)
 		return;
-	sw = DisplayWidth(dpy, lock->screen);
 	sh = DisplayHeight(dpy, lock->screen);
 	strftime(tim, sizeof tim, "%H:%M", tm);
-	strftime(date, sizeof date, "%A %d %B", tm);
-	snprintf(stamp, sizeof stamp, "%s %s", tim, date);
+	strftime(date, sizeof date, "%Y-%m-%d", tm);
+	if (secs >= 3600)
+		snprintf(afk, sizeof afk, "afk %ld:%02ld:%02ld", secs / 3600, (secs / 60) % 60, secs % 60);
+	else
+		snprintf(afk, sizeof afk, "afk %ld:%02ld", secs / 60, secs % 60);
+	snprintf(stamp, sizeof stamp, "L %s %s %s", tim, date, afk);
 	if (!force && !strcmp(stamp, lock->lastclock))
 		return;
 	snprintf(lock->lastclock, sizeof lock->lastclock, "%s", stamp);
 
 	XClearWindow(dpy, lock->win);
 
-	XftTextExtentsUtf8(dpy, clkfont, (FcChar8 *)tim, strlen(tim), &ext);
-	drawtext(lock, clkfont, &clkfg, (sw - ext.xOff) / 2,
-	         sh / 2 + clkfont->ascent / 2, tim);
-
-	y = sh / 2 + clkfont->ascent / 2 + 24;
+	y = sh / 2 + clkfont->ascent / 2;
+	centerline(dpy, lock, clkfont, &clkfg, y, tim);
 	if (clkfontsmall) {
-		int smasc = clkfontsmall->ascent;
-		XftTextExtentsUtf8(dpy, clkfontsmall, (FcChar8 *)date, strlen(date), &ext);
-		drawtext(lock, clkfontsmall, &clkdim, (sw - ext.xOff) / 2, y + smasc, date);
-		if (hostnamebuf[0]) {
-			XftTextExtentsUtf8(dpy, clkfontsmall, (FcChar8 *)hostnamebuf, strlen(hostnamebuf), &ext);
-			drawtext(lock, clkfontsmall, &clkdim, (sw - ext.xOff) / 2,
-			         y + smasc + clkfontsmall->height + 4, hostnamebuf);
+		y += 24;
+		centerline(dpy, lock, clkfontsmall, &clkdim, y + clkfontsmall->ascent, date);
+		y += clkfontsmall->height + 4;
+		centerline(dpy, lock, clkfontsmall, &clkdim, y + clkfontsmall->ascent, hostnamebuf);
+		y += clkfontsmall->height + 4;
+		centerline(dpy, lock, clkfontsmall, &clkdim, y + clkfontsmall->ascent, afk);
+	}
+}
+
+/* Screensaver face: clock + hostname, alternating runes/ASCII every 30s. */
+static void
+drawscreensaver(Display *dpy, struct lock *lock, int force)
+{
+	char tim[8], hostA[256], hostR[1024], stamp[64];
+	time_t t = time(NULL);
+	struct tm *tm = localtime(&t);
+	int phase = (int)(((t - lockstart) / 30) % 2);
+	int sh, y, i;
+
+	if (!lock->xftdraw || !clkfont)
+		return;
+	sh = DisplayHeight(dpy, lock->screen);
+	strftime(tim, sizeof tim, "%H:%M", tm);
+	snprintf(stamp, sizeof stamp, "S %d %s", phase, tim);
+	if (!force && !strcmp(stamp, lock->lastclock))
+		return;
+	snprintf(lock->lastclock, sizeof lock->lastclock, "%s", stamp);
+
+	XClearWindow(dpy, lock->win);
+
+	if (phase == 0 && runicfont && runicfontsmall) {
+		char tR[32];
+		runify(tim, tR, sizeof tR);
+		runify(hostnamebuf, hostR, sizeof hostR);
+		y = sh / 2 + runicfont->ascent / 2;
+		centerline(dpy, lock, runicfont, &clkfg, y, tR);
+		y += runicfontsmall->height + 12;
+		centerline(dpy, lock, runicfontsmall, &clkdim, y + runicfontsmall->ascent, hostR);
+	} else {
+		for (i = 0; hostnamebuf[i] && i < (int)sizeof(hostA) - 1; i++)
+			hostA[i] = toupper((unsigned char)hostnamebuf[i]);
+		hostA[i] = '\0';
+		y = sh / 2 + clkfont->ascent / 2;
+		centerline(dpy, lock, clkfont, &clkfg, y, tim);
+		if (clkfontsmall) {
+			y += 24;
+			centerline(dpy, lock, clkfontsmall, &clkdim, y + clkfontsmall->ascent, hostA);
 		}
 	}
+}
+
+/* Choose the face: screensaver until the first input, then the lock. */
+static void
+redraw(Display *dpy, struct lock *lock, int force)
+{
+	if (screensaver && !woken)
+		drawscreensaver(dpy, lock, force);
+	else
+		drawlock(dpy, lock, force);
 }
 
 static void
@@ -231,11 +339,17 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 			FD_SET(ConnectionNumber(dpy), &fds);
 			(void)select(ConnectionNumber(dpy) + 1, &fds, NULL, NULL, &tv);
 			for (screen = 0; screen < nscreens; screen++)
-				drawclock(dpy, locks[screen], 0);
+				redraw(dpy, locks[screen], 0);
 			continue;
 		}
 		XNextEvent(dpy, &ev);
 		if (ev.type == KeyPress) {
+			if (screensaver && !woken) { /* any key wakes the lock */
+				woken = 1;
+				for (screen = 0; screen < nscreens; screen++)
+					redraw(dpy, locks[screen], 1);
+				continue;
+			}
 			explicit_bzero(&buf, sizeof(buf));
 			num = XLookupString(&ev.xkey, buf, sizeof(buf), &ksym, 0);
 			if (IsKeypadKey(ksym)) {
@@ -294,9 +408,13 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 					XClearWindow(dpy, locks[screen]->win);
 				}
 				for (screen = 0; screen < nscreens; screen++)
-					drawclock(dpy, locks[screen], 1);
+					redraw(dpy, locks[screen], 1);
 				oldc = color;
 			}
+		} else if ((ev.type == ButtonPress || ev.type == ButtonRelease) && screensaver && !woken) {
+			woken = 1;
+			for (screen = 0; screen < nscreens; screen++)
+				redraw(dpy, locks[screen], 1);
 		} else if (rr->active && ev.type == rr->evbase + RRScreenChangeNotify) {
 			rre = (XRRScreenChangeNotifyEvent*)&ev;
 			for (screen = 0; screen < nscreens; screen++) {
@@ -314,7 +432,7 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 			}
 		} else if (ev.type == Expose) {
 			for (screen = 0; screen < nscreens; screen++)
-				drawclock(dpy, locks[screen], 1);
+				redraw(dpy, locks[screen], 1);
 		} else {
 			for (screen = 0; screen < nscreens; screen++)
 				XRaiseWindow(dpy, locks[screen]->win);
@@ -397,7 +515,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 				XRRSelectInput(dpy, lock->win, RRScreenChangeNotifyMask);
 
 			XSelectInput(dpy, lock->root, SubstructureNotifyMask);
-			drawclock(dpy, lock, 1);
+			redraw(dpy, lock, 1);
 			return lock;
 		}
 
@@ -422,7 +540,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 static void
 usage(void)
 {
-	die("usage: slock [-v] [cmd [arg ...]]\n");
+	die("usage: slock [-sv] [cmd [arg ...]]\n");
 }
 
 int
@@ -441,9 +559,14 @@ main(int argc, char **argv) {
 	case 'v':
 		puts("slock-"VERSION);
 		return 0;
+	case 's':
+		screensaver = 1;
+		break;
 	default:
 		usage();
 	} ARGEND
+
+	lockstart = time(NULL);
 
 	/* validate drop-user and -group */
 	errno = 0;
@@ -487,7 +610,8 @@ main(int argc, char **argv) {
 	if (setuid(duid) < 0)
 		die("slock: setuid: %s\n", strerror(errno));
 
-	/*Create screenshot Image*/
+	/* Lock: blur a screenshot of the root. Screensaver (-s): pure black. */
+	if (!screensaver) {
 	Screen *scr = ScreenOfDisplay(dpy, DefaultScreen(dpy));
 	image = imlib_create_image(scr->width,scr->height);
 	imlib_context_set_image(image);
@@ -541,6 +665,7 @@ main(int argc, char **argv) {
 	
 	
 #endif
+	}
 	/* check for Xrandr support */
 	rr.active = XRRQueryExtension(dpy, &rr.evbase, &rr.errbase);
 

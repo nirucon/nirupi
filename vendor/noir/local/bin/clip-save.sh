@@ -6,7 +6,7 @@
 set -euo pipefail
 
 CLIP_HISTORY="$HOME/.cache/clip-text.log"
-MAX_LINES=5 # Keep only last 5 entries
+MAX_LINES="${NIRUPI_CLIP_MAX:-40}" # keep in sync with nirupi-clipd.sh
 
 # Ensure directory exists
 mkdir -p "$(dirname "$CLIP_HISTORY")"

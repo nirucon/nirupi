@@ -64,7 +64,7 @@ WEATHER_CITY="Ljungskile"
 WEATHER_LAT="58.2167"
 WEATHER_LON="11.9333"
 WEATHER_TIMEZONE="Europe/Stockholm"
-WEATHER_INTERVAL_SECONDS=3600   # fetch at most once per hour
+WEATHER_INTERVAL_SECONDS=900    # current conditions, refreshed every 15 minutes
 
 # Media roots. Leave empty for auto-detect.
 MEDIA_MUSIC_DIR="${NIRUPI_MUSIC_DIR:-}"
@@ -301,9 +301,9 @@ get_weather() {
 
   if [[ ! -r "$WEATHER_CACHE_FILE" || "$age" -ge "$WEATHER_INTERVAL_SECONDS" ]]; then
     json="$(curl -sf --max-time 8 \
-      "https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=${WEATHER_TIMEZONE}&forecast_days=1" \
+      "https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&current=temperature_2m,weather_code&timezone=${WEATHER_TIMEZONE}" \
       2>/dev/null)" || true
-    if [[ -n "$json" ]] && printf '%s' "$json" | jq -e '.daily' >/dev/null 2>&1; then
+    if [[ -n "$json" ]] && printf '%s' "$json" | jq -e '.current' >/dev/null 2>&1; then
       printf '%s\n' "$json" > "$WEATHER_CACHE_FILE" 2>/dev/null || true
       printf '%s\n' "$now"  > "$WEATHER_CACHE_STAMP" 2>/dev/null || true
     fi
@@ -311,11 +311,8 @@ get_weather() {
 
   [[ -r "$WEATHER_CACHE_FILE" ]] || return 0
 
-  code="$(jq -r '.daily.weathercode[0] // empty' "$WEATHER_CACHE_FILE" 2>/dev/null)"
-  temp="$(jq -r '
-    (.daily.temperature_2m_min[0] + .daily.temperature_2m_max[0]) / 2
-    | round
-  ' "$WEATHER_CACHE_FILE" 2>/dev/null)"
+  code="$(jq -r '.current.weather_code // empty' "$WEATHER_CACHE_FILE" 2>/dev/null)"
+  temp="$(jq -r '.current.temperature_2m | round' "$WEATHER_CACHE_FILE" 2>/dev/null)"
 
   [[ -n "$code" && -n "$temp" ]] || return 0
 
