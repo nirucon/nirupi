@@ -84,7 +84,7 @@ fi
 if [[ "$MODE" == list ]]; then emit; exit 0; fi
 
 if command -v rofi >/dev/null 2>&1; then
-  choice="$(emit | rofi -dmenu -i -p 'NIRUPI' -mesg 'Klicka Enter: keybindings kopieras, appar startas' -theme-str 'window {width: 40%;}')" || exit 0
+  choice="$(emit | rofi -dmenu -i -p 'NIRUPI' -mesg 'Enter: keybindings are copied, apps are launched' -theme-str 'window {width: 40%;}')" || exit 0
 elif command -v fzf >/dev/null 2>&1; then
   choice="$(emit | fzf --prompt 'NIRUPI > ' --height=80% --reverse)" || exit 0
 else
@@ -97,7 +97,7 @@ label="$(printf '%s' "$choice" | awk '{print $2}')"
 kind="$(printf '%s' "$choice" | grep -q '⌨' && echo KEY || echo APP)"
 if [[ "$kind" == KEY ]]; then
   printf '%s' "$label" | tr -d ' ' | { command -v xclip >/dev/null 2>&1 && xclip -selection clipboard || cat; } \
-    && command -v notify-send >/dev/null 2>&1 && notify-send "NIRUPI" "Kopierade $label"
+    && command -v notify-send >/dev/null 2>&1 && notify-send "NIRUPI" "Copied $label"
 else
   case "$label" in
     Terminal) exec kitty;;

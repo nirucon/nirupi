@@ -53,4 +53,4 @@ echo "$entry" >>"$CLIP_HISTORY"
 tail -n "$MAX_LINES" "$CLIP_HISTORY" >"$CLIP_HISTORY.tmp"
 mv "$CLIP_HISTORY.tmp" "$CLIP_HISTORY"
 
-notify-send "Clipboard" "Sparat till historik"
+notify-send "Clipboard" "Saved to history"

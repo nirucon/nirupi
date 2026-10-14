@@ -29,4 +29,4 @@ done
 [[ ${#paths[@]} -gt 0 ]] || { echo 'Nothing to back up' >&2; exit 0; }
 tar -czf "$archive" -C "$HOME" "${paths[@]}"
 printf 'Backup written: %s\n' "$archive"
-command -v notify-send >/dev/null 2>&1 && notify-send "NIRUPI" "Backup klar: $archive"
+command -v notify-send >/dev/null 2>&1 && notify-send "NIRUPI" "Backup complete: $archive"

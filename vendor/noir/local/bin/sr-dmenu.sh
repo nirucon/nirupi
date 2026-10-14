@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sveriges Radio – dmenu-klient (endast livekanaler)
 # Beroenden: bash, curl, jq, mpv, dmenu  (valfritt: notify-send)
-# Testad på Linux/X11 (dmenu). Fungerar även med rofi -dmenu om du byter DMENU.
+# Tested on Linux/X11 (dmenu). Also works with rofi -dmenu if you change DMENU.
 
 set -euo pipefail
 
@@ -21,7 +21,7 @@ MPV_STATE_FILE="$STATE_DIR/mpv.state" # "playing" / "paused"
 NOWPLAY_FILE="$STATE_DIR/nowplaying.txt"
 CHANNEL_CACHE_FILE="$CACHE_DIR/channels.json"
 
-# ---- Hjälp ----
+# ---- Help ----
 has() { command -v "$1" >/dev/null 2>&1; }
 die() {
   printf "Fel: %s\n" "$1" >&2
@@ -60,14 +60,14 @@ toggle_pause() {
     if [[ -f "$MPV_STATE_FILE" && "$(cat "$MPV_STATE_FILE")" == "paused" ]]; then
       kill -CONT "$mpid" 2>/dev/null || true
       echo "playing" >"$MPV_STATE_FILE"
-      info "Fortsätter uppspelning"
+      info "Resuming playback"
     else
       kill -STOP "$mpid" 2>/dev/null || true
       echo "paused" >"$MPV_STATE_FILE"
-      info "Pausad"
+      info "Paused"
     fi
   else
-    info "Ingen uppspelning igång."
+    info "No playback running."
   fi
 }
 
@@ -90,9 +90,9 @@ _fetch() {
   curl -fsSL -A "$UA" --retry 2 --retry-delay 0 --connect-timeout 5 --max-time 20 "$1"
 }
 
-# ---- Livekanaler (med cache) ----
+# ---- Live channels (with cache) ----
 load_channels() {
-  # Ladda cache om yngre än 12 h
+  # Load cache if younger than 12 h
   if [[ -f "$CHANNEL_CACHE_FILE" ]]; then
     local mtime age
     if stat -f %m "$CHANNEL_CACHE_FILE" >/dev/null 2>&1; then
@@ -110,7 +110,7 @@ load_channels() {
   if [[ $ok -eq 1 ]]; then
     printf '%s' "$out" >"$CHANNEL_CACHE_FILE"
   else
-    : # lämna ev. gammal cache
+    : # keep any old cache
   fi
 }
 
@@ -128,7 +128,7 @@ get_channel_live_url() {
 
 # ---- dmenu helpers ----
 pick_from_list() {
-  PROMPT "${1:-Välj}" </dev/stdin
+  PROMPT "${1:-Select}" </dev/stdin
 }
 
 ask_text() {
@@ -142,8 +142,8 @@ extract_last_id() {
 # ---- Menyer ----
 main_menu() {
   cat <<'EOF' | PROMPT "SR"
-Lyssna på livekanal
-Paus/Fortsätt
+Listen to live channel
+Pause/Resume
 Stoppa
 Visa nu spelas
 Avsluta
@@ -157,7 +157,7 @@ do_live() {
   id="$(printf '%s' "$sel" | extract_last_id)"
   url="$(get_channel_live_url "$id")"
   [[ -n "$url" ]] || {
-    info "Kunde inte hämta stream-URL."
+    info "Could not fetch the stream URL."
     return 0
   }
   play_url "$sel" "$url"
@@ -175,8 +175,8 @@ show_nowplaying() {
 while :; do
   choice="$(main_menu || true)"
   case "${choice:-}" in
-  "Lyssna på livekanal") do_live ;;
-  "Paus/Fortsätt") toggle_pause ;;
+  "Listen to live channel") do_live ;;
+  "Pause/Resume") toggle_pause ;;
   "Stoppa")
     stop_playback
     info "Stoppad."

@@ -30,9 +30,9 @@ wifi(){
   local ssid
   ssid="$(nmcli -t -f SSID device wifi list 2>/dev/null | awk 'NF && !seen[$0]++' | choose)" || return 0
   [[ -n "$ssid" ]] || return 0
-  if nmcli -t device wifi connect "$ssid"; then notify "Ansluten till $ssid"; else
-    read -r -s -p "Lösenord för $ssid: " pw; echo
-    nmcli device wifi connect "$ssid" password "$pw" && notify "Ansluten till $ssid" || notify 'Misslyckades'
+  if nmcli -t device wifi connect "$ssid"; then notify "Connected to $ssid"; else
+    read -r -s -p "Password for $ssid: " pw; echo
+    nmcli device wifi connect "$ssid" password "$pw" && notify "Connected to $ssid" || notify 'Failed'
   fi
 }
 
@@ -87,6 +87,6 @@ case "$action" in
   'Mute / unmute') wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle 2>/dev/null || amixer -q set Master toggle 2>/dev/null || true;;
   'Agent (AI)') exec nirupi-agent;;
   'Backup configs') exec nirupi backup;;
-  'Check updates') n="$(nirupi updates --refresh >/dev/null 2>&1; nirupi updates 2>/dev/null)"; notify "Uppdateringar: ${n:-0}";;
+  'Check updates') n="$(nirupi updates --refresh >/dev/null 2>&1; nirupi updates 2>/dev/null)"; notify "Updates: ${n:-0}";;
   *) ;;
 esac

@@ -68,7 +68,7 @@ if [ "${IDLE_LOCK_MINUTES:-10}" -gt 0 ] 2>/dev/null; then
     xidlehook --not-when-fullscreen --not-when-audio --timer "$idle_secs" '' slock & IDLE_PID=$!
   elif command -v xautolock >/dev/null 2>&1; then
     xautolock -time "$IDLE_LOCK_MINUTES" -locker slock -notify "$IDLE_WARN_SECONDS" \
-      -notifier "notify-send -u normal 'NIRUPI' 'Skärmen låses om ${IDLE_WARN_SECONDS}s'" & IDLE_PID=$!
+      -notifier "notify-send -u normal 'NIRUPI' 'Screen locks in ${IDLE_WARN_SECONDS}s'" & IDLE_PID=$!
   elif command -v xss-lock >/dev/null 2>&1; then
     xset s "$idle_secs" "$idle_secs" 2>/dev/null || :
     xss-lock -- slock & IDLE_PID=$!

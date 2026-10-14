@@ -1,8 +1,8 @@
 #!/bin/bash
-# Screenshot med select + optional save med undermappar + rename + browse old screenshots
+# Screenshot with select + optional save with subfolders + rename + browse old screenshots
 # Del av DWM config by Nicklas Rudolfsson
 
-# Ta screenshot till temp-fil
+# Take a screenshot to a temp file
 tmp=$(mktemp "${TMPDIR:-/tmp}/nirupi-shot-XXXXXXXX.png") || exit 1
 trap 'rm -f -- "$tmp"' EXIT
 for cmd in maim xclip rofi; do
@@ -10,38 +10,38 @@ for cmd in maim xclip rofi; do
 done
 maim -s "$tmp" || exit 1
 
-# Kopiera till urklipp först (detta händer alltid)
+# Copy to clipboard first (always happens)
 xclip -selection clipboard -t image/png -i "$tmp"
 
-# Första valet: Var vill du spara?
+# First choice: where do you want to save?
 choice=$(echo -e "No\nSave to /Screenshots\nSave to /Screenshots/Important\nSave to /Screenshots/Fun\nSave & edit in Gimp\nSave & view in sxiv\nBrowse old (list)\nBrowse old (visual)" |
   rofi -dmenu -i -p "Save screenshot?" \
     -theme-str 'window {width: 400px;} listview {lines: 8;}')
 
-# Funktion för att spara med optional rename
+# Function to save with an optional rename
 save_with_rename() {
   local target_dir="$1"
   local timestamp=$(date +%F_%H-%M-%S)
 
-  # Fråga om användaren vill byta namn
+  # Ask whether the user wants to rename
   rename_choice=$(echo -e "No\nYes" |
     rofi -dmenu -i -p "Rename file before saving?" \
       -theme-str 'window {width: 350px;} listview {lines: 2;}')
 
   if [[ "$rename_choice" == "Yes" ]]; then
-    # Låt användaren skriva ett eget namn
+    # Let the user type a custom name
     custom_name=$(rofi -dmenu -p "Enter filename (without .png):" \
       -theme-str 'window {width: 400px;}' </dev/null)
 
     if [[ -n "$custom_name" ]]; then
-      # Ta bort .png om användaren skrev det
+      # Strip .png if the user typed it
       custom_name="${custom_name%.png}"
       # Prevent traversal, separators, control chars and hidden dot-only names.
       custom_name="$(printf '%s' "$custom_name" | tr -cd '[:alnum:] _.-' | sed 's#\.\.##g; s#^[. ]*##; s#[. ]*$##')"
       [[ -n "$custom_name" ]] || custom_name="screenshot"
       file="$target_dir/${custom_name}_${timestamp}.png"
     else
-      # Om användaren inte skrev något, använd bara timestamp
+      # If the user typed nothing, just use the timestamp
       file="$target_dir/${timestamp}.png"
     fi
   else
@@ -54,19 +54,19 @@ save_with_rename() {
   echo "$file"
 }
 
-# Funktion för att browse gamla screenshots med rofi (textlista)
+# Function to browse old screenshots with rofi (text list)
 browse_old_screenshots_rofi() {
   local screenshots_dir="$HOME/Pictures/Screenshots"
 
-  # Kolla om mappen finns (följ symlink med cd)
+  # Check if the folder exists (follow symlink with cd)
   if [[ ! -e "$screenshots_dir" ]]; then
     notify-send 'Screenshot Browser' 'Screenshots folder not found'
     rm -f "$tmp"
     exit 0
   fi
 
-  # Hitta alla bilder, sortera efter datum (nyast först)
-  # Använd -L för att följa symlinks
+  # Find all images, sorted by date (newest first)
+  # Use -L to follow symlinks
   mapfile -t images < <(find -L "$screenshots_dir" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) -printf "%T@ %p\n" 2>/dev/null | sort -rn | cut -d' ' -f2-)
 
   if [[ ${#images[@]} -eq 0 ]]; then
@@ -75,7 +75,7 @@ browse_old_screenshots_rofi() {
     exit 0
   fi
 
-  # Skapa lista med relativa sökvägar för bättre läsbarhet
+  # Build a list of relative paths for readability
   declare -a display_list
   for img in "${images[@]}"; do
     rel_path="${img#$screenshots_dir/}"
@@ -89,60 +89,60 @@ browse_old_screenshots_rofi() {
       selected_index=$selected
       break
     else
-      # Användaren tryckte Escape
+      # The user pressed Escape
       rm -f "$tmp"
       exit 0
     fi
   done
 
-  # Om något valdes
+  # If something was selected
   if [[ $selected_index -ge 0 ]]; then
     selected_file="${images[$selected_index]}"
     xclip -selection clipboard -t image/png -i "$selected_file"
     notify-send 'Screenshot Browser' "Copied to clipboard: $(basename "$selected_file")"
   fi
 
-  # Ta bort den nya screenshoten vi tog (eftersom vi browsade istället)
+  # Remove the new screenshot (we browsed instead)
   rm -f "$tmp"
 }
 
-# Funktion för att browse gamla screenshots med sxiv (visuell thumbnails)
+# Function to browse old screenshots with sxiv (visual thumbnails)
 browse_old_screenshots_sxiv() {
   local screenshots_dir="$HOME/Pictures/Screenshots"
 
-  # Kolla om mappen finns (följ symlink)
+  # Check if the folder exists (follow symlink)
   if [[ ! -e "$screenshots_dir" ]]; then
     notify-send 'Screenshot Browser' 'Screenshots folder not found'
     rm -f "$tmp"
     exit 0
   fi
 
-  # Kolla om det finns bilder (följ symlinks med -L)
+  # Check if there are images (follow symlinks with -L)
   if [[ -z $(find -L "$screenshots_dir" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) 2>/dev/null) ]]; then
     notify-send 'Screenshot Browser' 'No screenshots found'
     rm -f "$tmp"
     exit 0
   fi
 
-  # Öppna sxiv för att browsea (rekursivt, inkluderar undermappar)
+  # Open sxiv to browse (recursive, includes subfolders)
   # -r = rekursiv, -t = thumbnail mode, -o = output selected file
   notify-send 'Screenshot Browser' 'Use arrows to navigate, Enter to copy, q to quit'
 
   selected=$(sxiv -t -o -r "$screenshots_dir" 2>/dev/null)
 
   if [[ -n "$selected" ]]; then
-    # Kopiera den valda bilden till clipboard
+    # Copy the selected image to the clipboard
     xclip -selection clipboard -t image/png -i "$selected"
     notify-send 'Screenshot Browser' "Copied to clipboard: $(basename "$selected")"
   fi
 
-  # Ta bort den nya screenshoten vi tog (eftersom vi browsade istället)
+  # Remove the new screenshot (we browsed instead)
   rm -f "$tmp"
 }
 
 case "$choice" in
 "No")
-  # Ta bort temp-filen
+  # Remove the temp file
   rm -f "$tmp"
   notify-send 'Screenshot' 'Copied to clipboard (not saved)'
   ;;
@@ -192,7 +192,7 @@ case "$choice" in
   ;;
 
 *)
-  # Om användaren stänger dialogen eller trycker Escape
+  # If the user closes the dialog or presses Escape
   rm -f "$tmp"
   ;;
 esac
