@@ -92,6 +92,7 @@ check_user_install_conflicts() {
  done
 }
 restart_statusbar_if_running(){
+ [[ ${NIRUPI_NO_RESTART:-0} == 1 ]] && return 0
  command -v pgrep >/dev/null 2>&1 || return 0
  local dp display xauth
  dp="$(pgrep -x dwm 2>/dev/null | head -n1 || true)"
@@ -111,6 +112,8 @@ install_helpers(){
  managed_helper_install nirupi-appearance "$ROOT/runtime/nirupi-appearance" "$HOME/.local/bin/nirupi-appearance"
  managed_helper_install nirupi-browser "$ROOT/runtime/nirupi-browser" "$HOME/.local/bin/nirupi-browser"
  managed_helper_install nirupi-maintenance "$ROOT/runtime/nirupi-maintenance" "$HOME/.local/bin/nirupi-maintenance"
+ managed_helper_install nirupi-gc "$ROOT/runtime/nirupi-gc.sh" "$HOME/.local/bin/nirupi-gc.sh"
+ managed_helper_install nirupi-update "$ROOT/runtime/nirupi-update.sh" "$HOME/.local/bin/nirupi-update.sh"
  # Back-compat: dwm builds on some earlier versions invoked this without .sh
  ln -sf nirupi-status-click.sh "$HOME/.local/bin/nirupi-status-click"
  for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do

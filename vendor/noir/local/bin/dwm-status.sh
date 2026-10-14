@@ -1188,6 +1188,20 @@ render_cached_now_playing() {
 
 # Prefer one-character frames; user config can still request larger steps.
 # The system line is rebuilt only at INTERVAL, including metadata detection.
+# One-shot modes for scripts and `nirupi status`.
+case "${1:-}" in
+  --once)
+    build_status_line | tr -d '\000-\037' | sed -e 's/\^[^^]*\^//g'
+    exit 0;;
+  --json)
+    _jes(){ printf '%s' "$1" | tr -d '\000-\037' | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+    printf '{"kernel":"%s","host":"%s","network":"%s","nextcloud":"%s","battery":"%s","temp":"%s","updates":"%s","volume":"%s","weather":"%s","date":"%s","time":"%s"}\n' \
+      "$(_jes "$(get_kernel)")" "$(_jes "$(get_hostname)")" "$(_jes "$(get_network)")" \
+      "$(_jes "$(get_nextcloud)")" "$(_jes "$(get_battery)")" "$(_jes "$(get_temp_high)")" \
+      "$(_jes "$(get_updates)")" "$(_jes "$(get_volume)")" "$(_jes "$(get_weather)")" \
+      "$(_jes "$("$DATEBIN" '+%Y-%m-%d')")" "$(_jes "$("$DATEBIN" '+%H:%M')")"
+    exit 0;;
+esac
 NOW_PLAYING_TEMPLATE=1
 last_system_update=0
 template=""

@@ -38,15 +38,33 @@ Segments (left to right): agent, media counts, volume, mic-mute, now playing,
 network, Nextcloud, battery, temperature, DND, recording, updates, kernel,
 host, weather (Ljungskile), date, time.
 
-Clicks (the sections that are clickable):
+Clicks on the bar (left = act, right = info where noted):
 
-- **Agent icon** → opencode · **Volume** → scroll to change, click to mute
-- **Weather** → forecast · **Network** → Wi‑Fi menu
-- **Updates** → check updates · **Nextcloud** → open the client
+| Section | Left click | Right click |
+|---|---|---|
+| Agent icon | opencode agent picker | |
+| Media counts | open the Music folder | |
+| Volume | mute (scroll = volume) | show level |
+| Mic | toggle mic mute | |
+| Now playing | play / pause | |
+| Network | Wi‑Fi menu | connections + IP |
+| Nextcloud | open the client | |
+| Battery | details | |
+| Temperature | details | |
+| Do not disturb | toggle | |
+| Recording | open Videos | |
+| Updates | check updates | |
+| Weather | forecast | |
+| Kernel / Host | details / hostname+IP | |
+| Date / Time | full date / time | |
+
+`nirupi status --once` prints the bar once as text; `nirupi status --json`
+prints it as JSON (handy for scripts/tests).
 
 Tune it in `~/.config/nirupi/status.conf` (this file is yours and is never
-overwritten): toggle segments with `SHOW_*`, set weather coordinates, or change
-cache intervals. Restart the session to re-read it.
+overwritten): toggle segments with `SHOW_*`, set weather coordinates, force bar
+colour with `BAR_COLOR=1`, or change cache intervals. Restart the session to
+re-read it.
 
 ## Control center — `Super+Shift+m`
 
@@ -105,12 +123,27 @@ after editing with `nirupi migrate dwm --rebuild`.
 ## Update & rollback
 
 ```sh
+nirupi update                 # git pull + next steps
+# or manually:
 cd ~/Git/nirupi
 git pull --ff-only
 bash ./install.sh --diff      # what will change
 bash ./install.sh --plan
 # then from a local TTY:
 bash ./install.sh --apply
+```
+
+Shortcuts: `bash ./install.sh --update-dots` refreshes scripts + theme only
+(no packages, no dwm rebuild). `bash ./install.sh --adopt-dots` force-adopts
+the bundled dotfiles and DWM config (previous files are backed up).
+
+## Maintenance
+
+```sh
+nirupi gc --dry-run           # show old versions/snapshots/backups to prune
+nirupi gc --yes               # prune (keeps current + N newest)
+nirupi gc --yes --legacy      # also prune old legacy archives
+nirupi status --once|--json   # bar for scripts
 ```
 
 Rollback (local TTY only; touches only `$HOME` and `~/.local/state/nirupi/`):

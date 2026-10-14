@@ -77,6 +77,12 @@ managed_config_install() {
   fi
   previous="$(_manifest_hash "$manifest" "$name")"
   current="$(sha256sum -- "$dest" | cut -d ' ' -f 1)"
+  if [[ ${NIRUPI_FORCE_CONFIGS:-0} == 1 ]]; then
+   # Explicit adopt: replace even a modified file (put_file keeps a backup).
+   put_file "$src" "$dest" "$mode"
+   _manifest_record "$manifest" "$name" "$new_hash"
+   return 0
+  fi
   if [[ $current == "$new_hash" ]]; then
    # Already current: refresh the manifest and repair a lost permission bit.
    put_file "$src" "$dest" "$mode"

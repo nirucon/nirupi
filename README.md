@@ -14,7 +14,7 @@ launchers and an optional SDDM theme.
 **License:** MIT (see `LICENSE`). The bundled Suckless tools and third-party
 themes are **not** mine and keep their own licenses (also listed in `LICENSE`).
 
-**Manual:** a short day-to-day guide is in [`docs/USAGE.md`](docs/USAGE.md).
+**Manual:** a short day-to-day guide is in [`docs/USAGE.md`](docs/USAGE.md), changes in [`CHANGELOG.md`](CHANGELOG.md).
 Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.md).
 
 ## What it does
@@ -93,6 +93,8 @@ nirupi rollback --binaries            # binary links only
 nirupi theme apply|status|diff|wallpaper IMAGE|mode noir|wallpaper
 nirupi migrate plan|dwm --rebuild     nirupi agent [profile]
 nirupi menu | nirupi keys | nirupi backup
+nirupi status --once|--json          nirupi gc --dry-run|--yes
+nirupi update
 nirupi rollback --all|--configs RUN|--binaries
 nirupi browser status|set|reset       nirupi updates --refresh
 ```

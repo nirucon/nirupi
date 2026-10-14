@@ -227,7 +227,12 @@ theme_from_image(){
   mapfile -t colarr <<< "$sorted"
   bg="${colarr[0]}"
   fg="${colarr[$((${#colarr[@]} - 1))]}"
-  (( $(_hex_lum "$fg") < 150 )) && fg="e5e5e5"
+  # Enforce readable contrast between foreground and background.
+  _lbg="$(_hex_lum "$bg")"; _lfg="$(_hex_lum "$fg")"
+  _d=$(( _lfg - _lbg )); (( _d < 0 )) && _d=$(( -_d ))
+  if (( _d < 110 )); then
+    if (( _lbg > 128 )); then fg="0f0f10"; else fg="e5e5e5"; fi
+  fi
 
   local ansi=()
   ansi[0]="$bg"; ansi[7]="$fg"; ansi[8]="$(_hex_mix "$bg" "$fg" 30)"; ansi[15]="$fg"

@@ -27,6 +27,11 @@ ids=$(grep -oE 'nirupi-status-click\.sh [a-z]+", *[0-9]+' "$DWM/config.h" | grep
 for id in $ids; do
   if [ "$id" -ge 9 ] && [ "$id" -le 13 ]; then echo "FAIL unsafe statuscmd id: $id" >&2; exit 1; fi
 done
+# every section id used by the script must exist in config.h statuscmds
+cfg_ids=" $(grep -oE 'nirupi-status-click\.sh [a-z]+", *[0-9]+' "$DWM/config.h" | grep -oE '[0-9]+$' | sort -n | tr '\n' ' ') "
+for id in $(grep -oE 'sect \([0-9]+\)' "$ROOT/vendor/noir/local/bin/dwm-status.sh" | grep -oE '[0-9]+' | sort -n | uniq); do
+  case "$cfg_ids" in *" $id "*) ;; *) echo "FAIL sect id $id has no statuscmds entry" >&2; exit 1;; esac
+done
 # also the shell script must use the same ids (no 9..13)
 if grep -oE 'sect ([0-9]+)' "$ROOT/vendor/noir/local/bin/dwm-status.sh" | grep -oE '[0-9]+' | awk '$1>=9 && $1<=13' | grep -q .; then
   echo 'FAIL dwm-status.sh uses an unsafe section id (9..13)' >&2; exit 1

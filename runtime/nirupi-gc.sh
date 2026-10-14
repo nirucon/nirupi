@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# NIRUPI garbage collector: prune old versioned binaries and stale state.
+#   nirupi gc [--dry-run] [--yes] [--legacy]
+# Keeps the current version plus NIRUPI_KEEP_VERSIONS older ones, the newest
+# NIRUPI_KEEP_SNAPSHOTS release snapshots, NIRUPI_KEEP_BACKUPS backup runs.
+# --legacy also prunes old legacy archives (kept by default for safety).
+set -Eeuo pipefail
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/nirupi"
+LIBROOT="$HOME/.local/lib/nirupi"
+KEEP_VERSIONS="${NIRUPI_KEEP_VERSIONS:-1}"
+KEEP_SNAPSHOTS="${NIRUPI_KEEP_SNAPSHOTS:-3}"
+KEEP_BACKUPS="${NIRUPI_KEEP_BACKUPS:-5}"
+DRY=0; ASSUME=0; LEGACY=0
+while (($#)); do
+  case "$1" in
+    --dry-run) DRY=1;; --yes) ASSUME=1;; --legacy) LEGACY=1;;
+    -h|--help) echo 'Usage: nirupi gc [--dry-run] [--yes] [--legacy]'; exit 0;;
+    *) echo "Unknown option: $1" >&2; exit 2;;
+  esac
+  shift
+done
+
+current="$(sed -n 's/^NIRUPI_VERSION=//p' "$STATE/installed.env" 2>/dev/null | head -n1)"
+if [[ -z $current ]]; then
+  link="$(readlink -f "$HOME/.local/bin/dwm" 2>/dev/null || true)"
+  current="$(printf '%s' "$link" | sed -n 's#.*/nirupi/\([^/]*\)/.*#\1#p')"
+fi
+
+targets=()
+# versioned binary dirs
+if [[ -d $LIBROOT ]]; then
+  mapfile -t all < <(find "$LIBROOT" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | grep -E '^[0-9]' | sort -V)
+  keep=()
+  for ((i=${#all[@]}-1; i>=0 && ${#keep[@]} < KEEP_VERSIONS + 1; i--)); do keep+=("${all[i]}"); done
+  for v in "${all[@]}"; do
+    if [[ $v == "$current" ]]; then continue; fi
+    found=0
+    for k in "${keep[@]}"; do if [[ $v == "$k" ]]; then found=1; fi; done
+    if (( found == 0 )); then targets+=("$LIBROOT/$v"); fi
+  done
+fi
+prune_dir() {
+  local root="$1" keep="$2" d
+  [[ -d $root ]] || return 0
+  local list; list="$(find "$root" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort -r)"
+  local n=0
+  while IFS= read -r d; do
+    if [[ -z $d ]]; then continue; fi
+    if (( n < keep )); then n=$(( n + 1 )); continue; fi
+    targets+=("$root/$d")
+  done <<< "$list"
+  return 0
+}
+prune_dir "$STATE/release-snapshots" "$KEEP_SNAPSHOTS"
+prune_dir "$STATE/backups" "$KEEP_BACKUPS"
+if (( LEGACY )); then prune_dir "$STATE/legacy" "$KEEP_BACKUPS"; fi
+prune_dir "$STATE/migrations" "$KEEP_BACKUPS"
+
+if ((${#targets[@]} == 0)); then echo 'Nothing to prune'; exit 0; fi
+echo "NIRUPI gc will remove:"
+for t in "${targets[@]}"; do
+  sz="$(du -sh "$t" 2>/dev/null | cut -f1)"
+  printf '  %-8s %s\n' "${sz:-?}" "$t"
+done
+if (( DRY )); then echo '(dry run; nothing removed)'; exit 0; fi
+if (( ASSUME == 0 )); then
+  [[ -t 0 ]] || { echo 'Refusing without --yes on a non-interactive terminal' >&2; exit 1; }
+  printf 'Type GC to remove these paths: '; read -r ans
+  [[ $ans == GC ]] || { echo 'Cancelled'; exit 1; }
+fi
+for t in "${targets[@]}"; do rm -rf -- "$t"; done
+echo "Removed ${#targets[@]} path(s)."

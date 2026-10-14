@@ -5,7 +5,7 @@
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TMP="$(mktemp -d)"; trap 'rm -rf -- "$TMP"' EXIT
-export HOME="$TMP/home" XDG_STATE_HOME="$TMP/home/.local/state" XDG_CONFIG_HOME="$TMP/home/.config"
+export HOME="$TMP/home" XDG_STATE_HOME="$TMP/home/.local/state" XDG_CONFIG_HOME="$TMP/home/.config" NIRUPI_NO_RESTART=1
 mkdir -p "$HOME/.local/bin"
 printf '#!/usr/bin/env bash\n# OLD nirupi status\n' > "$HOME/.local/bin/dwm-status.sh"
 printf '#!/usr/bin/env bash\n# OLD nirupi cli\n' > "$HOME/.local/bin/nirupi"

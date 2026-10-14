@@ -15,7 +15,11 @@ case "$cmd" in
   browser) exec "$HOME/.local/bin/nirupi-browser" "$@";;
   appearance) exec "$HOME/.local/bin/nirupi-appearance" "$@";;
   updates) exec "$HOME/.local/bin/nirupi-updates" "$@";;
-  status) printf 'Session: %s\nDisplay: %s\n' "${XDG_SESSION_TYPE:-unknown}" "${DISPLAY:-none}"; pgrep -af '[d]wm-status.sh' || :;;
+  status)
+    case "${1:-}" in
+      --once|--json|--bar) exec "$HOME/.local/bin/dwm-status.sh" "$1";;
+    esac
+    printf 'Session: %s\nDisplay: %s\n' "${XDG_SESSION_TYPE:-unknown}" "${DISPLAY:-none}"; pgrep -af '[d]wm-status.sh' || :;;
   doctor)
     failures=0
     for app in dwm dmenu st nirupi-session dwm-status.sh nirupi-updates nirupi-browser; do
@@ -24,6 +28,10 @@ case "$cmd" in
     for app in Xorg xsetroot kitty rofi opencode slock xss-lock xidlehook xautolock nextcloud; do
       if command -v "$app" >/dev/null 2>&1; then printf 'OK   %s\n' "$app"; else printf 'WARN %s missing\n' "$app"; fi
     done
+    if ! command -v xidlehook >/dev/null 2>&1 && ! command -v xautolock >/dev/null 2>&1 && ! command -v xss-lock >/dev/null 2>&1; then
+      printf 'HINT install an idle-lock tool (xss-lock or xautolock) for automatic screen lock\n'
+    fi
+    command -v nmcli >/dev/null 2>&1 || printf 'HINT install NetworkManager (nmcli) for the Wi-Fi menu\n'
     [[ -e /usr/share/xsessions/nirupi-dwm.desktop ]] && echo 'OK   X11 session' || echo 'WARN X11 session missing'
     if [[ -r /etc/os-release ]]; then
       . /etc/os-release
@@ -66,6 +74,8 @@ case "$cmd" in
   menu) exec "$HOME/.local/bin/nirupi-menu.sh" "$@";;
   keys) exec "$HOME/.local/bin/nirupi-keys.sh" "$@";;
   backup) exec "$HOME/.local/bin/nirupi-backup.sh" "$@";;
-  help|-h|--help) printf 'nirupi {version|--version|status|doctor|appearance|browser|updates [--refresh]|config|keys|menu|agent [profile]|backup|theme apply|dots update|migrate plan|rollback --all|history}\n';;
+  gc) exec "$HOME/.local/bin/nirupi-gc.sh" "$@";;
+  update) exec "$HOME/.local/bin/nirupi-update.sh" "$@";;
+  help|-h|--help) printf 'nirupi {version|--version|status [--once|--json]|doctor|appearance|browser|updates [--refresh]|config|keys|menu|agent [profile]|backup|gc|update|theme apply|dots update|migrate plan|rollback --all|history}\n';;
   *) printf 'Unknown command: %s\n' "$cmd" >&2; exit 2;;
 esac

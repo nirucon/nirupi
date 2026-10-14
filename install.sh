@@ -8,7 +8,7 @@ source "$ROOT/lib/apps.sh"
 source "$ROOT/lib/install.sh"
 source "$ROOT/lib/release.sh"
 source "$ROOT/lib/rollback.sh"
-SESSION=sddm; ACTION=plan; DRY_RUN=0; REFRESH=0
+SESSION=sddm; ACTION=plan; DRY_RUN=0; REFRESH=0; ADOPT=0
 usage(){ printf 'NIRUPI %s\n' "$VERSION"; cat <<'EOF'
 Usage: ./install.sh [action] [--session sddm|startx]
 Actions:
@@ -27,13 +27,14 @@ Options:
   --session sddm|startx   Login manager target (default sddm).
   --dry-run               Combine with --apply to preview without writing.
   --refresh               Adopt the bundled NIRUPI scripts even if untracked (backup kept).
+  --adopt-dots            Force-adopt bundled dotfiles + dwm config (backup kept).
   -h, --help              Show this help.
 EOF
 }
 while (($#)); do
  case "$1" in
  --plan) ACTION=plan;; --apply) ACTION=apply;; --doctor) ACTION=doctor;; --audit) ACTION=audit;; --verify) ACTION=verify;; --history) ACTION=history;; --rollback) ACTION=rollback;;
- --migrate) ACTION=migrate;; --diff) ACTION=diff;; --theme-only) ACTION=theme;; --update-dots) ACTION=dots;;
+ --migrate) ACTION=migrate;; --diff) ACTION=diff;; --theme-only) ACTION=theme;; --update-dots) ACTION=dots;; --adopt-dots) ACTION=dots; ADOPT=1;;
  --dry-run) DRY_RUN=1;; --refresh) REFRESH=1;;
  --session) shift; (($#)) || die 'Missing --session value'; SESSION=$1;;
  -h|--help) usage; exit 0;; *) die "Unknown argument: $1";; esac
@@ -69,7 +70,13 @@ if [[ $ACTION == theme || $ACTION == dots ]]; then
    log 'Adopting bundled NIRUPI scripts (backups kept)'
    NIRUPI_REFRESH=1 install_helpers
   fi
+  deploy_bundle
+  if [[ $ADOPT == 1 ]]; then export NIRUPI_FORCE_CONFIGS=1; fi
   NIRUPI_NOIR_DIR="$ROOT/vendor/noir" theme_apply
+  if [[ $ADOPT == 1 && -f $ROOT/vendor/suckless/dwm/config.h ]]; then
+   NIRUPI_FORCE_CONFIGS=1 managed_config_install 'dwm/config.h' "$ROOT/vendor/suckless/dwm/config.h" "$HOME/.config/suckless/dwm/config.h"
+   log 'Adopted the bundled dwm config.h (previous file backed up)'
+  fi
   write_installed_state
   restart_statusbar_if_running
   exit 0
