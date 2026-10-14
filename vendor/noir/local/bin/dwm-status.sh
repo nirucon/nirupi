@@ -1113,10 +1113,10 @@ build_status_line() {
   [[ -n "${load:-}" ]] && parts+=("$load")
   [[ -n "${bluetooth:-}" ]] && parts+=("$bluetooth")
   [[ -n "${updates:-}" ]] && parts+=("$updates")
+  [[ -n "${weather:-}" ]] && parts+=("$weather")
 
   [[ -n "${kernel:-}" ]] && parts+=("$kernel")
   [[ -n "${host:-}" ]] && parts+=("$host")
-  [[ -n "${weather:-}" ]] && parts+=("$weather")
   [[ -n "${datepart:-}" ]] && parts+=("$datepart")
   [[ -n "${timepart:-}" ]] && parts+=("$timepart")
 

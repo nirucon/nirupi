@@ -22,7 +22,7 @@ get_setting(){
 }
 icon_theme(){
  local name
- for name in Papirus-Dark Tela-black Adwaita; do
+ for name in Papirus-Dark Tela-circle-black Tela-black Adwaita; do
   if [[ -d "$HOME/.local/share/icons/$name" || -d "$HOME/.icons/$name" || -d "/usr/share/icons/$name" ]]; then
    printf '%s\n' "$name"; return
   fi

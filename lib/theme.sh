@@ -98,6 +98,15 @@ theme_apply_gtk4(){
   else
     printf 'gtk-theme-name=Adwaita-dark\n' >> "$tmp"
   fi
+  local icons="Adwaita"
+  for _t in Papirus-Dark Tela-black Tela-circle-black; do
+    [[ -d "/usr/share/icons/$_t" || -d "$HOME/.local/share/icons/$_t" ]] && { icons="$_t"; break; }
+  done
+  if grep -q '^gtk-icon-theme-name=' "$tmp"; then
+    sed -i "s/^gtk-icon-theme-name=.*/gtk-icon-theme-name=$icons/" "$tmp"
+  else
+    printf 'gtk-icon-theme-name=%s\n' "$icons" >> "$tmp"
+  fi
   chmod 0644 "$tmp"
   mv -f -- "$tmp" "$dest"
 }
