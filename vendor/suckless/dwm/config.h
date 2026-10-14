@@ -199,6 +199,8 @@ static const char *keyscmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-keys.
 static const char *menucmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-menu.sh", NULL };
 /* AI agent launcher */
 static const char *agentcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent.sh", NULL };
+/* Theme picker (Super+Ctrl+t): rofi with colour swatches, applies live. */
+static const char *thememenu[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi theme menu", NULL };
 
 /* Clipboard save */
 static const char *clipsavecmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/clip-save.sh", NULL };
@@ -290,6 +292,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_slash,                 spawn,          {.v = keyscmd } },         /* Super+/ (US layouts) */
 	{ MODKEY,                       XK_grave,                 spawn,          {.v = menucmd } },         /* Super+` (US layouts) */
 	{ MODKEY,                       XK_a,                     spawn,          {.v = agentcmd } },        /* Super+a -> AI agent (opencode) */
+	{ MODKEY|ControlMask,           XK_t,                     spawn,          {.v = thememenu } },       /* Super+Ctrl+t -> theme picker */
 	{ MODKEY|ShiftMask,             XK_f,                     spawn,          {.v = fmcmd } },          /* Super+Shift+f -> pcmanfm */
 
 	/* Clipboard */

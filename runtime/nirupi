@@ -135,6 +135,6 @@ case "$cmd" in
   webapp) exec "$HOME/.local/bin/nirupi-webapp.sh" "$@";;
   gc) exec "$HOME/.local/bin/nirupi-gc.sh" "$@";;
   update) exec "$HOME/.local/bin/nirupi-update.sh" "$@";;
-  help|-h|--help) printf 'nirupi {version|--version|status [--once|--json]|doctor [--fix]|appearance|browser|updates [--refresh]|config|keys|menu|agent [profile]|lock|webapp add|list|remove|backup|gc|update|theme apply|status|diff|list|preview|set|wallpaper IMAGE|dots update|migrate plan|rollback --all|history}\n';;
+  help|-h|--help) printf 'nirupi {version|--version|status [--once|--json]|doctor [--fix]|appearance|browser|updates [--refresh]|config|keys|menu|agent [profile]|lock|webapp add|list|remove|backup|gc|update|theme apply|status|diff|list|preview NAME|set NAME|menu|wallpaper IMAGE|dots update|migrate plan|rollback --all|history}\n';;
   *) printf 'Unknown command: %s\n' "$cmd" >&2; exit 2;;
 esac

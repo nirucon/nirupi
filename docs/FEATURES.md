@@ -75,14 +75,21 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **Touchpad** `Super+Shift+t` — toggles the touchpad via `xinput`.
 
 ## Theme
-- Palettes: `nirupi theme list`, `nirupi theme preview NAME`,
-  `nirupi theme set noir|warm|cool`.
+- **One palette drives everything.** Switching a theme restyles terminals
+  (kitty, alacritty, st), fish, TUI tools (tmux, lazygit, micro, aerc, cmus),
+  GTK/Qt, rofi, dunst, the SDDM theme and the status-bar accents — live, no
+  rebuild.
+- **Theme picker** `Super+Ctrl+t` (`nirupi theme menu`): rofi with colour
+  swatches per theme.
+- Shipped themes: `noir` (default), `Satie` (monochrome graphite, one muted-gold
+  accent), `carl-larsson` (warm umber/watercolour), plus `warm`/`cool`.
+- Commands: `nirupi theme list`, `nirupi theme preview NAME`,
+  `nirupi theme set NAME`.
 - **Day/night auto** — `nirupi-theme-auto.sh auto` picks `warm` after 20:00 and
-  before 07:00, else `noir` (also in the control center). Schedule it with cron,
+  before 07:00, else `noir` (also in the control center). Schedule with cron,
   e.g. `0 * * * * ~/.local/bin/nirupi-theme-auto.sh auto`.
-- Wallpaper-driven palette: `nirupi theme wallpaper IMAGE`.
-- `st`/`dmenu` follow the theme live via Xresources; rofi, dunst and the SDDM
-  theme are generated from the tokens.
+- **Wallpaper-driven palette:** `nirupi theme wallpaper IMAGE`.
+- Add your own: drop `MyTheme.env` (same schema) in `vendor/noir/theme/`.
 
 ## Your apps & the web
 - **Default repositories** `nirupresence`, `nirunote`, `nplay` are cloned to

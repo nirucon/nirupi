@@ -1,6 +1,11 @@
 function fish_greeting
 end
 
+# Theme colours generated from the active palette (nirupi theme apply).
+if test -r ~/.config/nirupi/theme/fish.fish
+    source ~/.config/nirupi/theme/fish.fish
+end
+
 # CachyOS extras only where that config actually exists.
 if test -r /usr/share/cachyos-fish-config/cachyos-config.fish
     source /usr/share/cachyos-fish-config/cachyos-config.fish

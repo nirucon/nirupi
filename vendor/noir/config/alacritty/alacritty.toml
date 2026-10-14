@@ -63,49 +63,11 @@ save_to_clipboard = true
 [mouse]
 hide_when_typing = true
 
-# --------- COLORS: MatteBlack + Nord Blue Accents ----------
-[colors.primary]
-background = "0x0f0f10"  # Deep black background
-foreground = "0xe5e5e5"  # Light gray foreground
-
-[colors.cursor]
-text   = "0x0f0f10"  # Cursor text color
-cursor = "0xe5e5e5"  # Cursor block color
-
-[colors.selection]
-text       = "0xe5e5e5"  # Selected text color
-background = "0x3a3a3d"  # Selection background
-
-# Normal colors - Nord blue palette mapped to standard positions
-[colors.normal]
-black   = "0x0f0f10"
-red     = "0xb87878"
-green   = "0x83a18b"
-yellow  = "0xb5a47e"
-blue    = "0x819eb5"
-magenta = "0xa390b0"
-cyan    = "0x83a9a7"
-white   = "0xe5e5e5"
-
-# Bright colors - matching Nord blue theme
-[colors.bright]
-black   = "0x5a5a60"
-red     = "0xd69a9a"
-green   = "0xa4c5aa"
-yellow  = "0xd2c092"
-blue    = "0xa4bfd3"
-magenta = "0xc0a9cc"
-cyan    = "0xa4cbca"
-white   = "0xffffff"
-
-# Hints (URL/path highlighting)
-[colors.hints.start]
-foreground = "0x0f0f10"
-background = "0x819eb5"
-
-[colors.hints.end]
-foreground = "0x819eb5"
-background = "0x0f0f10"
+# --------- COLORS (theme-driven) ----------
+# Colours are generated from the active palette and imported. Do not set
+# colours here: `nirupi theme apply` (and Super+Ctrl+t) rewrites the import.
+[general]
+import = ["~/.config/nirupi/theme/alacritty.toml"]
 
 # --------- Efficient Keybindings ----------
 # Copy/paste, zoom, new window, etc.

@@ -27,13 +27,28 @@ grep -q 'theme_render_sddm' "$ROOT/lib/theme.sh" || fail 'sddm generator missing
 grep -q 'BEGIN NIRU-NOIR-COLORS' "$ROOT/vendor/sddm/Main.qml" || fail 'sddm color markers missing'
 grep -q 'vendor/sddm' "$ROOT/lib/install.sh" || fail 'sddm not deployed with the bundle'
 
-# Built-in palettes + list/preview/set.
-for p in tokens.env Noir-warm.env Noir-cool.env; do
+# Built-in palettes + list/preview/set/menu.
+for p in tokens.env Noir-warm.env Noir-cool.env Satie.env Carl-Larsson.env; do
   [[ -f "$ROOT/vendor/noir/theme/$p" ]] || fail "missing palette $p"
 done
 grep -q 'theme_list' "$ROOT/lib/theme.sh" || fail 'theme list missing'
 grep -q 'theme_preview' "$ROOT/lib/theme.sh" || fail 'theme preview missing'
 grep -q 'theme_set' "$ROOT/lib/theme.sh" || fail 'theme set missing'
+grep -q 'theme_menu' "$ROOT/lib/theme.sh" || fail 'theme menu missing'
+
+# Generated per-app colour fragments (include-driven, always rewritten).
+for fn in theme_render_kitty theme_render_alacritty theme_render_fish \
+          theme_render_tmux theme_render_lazygit theme_render_micro \
+          theme_render_aerc theme_render_cmus theme_render_statusbar \
+          theme_reload_running; do
+  grep -q "$fn" "$ROOT/lib/theme.sh" || fail "missing $fn"
+done
+grep -q 'theme_gen_dir' "$ROOT/lib/theme.sh" || fail 'generated theme dir missing'
+
+# Theme picker is reachable from dwm, the control center and the palette.
+grep -q 'thememenu' "$ROOT/vendor/suckless/dwm/config.h" || fail 'dwm theme picker missing'
+grep -q 'XK_t' "$ROOT/vendor/suckless/dwm/config.h" || fail 'theme keybinding missing'
+grep -q 'Theme: choose' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'control center theme entry missing'
 
 # Noir lock wrapper and slock palette.
 [[ -f "$ROOT/vendor/noir/local/bin/nirupi-lock.sh" ]] || fail 'lock wrapper missing'

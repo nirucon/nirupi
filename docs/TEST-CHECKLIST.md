@@ -25,7 +25,9 @@ a real login on real hardware.
 - [ ] Clicking bar segments works (agent icon, volume scroll, weather, network,
       updates, Nextcloud).
 - [ ] `Super+a` opens the agent (opencode); `Super+/` cheat-sheet; `Super+` menu.
-- [ ] `Super+F5` reloads Xresources colors; `nirupi theme wallpaper IMAGE`
+- [ ] `Super+Ctrl+t` opens the theme picker; choosing **Satie**/**Carl Larsson**
+      restyles terminals, TUI tools, rofi, dunst and the bar live.
+- [ ] `Super+Shift+r` reloads Xresources colors; `nirupi theme wallpaper IMAGE`
       recolors terminals + bar; `nirupi theme mode noir` restores Noir.
 - [ ] Idle for `IDLE_LOCK_MINUTES` (default 10) locks with slock; unlock works.
 - [ ] DND toggle (control center) suppresses notifications; indicator shows.

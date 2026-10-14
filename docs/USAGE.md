@@ -20,16 +20,17 @@ startup, run `nirupi theme apply`.
 | `Super+Shift+p` | rofi run |
 | `Super+b` | Browser (resolver) |
 | `Super+a` | **Agent** (opencode) |
+| `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson…) |
 | `Super+Shift+h` | **Keybinding palette** (search everything) |
 | `Super+Shift+m` | **Control center** |
 | `Super+Esc` | Lock (`nirupi lock` → slock) |
 | `Super+Shift+q` | **Log out** (asks for confirmation) |
 | `Super+n` | **Night light** toggle (gammastep/redshift) |
-| `Super+F11` | Toggle real fullscreen |
+| `Super+Shift+e` | Toggle real fullscreen |
 | `Super+Ctrl+,` / `Super+Ctrl+.` | Cycle layouts |
 | `Super+Shift+u` | Jump to the urgent window |
 | `Super+Shift+w` | Next wallpaper |
-| `Super+F5` | Reload theme colors (Xresources) |
+| `Super+Shift+r` | Reload theme colours (Xresources) |
 | `Super+q` | Close focused window |
 
 The full, searchable list is `Super+Shift+h` (or `nirupi keys`; `Super+/` on US layouts). It clearly marks
@@ -92,20 +93,40 @@ API keys/accounts stay in opencode's own config — never in this repo.
 
 ## Theme
 
-- Static Noir (default): `nirupi theme apply` or `./install.sh --theme-only`.
-- Built-in palettes: `nirupi theme list`, `nirupi theme preview warm`, and
-  `nirupi theme set noir|warm|cool` to apply one.
-- Follow the wallpaper (opt-in): `nirupi theme wallpaper /path/to/image.jpg`
-  (uses ImageMagick, then reloads terminals and the bar). `Super+F5` re-applies
-  the dwm colors. Back to static: `nirupi theme mode noir`.
+The whole desktop is generated from **one palette** (`vendor/noir/theme/<name>.env`),
+so a theme change restyles terminals, fish, TUI tools, GTK/Qt, rofi, dunst, the
+SDDM theme and the status bar — live, without a rebuild.
 
-`st` and `dmenu` read the palette from Xresources at startup, so they match the
-active theme without a rebuild. **rofi, dunst and the SDDM theme are generated
-from `vendor/noir/theme/tokens.env`** whenever the theme is applied.
+- **Pick a theme:** `Super+Ctrl+t` (rofi picker with colour swatches), or
+  `nirupi theme menu`.
+- **List / preview:** `nirupi theme list`, `nirupi theme preview Satie`.
+- **Apply by name:** `nirupi theme set NAME` (e.g. `noir`, `Satie`,
+  `carl-larsson`, `warm`, `cool`).
+- **Follow the wallpaper (opt-in):** `nirupi theme wallpaper /path/image.jpg`
+  (ImageMagick) then reloads terminals and the bar. Back to static:
+  `nirupi theme mode noir`.
+- `Super+Shift+r` re-applies the dwm colours.
 
-Noir is monochrome: the status bar uses no colour codes in noir mode. Colour is
-applied automatically only in wallpaper mode (or force it with `BAR_COLOR=1` in
-`~/.config/nirupi/status.conf`).
+Shipped themes:
+
+| Name | Look |
+|---|---|
+| `noir` | Cold, near-black monochrome (default) |
+| `Satie` | Flat graphite grey, one muted-gold accent |
+| `carl-larsson` | Warm umber, cream and earth/watercolour accents |
+| `warm` / `cool` | Noir with a warm or cool cast |
+
+`st`/`dmenu`/dwm read the palette from Xresources at startup (and on `SIGUSR1`);
+**kitty, alacritty, fish, tmux, lazygit, micro, aerc, cmus, rofi, dunst and SDDM
+are generated from the active palette** on every `nirupi theme apply`.
+
+Add your own theme: copy `vendor/noir/theme/Satie.env` to
+`vendor/noir/theme/MyTheme.env`, edit the hex values, and
+`nirupi theme set MyTheme`.
+
+The **status bar** follows the theme automatically (each segment is drawn from
+the palette accents). To force colour in a monochrome mode set `BAR_COLOR=1` in
+`~/.config/nirupi/status.conf`.
 
 ## Screen lock, idle & effects
 
@@ -149,6 +170,7 @@ nirupi webapp remove "Work Mail"
 | `~/.config/nirupi/agents.conf` | opencode profiles |
 | `~/.config/nirupi/browser.conf` | Default browser (`nirupi browser set X`) |
 | `~/.config/nirupi/tokens.env` | Active palette (from `nirupi theme set`) |
+| `~/.config/nirupi/theme/` | Generated colour fragments (do not edit) |
 
 DWM keybindings/colors are compiled in `vendor/suckless/dwm/config.h`; rebuild
 after editing with `nirupi migrate dwm --rebuild`.

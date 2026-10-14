@@ -88,7 +88,7 @@ Keyboard layout (se/us)
 Touchpad: toggle
 Night light: cycle
 Night light: off
-Apply Noir theme
+Theme: choose…
 Wallpaper mode: toggle
 Next wallpaper
 Theme: auto (day/night)
@@ -129,7 +129,7 @@ case "$action" in
   'Touchpad: toggle') exec "$HOME/.local/bin/nirupi-touchpad.sh";;
   'Night light: cycle') exec "$HOME/.local/bin/nirupi-nightlight.sh";;
   'Night light: off') exec "$HOME/.local/bin/nirupi-nightlight.sh" off;;
-  'Apply Noir theme') exec nirupi theme apply;;
+  'Theme: choose…') exec nirupi theme menu;;
   'Wallpaper mode: toggle') theme_toggle;;
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
   'Theme: auto (day/night)') exec "$HOME/.local/bin/nirupi-theme-auto.sh" auto;;

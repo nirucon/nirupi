@@ -2,6 +2,22 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.8.0
+- **Multiple themes with a picker.** The whole desktop is generated from a single
+  palette, so switching a theme restyles terminals (kitty, alacritty, st), fish,
+  TUI tools (tmux, lazygit, micro, aerc, cmus), GTK/Qt, rofi, dunst, the SDDM
+  theme and the status-bar accents — live, without a rebuild.
+- New shipped themes: **Satie** (monochrome graphite, one muted-gold accent) and
+  **Carl Larsson** (warm umber and watercolour accents), alongside **Noir** and
+  the `warm`/`cool` variants.
+- **Theme picker** on `Super+Ctrl+t` (`nirupi theme menu`): rofi with colour
+  swatches. Also in the control center (`Theme: choose…`) and the key palette.
+- `nirupi theme list|preview NAME|set NAME` (the old `set PALETTE` still works);
+  add your own theme by dropping `Name.env` in `vendor/noir/theme/`.
+- App colour configs (kitty/alacritty/tmux/fish/lazygit/micro/aerc/cmus) now
+  *include* generated fragments instead of hard-coding Noir, so palette changes
+  actually reach every app. Stale `docs/TESTING.md` removed.
+
 ## 0.7.2
 - **Screensaver**: the clock is now always normal digits — only the **hostname**
   alternates between Elder Futhark runes and ASCII every 30 s. The first input

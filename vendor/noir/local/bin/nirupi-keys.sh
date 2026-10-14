@@ -80,6 +80,7 @@ list_apps() {
 APP	Terminal	kitty
 APP	Files	pcmanfm
 APP	Browser	nirupi-browser
+APP	Themes	nirupi theme menu
 APP	Agent (AI)	nirupi-agent
 APP	Control center	nirupi-menu.sh
 APP	Screenshot	screenshot-select.sh
@@ -127,6 +128,7 @@ else
     Terminal) exec kitty;;
     Files) exec pcmanfm;;
     Browser) exec nirupi-browser;;
+    Themes) exec nirupi theme menu;;
     Agent\(AI\)|Agent) exec nirupi-agent;;
     Control) exec nirupi-menu.sh;;
     Screenshot) exec screenshot-select.sh;;

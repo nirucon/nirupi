@@ -252,6 +252,16 @@ install_desktop() (
    theme_render_rofi
    theme_render_dunst
    theme_render_sddm
+   # Generated per-app colour fragments (included by the bundled app configs).
+   theme_render_kitty
+   theme_render_alacritty
+   theme_render_fish
+   theme_render_tmux
+   theme_render_lazygit
+   theme_render_micro
+   theme_render_aerc
+   theme_render_cmus
+   theme_render_statusbar
    # Deploy the reusable bundle so `nirupi theme|dots|migrate` work after install.
    deploy_bundle
   local user_session="$HOME/.local/bin/nirupi-session"

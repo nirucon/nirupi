@@ -1,8 +1,9 @@
-# NIRUPI — NIRU Noir
+# NIRUPI — a NIRU desktop
 
 A personal, minimal **Suckless** X11 desktop for **Arch/CachyOS**,
 **Void Linux (glibc)** and **Debian**. It bundles patched `dwm`, `dmenu`, `st`
-and `slock`, one unified dark **NIRU Noir** theme, an X11 session, a status bar,
+and `slock`, a set of unified dark **themes** (Noir, Satie, Carl Larsson) that
+restyle the whole desktop from one palette, an X11 session, a status bar,
 launchers and an optional SDDM theme.
 
 > **Personal project.** This is the everyday setup of **Nicklas Rudolfsson
@@ -27,12 +28,15 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   existing pertag/gaps/scratchpad/centered-master).
 - Status bar with **Noir colors and clickable segments** (agent, volume,
   weather, network, updates, Nextcloud); Nextcloud status without a tray.
-- Applies the NIRU Noir dark theme everywhere: terminals, fish, TUI tools
-  (`tmux`, `lazygit`, `micro`, `aerc`), GTK/Qt, browsers and the status bar.
-  `st`/`dmenu` follow the theme live via **Xresources**, and **rofi, dunst and
-  the SDDM theme are generated from the tokens**. Opt-in **wallpaper-driven
-  theme** (`nirupi theme wallpaper IMAGE`) and built-in palettes
-  (`nirupi theme list|preview|set noir|warm|cool`).
+- Applies a dark theme everywhere: terminals (`kitty`, `alacritty`, `st`), fish,
+  TUI tools (`tmux`, `lazygit`, `micro`, `aerc`, `cmus`), GTK/Qt, rofi, dunst,
+  browsers and the status bar. Everything is generated from a single palette
+  (`vendor/noir/theme/*.env`), so **switching a theme restyles all of it live**.
+  Ship-with themes: **Noir** (default), **Satie** (monochrome graphite) and
+  **Carl Larsson** (warm umber/watercolour), plus `warm`/`cool` variants:
+  `nirupi theme list|preview NAME|set NAME` or the **theme picker**
+  (`Super+Ctrl+t`). Opt-in **wallpaper-driven theme**
+  (`nirupi theme wallpaper IMAGE`).
 - **Idle ladder**: dim → lock → DPMS off → suspend (each optional), lock on
   suspend, and a Noir lock wrapper (`nirupi lock`).
 - **Logout confirmation** (`Super+Shift+q`) and a **night light** toggle
@@ -108,8 +112,10 @@ nirupi rollback --binaries            # binary links only
 
 - **Apps/repos:** copy `custom_apps.conf.example` to `~/.config/nirupi/apps.conf`
   and list extra `package=`, `package-<distro>=` and `repo=URL|DEST|BUILD`.
-- **Theme:** NIRU Noir is generated from `vendor/noir/theme/tokens.env`.
-  Re-apply anytime with `./install.sh --theme-only` or `nirupi theme apply`.
+- **Theme:** every colour comes from `vendor/noir/theme/*.env` (one palette per
+  theme). Pick with `nirupi theme menu` (`Super+Ctrl+t`), apply a name with
+  `nirupi theme set NAME`, or re-apply with `./install.sh --theme-only`. Add your
+  own palette by dropping `Name.env` in that directory (same schema).
 - **Dots only:** `./install.sh --update-dots`.
 
 ## Commands
@@ -117,7 +123,7 @@ nirupi rollback --binaries            # binary links only
 ```
 ./install.sh --plan|--apply|--doctor|--verify|--diff|--history|--rollback
 ./install.sh --theme-only|--update-dots|--migrate|--dry-run
-nirupi theme apply|status|diff|list|preview PALETTE|set PALETTE
+nirupi theme apply|status|diff|list|preview NAME|set NAME|menu
 nirupi theme wallpaper IMAGE|mode noir|wallpaper|palette
 nirupi migrate plan|dwm --rebuild     nirupi agent [profile]
 nirupi menu | nirupi keys | nirupi lock | nirupi webapp add|list|remove
@@ -130,10 +136,11 @@ nirupi browser status|set|reset       nirupi updates --refresh
 ```
 
 Keybindings: `Super+Return` terminal, `Super+b` browser, `Super+a` agent,
-`Super+Shift+h` keybinding palette, `Super+Shift+m` control center, `Super+Esc` lock,
-`Super+Shift+q` log out, `Super+n` night light, `Super+F11` fullscreen,
+`Super+Ctrl+t` theme picker, `Super+Shift+h` keybinding palette,
+`Super+Shift+m` control center, `Super+Esc` lock,
+`Super+Shift+q` log out, `Super+n` night light, `Super+Shift+e` fullscreen,
 `Super+Ctrl+,`/`Super+Ctrl+.` cycle layouts, `Super+Shift+w` next wallpaper,
-`Super+F5` reload theme colors. (On US layouts `Super+/` and ``Super+` `` also work.)
+`Super+Shift+r` reload theme colours. (On US layouts `Super+/` and ``Super+` `` also work.)
 The full list is generated in [`docs/KEYBINDINGS.md`](docs/KEYBINDINGS.md).
 
 ## Development

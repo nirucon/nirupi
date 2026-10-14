@@ -2,7 +2,7 @@
 
 <!-- Generated from vendor/suckless/dwm/config.h by tools/gen-keybindings.sh. Do not edit by hand. -->
 
-114 bindings. `Super` is the Mod4/Win key.
+115 bindings. `Super` is the Mod4/Win key.
 
 | Keys | Action |
 | --- | --- |
@@ -18,6 +18,7 @@
 | `Super+/` | Super+/ (US layouts) |
 | `Super+Backtick` | Super+` (US layouts) |
 | `Super+A` | AI agent (opencode) |
+| `Super+Ctrl+T` | theme picker |
 | `Super+Shift+F` | pcmanfm |
 | `Super+V` | clipboard menu |
 | `Super+Shift+V` | save to clipboard history |
