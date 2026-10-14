@@ -2,6 +2,25 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.6.1
+- Fix: rofi menus (control center, agent, keybindings, screenshots) rendered a
+  dark list on a dark background because `element-text` inherited rofi's dark
+  default foreground. The generated theme now sets `element-text`/`text-color`
+  explicitly and is a complete theme.
+- Fix: dmenu opened half above the top bar (bar padding). dmenu gains a vertical
+  offset (`-y`, `dmenu.yoffset`) and dwm exports the bar height via
+  `NIRUPI_DMENU_Y`, so every dmenu (and helper) opens just below the bar.
+- Workspace icons changed to: browser, 3× AI agent, folder, 3× terminal, chat.
+- Base install now ships everything the desktop needs: picom, xss-lock,
+  gammastep (night light), ImageMagick, xdotool, xdg-utils, NetworkManager,
+  bluez, Papirus + emoji fonts, Python/mpv/yt-dlp and nsxiv.
+- `ensure_helium`: Helium is provisioned automatically (Debian apt repo, Arch
+  AUR helper, otherwise the official binary tarball) so a browser always exists.
+- Default repositories `nirupresence`, `nirunote` and `nplay` are cloned to
+  `~/Git/` on install and updated on `--update-dots`.
+- Extra optional apps added for a familiar setup (bat/eza/ripgrep/zoxide/cava/
+  librespot/PySide6/nextcloud/GIMP/VLC/meld/…).
+
 ## 0.6.0
 - dwm 6.8 bar/session patch set: statusallmons, barpadding (vertpad/sidepad),
   tagicons (Nerd glyphs), swallow (xcb-res), actualfullscreen (Super+F11),

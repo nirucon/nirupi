@@ -38,7 +38,12 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
 - **Logout confirmation** (`Super+Shift+q`) and a **night light** toggle
   (`Super+n`, gammastep/redshift).
 - Web apps open in **Helium** (Chromium app mode); manage them with
-  `nirupi webapp add|list|remove NAME URL`.
+  `nirupi webapp add|list|remove NAME URL`. Helium is provisioned automatically
+  (Debian apt repo, Arch AUR helper, otherwise the official tarball) with
+  firefox/brave/chromium as fallback.
+- Workspace tags use glyphs (browser · AI agents · folder · terminals · chat).
+- Clones your default repositories (`nirupresence`, `nirunote`, `nplay`) into
+  `~/Git/` on install and updates them on `--update-dots`.
 - Installs **opencode** and wires `nirupi agent` + a control center / keybinding
   cheat-sheet (`Super+a`, `Super+/`, ``Super+` ``).
 - Migrates an existing system **non-destructively**: configs are merged, foreign
