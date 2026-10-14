@@ -29,6 +29,11 @@ grep -q 'gammastep' "$ROOT/vendor/noir/local/bin/nirupi-nightlight.sh" || fail '
 grep -q 'redshift' "$ROOT/lib/packages.sh" || fail 'redshift not in OPTIONAL_PKGS'
 grep -q 'Night light: toggle' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'menu night light missing'
 
+# Suspend helper must detect the (privilege-dropping) locker with pgrep, not kill -0.
+SS="$ROOT/vendor/noir/local/bin/sleep-suspend.sh"
+grep -q 'pgrep -x slock' "$SS" || fail 'sleep-suspend.sh does not use pgrep'
+! grep -q 'kill -0' "$SS" || fail 'sleep-suspend.sh still uses kill -0 (fails on a nobody-owned slock)'
+
 # Lock wrapper deployed and setuid slock provisioned on install/update.
 grep -q 'nirupi-lock.sh' "$ROOT/lib/install.sh" || fail 'lock wrapper not deployed'
 grep -q 'ensure_slock' "$ROOT/lib/install.sh" || fail 'ensure_slock missing'
