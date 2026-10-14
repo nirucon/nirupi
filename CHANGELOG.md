@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.5.1
+- `nirupi gc`: version directories referenced by retained release snapshots are
+  never removed, so `nirupi rollback` keeps working.
+
 ## 0.5.0
 - `nirupi gc` — prune old versioned binaries, release snapshots and backups
   (dry-run, `--yes`, `--legacy`).

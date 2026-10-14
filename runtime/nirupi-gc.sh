@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # NIRUPI garbage collector: prune old versioned binaries and stale state.
 #   nirupi gc [--dry-run] [--yes] [--legacy]
-# Keeps the current version plus NIRUPI_KEEP_VERSIONS older ones, the newest
-# NIRUPI_KEEP_SNAPSHOTS release snapshots, NIRUPI_KEEP_BACKUPS backup runs.
-# --legacy also prunes old legacy archives (kept by default for safety).
+# Safety: version directories referenced by the retained release snapshots are
+# never removed, so `nirupi rollback` keeps working. Keeps the current version,
+# the newest NIRUPI_KEEP_VERSIONS older ones, the newest NIRUPI_KEEP_SNAPSHOTS
+# release snapshots and the newest NIRUPI_KEEP_BACKUPS backup/migration runs.
+# --legacy also prunes old legacy archives (kept by default).
 set -Eeuo pipefail
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/nirupi"
 LIBROOT="$HOME/.local/lib/nirupi"
@@ -27,18 +29,45 @@ if [[ -z $current ]]; then
 fi
 
 targets=()
-# versioned binary dirs
+
+# Retained release snapshots (newest KEEP_SNAPSHOTS).
+snap_root="$STATE/release-snapshots"
+snaps=()
+if [[ -d $snap_root ]]; then
+  mapfile -t snaps < <(find "$snap_root" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort -r)
+fi
+retained_snaps=("${snaps[@]:0:KEEP_SNAPSHOTS}")
+# Version dirs referenced by retained snapshots must be preserved.
+protected=()
+for sn in "${retained_snaps[@]}"; do
+  f="$snap_root/$sn/links.tsv"
+  [[ -f $f && ! -L $f ]] || continue
+  while IFS=$'\t' read -r app tgt; do
+    [[ $tgt == "$LIBROOT/"* ]] || continue
+    rest="${tgt#"$LIBROOT"/}"; protected+=("${rest%%/*}")
+  done < "$f"
+done
+
+# Versioned binary dirs: keep current + protected + newest KEEP_VERSIONS.
 if [[ -d $LIBROOT ]]; then
   mapfile -t all < <(find "$LIBROOT" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | grep -E '^[0-9]' | sort -V)
-  keep=()
-  for ((i=${#all[@]}-1; i>=0 && ${#keep[@]} < KEEP_VERSIONS + 1; i--)); do keep+=("${all[i]}"); done
+  keep=("$current")
+  for ((i=0; i<=KEEP_VERSIONS && i<${#all[@]}; i++)); do keep+=("${all[${#all[@]}-1-i]}"); done
+  keep+=("${protected[@]}")
   for v in "${all[@]}"; do
-    if [[ $v == "$current" ]]; then continue; fi
-    found=0
-    for k in "${keep[@]}"; do if [[ $v == "$k" ]]; then found=1; fi; done
-    if (( found == 0 )); then targets+=("$LIBROOT/$v"); fi
+    skip=0
+    for k in "${keep[@]}"; do if [[ $v == "$k" ]]; then skip=1; fi; done
+    if (( skip == 0 )); then targets+=("$LIBROOT/$v"); fi
   done
 fi
+
+# Old release snapshots (beyond KEEP_SNAPSHOTS).
+for sn in "${snaps[@]}"; do
+  in_ret=0
+  for r in "${retained_snaps[@]}"; do if [[ $sn == "$r" ]]; then in_ret=1; fi; done
+  if (( in_ret == 0 )); then targets+=("$snap_root/$sn"); fi
+done
+
 prune_dir() {
   local root="$1" keep="$2" d
   [[ -d $root ]] || return 0
@@ -51,10 +80,9 @@ prune_dir() {
   done <<< "$list"
   return 0
 }
-prune_dir "$STATE/release-snapshots" "$KEEP_SNAPSHOTS"
 prune_dir "$STATE/backups" "$KEEP_BACKUPS"
-if (( LEGACY )); then prune_dir "$STATE/legacy" "$KEEP_BACKUPS"; fi
 prune_dir "$STATE/migrations" "$KEEP_BACKUPS"
+if (( LEGACY )); then prune_dir "$STATE/legacy" "$KEEP_BACKUPS"; fi
 
 if ((${#targets[@]} == 0)); then echo 'Nothing to prune'; exit 0; fi
 echo "NIRUPI gc will remove:"
