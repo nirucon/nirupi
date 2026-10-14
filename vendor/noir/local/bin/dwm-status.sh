@@ -4,6 +4,14 @@ set -u
 export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
 
 XSETROOT="$(command -v xsetroot || true)"
+# Detect whether the running dwm supports status2d/statuscmd (built with the
+# NIRUPI patches). On an older dwm we must NOT emit colour codes or section
+# bytes, or they would render as garbage.
+DWM_STATUS2D=0
+_nirupi_dwm_bin="$(readlink -f "$HOME/.local/bin/dwm" 2>/dev/null || true)"
+if [[ -n "$_nirupi_dwm_bin" && -r "$_nirupi_dwm_bin" ]] && command -v strings >/dev/null 2>&1; then
+  if strings "$_nirupi_dwm_bin" 2>/dev/null | grep -q 'nirupi-status-click'; then DWM_STATUS2D=1; fi
+fi
 DATEBIN="$(command -v date || true)"
 HOSTNAMEBIN="$(command -v hostname || true)"
 NMCLI="$(command -v nmcli || true)"
@@ -123,11 +131,16 @@ provider_cached() {
 # sect ID TEXT   -> wrap a clickable section with the raw section id byte
 sect() {
   local id="$1"; shift
-  printf "\\$(printf '%03o' "$id")%s\\$(printf '%03o' "$id")" "$*"
+  if [[ "${DWM_STATUS2D:-0}" -eq 1 ]]; then
+    printf "\\$(printf '%03o' "$id")%s\\$(printf '%03o' "$id")" "$*"
+  else
+    printf '%s' "$*"
+  fi
 }
 # colorc RRGGBB TEXT -> status2d coloured text (resets to SchemeNorm afterwards)
-colorc() { printf '^c#%s^%s^d^' "$1" "$2"; }
+colorc() { if [[ "${DWM_STATUS2D:-0}" -eq 1 ]]; then printf '^c#%s^%s^d^' "$1" "$2"; else printf '%s' "$2"; fi; }
 bar_color_on(){
+  [[ "${DWM_STATUS2D:-0}" -eq 1 ]] || return 1
   if [[ "${BAR_COLOR_EXPLICIT:-0}" -eq 1 ]]; then
     [[ "${BAR_COLOR:-0}" -eq 1 ]]
   else
