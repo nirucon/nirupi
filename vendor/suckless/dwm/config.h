@@ -226,8 +226,10 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_p,                     spawn,          {.v = rofiruncmd } },     /* Super+Shift+p -> rofi -show run */
 	{ MODKEY,                       XK_p,                     spawn,          {.v = dmenucmd } },       /* Super+p -> dmenu (MatteBlack) */
 	{ MODKEY|Mod1Mask,              XK_k,                     spawn,          {.v = keybindingscmd } }, /* Super+Alt+k -> keybindings viewer */
-	{ MODKEY,                       XK_slash,                 spawn,          {.v = keyscmd } },         /* Super+/ -> keybinding cheat-sheet / palette */
-	{ MODKEY,                       XK_grave,                 spawn,          {.v = menucmd } },         /* Super+` -> control center */
+	{ MODKEY,                       XK_F1,                    spawn,          {.v = keyscmd } },         /* Super+F1 -> keybinding palette (layout-independent) */
+	{ MODKEY,                       XK_F2,                    spawn,          {.v = menucmd } },         /* Super+F2 -> control center (layout-independent) */
+	{ MODKEY,                       XK_slash,                 spawn,          {.v = keyscmd } },         /* Super+/ (US layouts) */
+	{ MODKEY,                       XK_grave,                 spawn,          {.v = menucmd } },         /* Super+` (US layouts) */
 	{ MODKEY,                       XK_a,                     spawn,          {.v = agentcmd } },        /* Super+a -> AI agent (opencode) */
 	{ MODKEY|ShiftMask,             XK_f,                     spawn,          {.v = fmcmd } },          /* Super+Shift+f -> pcmanfm */
 

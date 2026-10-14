@@ -20,15 +20,15 @@ startup, run `nirupi theme apply`.
 | `Super+Shift+p` | rofi run |
 | `Super+b` | Browser (resolver) |
 | `Super+a` | **Agent** (opencode) |
-| `Super+/` | **Keybinding palette** (search everything) |
-| ``Super+` `` | **Control center** |
+| `Super+F1` | **Keybinding palette** (search everything) |
+| `Super+F2` | **Control center** |
 | `Super+Esc` | Lock (slock) |
 | `Super+Shift+w` | Next wallpaper |
 | `Super+F5` | Reload theme colors (Xresources) |
 | `Super+q` | Close focused window |
 | `Super+Shift+q` | Quit dwm (end session) |
 
-The full, searchable list is `Super+/` (or `nirupi keys`). It clearly marks
+The full, searchable list is `Super+F1` (or `nirupi keys`; `Super+/` on US layouts). It clearly marks
 **apps** vs **keybindings**: pressing Enter on an app launches it, on a
 keybinding it copies the shortcut.
 
@@ -48,7 +48,7 @@ Tune it in `~/.config/nirupi/status.conf` (this file is yours and is never
 overwritten): toggle segments with `SHOW_*`, set weather coordinates, or change
 cache intervals. Restart the session to re-read it.
 
-## Control center — ``Super+` ``
+## Control center — `Super+F2`
 
 One menu for: lock, suspend, log out, reboot, shut down, apply Noir theme,
 toggle wallpaper mode, next wallpaper, Wi‑Fi, Bluetooth, weather, mute, agent,
