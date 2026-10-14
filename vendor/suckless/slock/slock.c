@@ -455,6 +455,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 
 	lock->screen = screen;
 	lock->root = RootWindow(dpy, lock->screen);
+	lock->bgmap = 0; /* screensaver mode has no blurred background */
 
     if(image) 
     {
