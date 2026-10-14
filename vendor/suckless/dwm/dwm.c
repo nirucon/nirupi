@@ -1412,9 +1412,13 @@ manage(Window w, XWindowAttributes *wa)
 	c->y = MAX(c->y, c->mon->wy);
 	c->bw = borderpx;
 
-	/* Centre the NIRUPI helper pop-ups (calendar, system update). */
+	/* Centre the NIRUPI helper pop-ups (calendar, system update) at a fixed
+	 * fraction so their size does not depend on the terminal's defaults. */
 	if (!strcmp(c->name, "nirupi-calendar") || !strcmp(c->name, "nirupi-update")) {
+		int big = !strcmp(c->name, "nirupi-update");
 		c->isfloating = True;
+		c->w = c->mon->ww * (big ? 70 : 34) / 100;
+		c->h = c->mon->wh * (big ? 72 : 46) / 100;
 		c->x = c->mon->wx + (c->mon->ww - WIDTH(c)) / 2;
 		c->y = c->mon->wy + (c->mon->wh - HEIGHT(c)) / 2;
 	}
