@@ -50,7 +50,10 @@ managed_helper_install() {
   fi
   previous="$(_manifest_hash "$manifest" "$name")"
   current="$(sha256sum -- "$dest" | cut -d ' ' -f 1)"
-  if [[ -z $previous || $current != "$previous" ]]; then
+  if [[ ${NIRUPI_REFRESH:-0} == 1 ]]; then
+   # Explicit adopt: refresh an older/untracked NIRUPI helper (backup kept).
+   warn "Refreshing NIRUPI helper (backup kept): $dest"
+  elif [[ -z $previous || $current != "$previous" ]]; then
    warn "Preserving modified or untracked helper: $dest"; return 0
   fi
  fi

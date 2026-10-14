@@ -8,7 +8,7 @@ source "$ROOT/lib/apps.sh"
 source "$ROOT/lib/install.sh"
 source "$ROOT/lib/release.sh"
 source "$ROOT/lib/rollback.sh"
-SESSION=sddm; ACTION=plan; DRY_RUN=0
+SESSION=sddm; ACTION=plan; DRY_RUN=0; REFRESH=0
 usage(){ printf 'NIRUPI %s\n' "$VERSION"; cat <<'EOF'
 Usage: ./install.sh [action] [--session sddm|startx]
 Actions:
@@ -26,6 +26,7 @@ Actions:
 Options:
   --session sddm|startx   Login manager target (default sddm).
   --dry-run               Combine with --apply to preview without writing.
+  --refresh               Adopt the bundled NIRUPI scripts even if untracked (backup kept).
   -h, --help              Show this help.
 EOF
 }
@@ -33,7 +34,7 @@ while (($#)); do
  case "$1" in
  --plan) ACTION=plan;; --apply) ACTION=apply;; --doctor) ACTION=doctor;; --audit) ACTION=audit;; --verify) ACTION=verify;; --history) ACTION=history;; --rollback) ACTION=rollback;;
  --migrate) ACTION=migrate;; --diff) ACTION=diff;; --theme-only) ACTION=theme;; --update-dots) ACTION=dots;;
- --dry-run) DRY_RUN=1;;
+ --dry-run) DRY_RUN=1;; --refresh) REFRESH=1;;
  --session) shift; (($#)) || die 'Missing --session value'; SESSION=$1;;
  -h|--help) usage; exit 0;; *) die "Unknown argument: $1";; esac
  shift
@@ -64,6 +65,10 @@ if [[ $ACTION == theme || $ACTION == dots ]]; then
   require mktemp; require install; require cp; require mv; require sha256sum; require awk
   mkdir -p "$STATE" "$BACKUP_DIR"
   check_home_path_safety
+  if [[ $ACTION == dots || $REFRESH == 1 ]]; then
+   log 'Adopting bundled NIRUPI scripts (backups kept)'
+   NIRUPI_REFRESH=1 install_helpers
+  fi
   NIRUPI_NOIR_DIR="$ROOT/vendor/noir" theme_apply
   write_installed_state
   exit 0
@@ -140,6 +145,7 @@ install_custom_repos
 require make; require cc; require pkg-config
 ensure_nerd_font
 install_opencode
+export NIRUPI_REFRESH=$REFRESH
 install_desktop
 write_installed_state
 "$ROOT/tests/post-install-verify.sh" || warn "Post-install verification found missing components; inspect before reboot"

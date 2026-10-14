@@ -92,4 +92,6 @@ printf 'PASS: build-stage cleanup guard\n'
 
 "$ROOT/tests/migrate-engine.sh"
 
+"$ROOT/tests/refresh.sh"
+
 "$ROOT/tests/custom-apps.sh"

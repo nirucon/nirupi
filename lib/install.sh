@@ -91,6 +91,21 @@ check_user_install_conflicts() {
   [[ ! -L $path ]] || die "Unsafe manifest symlink: $path"
  done
 }
+install_helpers(){
+ local app src dest updates_dest="$HOME/.local/bin/nirupi-updates"
+ managed_helper_install nirupi-updates "$ROOT/runtime/nirupi-updates" "$updates_dest"
+ managed_helper_install nirupi "$ROOT/runtime/nirupi" "$HOME/.local/bin/nirupi"
+ managed_helper_install nirupi-appearance "$ROOT/runtime/nirupi-appearance" "$HOME/.local/bin/nirupi-appearance"
+ managed_helper_install nirupi-browser "$ROOT/runtime/nirupi-browser" "$HOME/.local/bin/nirupi-browser"
+ managed_helper_install nirupi-maintenance "$ROOT/runtime/nirupi-maintenance" "$HOME/.local/bin/nirupi-maintenance"
+ for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
+  src="$ROOT/vendor/noir/local/bin/$app"
+  if [[ -f $src ]]; then
+   dest="$HOME/.local/bin/$app"
+   managed_helper_install "$app" "$src" "$dest"
+  fi
+ done
+}
 install_desktop() (
  local app stage bin_dir="$HOME/.local/lib/nirupi/$VERSION/bin" src dest desktop
  local -a stages=()
@@ -172,19 +187,7 @@ install_desktop() (
  else
   warn 'Slock not activated; lock keybinding will not be functional without a secure system slock'
  fi
- local updates_dest="$HOME/.local/bin/nirupi-updates"
- managed_helper_install nirupi-updates "$ROOT/runtime/nirupi-updates" "$updates_dest"
- managed_helper_install nirupi "$ROOT/runtime/nirupi" "$HOME/.local/bin/nirupi"
- managed_helper_install nirupi-appearance "$ROOT/runtime/nirupi-appearance" "$HOME/.local/bin/nirupi-appearance"
- managed_helper_install nirupi-browser "$ROOT/runtime/nirupi-browser" "$HOME/.local/bin/nirupi-browser"
- managed_helper_install nirupi-maintenance "$ROOT/runtime/nirupi-maintenance" "$HOME/.local/bin/nirupi-maintenance"
- for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
-  src="$ROOT/vendor/noir/local/bin/$app"
-  if [[ -f $src ]]; then
-   dest="$HOME/.local/bin/$app"
-   managed_helper_install "$app" "$src" "$dest"
-  fi
- done
+ install_helpers
  # Only initialize GTK on clean profiles; upgrades preserve LXAppearance choices.
  "$HOME/.local/bin/nirupi-appearance" default || warn "GTK appearance setup skipped; use nirupi appearance status"
  # Keep user preferences separate from the managed status script.

@@ -130,6 +130,10 @@ bash ./install.sh --verify
   `bash tests/dwm-patches.sh` in the source tree.
 - Upgrading kept your old config on purpose. New versions are offered as
   `*.nirupi-new` next to the original — merge manually when ready.
+- **The bar looks unchanged after an upgrade?** Your old scripts were kept.
+  Adopt the new ones (backups are kept) with `./install.sh --update-dots`, then
+  log out and back in. `./install.sh --apply --refresh` does the same as part of
+  a full upgrade.
 - `~/.local/state/nirupi/installed.env` records version and schema;
   `~/.local/state/nirupi/legacy/` holds archived old binaries.
 
