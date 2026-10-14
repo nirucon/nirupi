@@ -46,3 +46,26 @@ theme_set noir >/dev/null
 theme_apply >/dev/null
 theme_apply >/dev/null
 echo 'PASS: switching themes restyles terminals, TUI tools and launchers'
+
+# Display names shown by the picker (and accepted by `nirupi theme set`) resolve,
+# including the default theme whose display name is "Noir".
+for name in Noir Satie "Carl Larsson" "Noir warm" "Noir cool" noir warm cool carl; do
+  f="$(theme_palette_file "$name")" || fail "display name '$name' did not resolve"
+  [[ -f $f ]] || fail "display name '$name' resolved to a missing file"
+done
+[[ "$(theme_palette_file Noir)" == */tokens.env ]] || fail 'Noir should resolve to tokens.env'
+theme_set "Carl Larsson" >/dev/null || fail 'theme_set by display name failed'
+[[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#241a16' ]] || fail 'display-name apply not Carl Larsson'
+theme_set noir >/dev/null
+
+# The runtime `nirupi theme` path sources the library without the installer's
+# per-run BACKUP_DIR, so applying must derive one instead of aborting.
+( unset BACKUP_DIR; theme_apply ) >/dev/null 2>&1 || fail 'theme_apply failed without BACKUP_DIR'
+echo 'PASS: theme display names and BACKUP_DIR-free apply'
+
+# A hand-edited lazygit config is preserved (with a proposal), never clobbered.
+printf '# user edit\n' >> "$HOME/.config/lazygit/config.yml"
+theme_set Satie >/dev/null
+grep -q '# user edit' "$HOME/.config/lazygit/config.yml" || fail 'lazygit user edit was lost'
+[[ -f "$HOME/.config/lazygit/config.yml.nirupi-new" ]] || fail 'lazygit proposal missing'
+echo 'PASS: user-edited lazygit config preserved'

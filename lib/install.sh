@@ -42,6 +42,22 @@ check_home_path_safety() {
   fi
  done
 }
+# Numeric schema version from a dwm config.h (0 when the marker is absent).
+dwm_config_version() {
+ local v
+ v="$(sed -n 's/^#define NIRUPI_CONFIG_VERSION[[:space:]]\{1,\}\([0-9]\{1,\}\).*/\1/p' "$1" 2>/dev/null | head -n1)"
+ printf '%s' "${v:-0}"
+}
+# True when the user's config.h is a safe build input for the bundled dwm:
+# a regular file whose schema version is at least the bundled one. An older
+# schema is preserved (and proposed as config.h.nirupi-new) but must not be
+# compiled, because dwm.c rejects it at compile time.
+dwm_config_current() {
+ local user="$1" bundled="$2" uv bv
+ [[ -f $user && ! -L $user ]] || return 1
+ uv="$(dwm_config_version "$user")"; bv="$(dwm_config_version "$bundled")"
+ [[ $uv != 0 && $uv -ge $bv ]]
+}
 # Choose the effective DWM config BEFORE compiling, without modifying source or HOME.
 # The user's regular config takes precedence, even when customized. A symlink or
 # unexpected file type is never read as build input.
@@ -149,16 +165,17 @@ install_desktop() (
   stage="$(mktemp -d "$stage_root/build.XXXXXXXX")"; stages+=("$stage")
   cp -a "$ROOT/vendor/suckless/$app/." "$stage/"
   if [[ $app == dwm ]]; then
-   # Build source must match the bundled dwm.c. Only a config that carries the
-   # current NIRUPI_CONFIG_VERSION marker is safe to compile; older user configs
-   # are preserved as config.h.nirupi-new and the bundled config is built instead.
+   # Build source must match the bundled dwm.c. Only a config whose schema
+   # version is at least the bundled one is safe to compile; older or unmarked
+   # user configs are preserved as config.h.nirupi-new and the bundled config
+   # is built instead.
    local dwm_build_custom="$HOME/.config/suckless/dwm/config.h"
    if [[ -e $dwm_build_custom || -L $dwm_build_custom ]]; then
     if [[ -L $dwm_build_custom || ! -f $dwm_build_custom ]]; then
      die "Unsafe DWM configuration path: $dwm_build_custom"
     fi
-    if ! grep -q 'NIRUPI_CONFIG_VERSION' "$dwm_build_custom"; then
-     warn "Existing DWM config.h predates the new patches; building the bundled config (your file is preserved as config.h.nirupi-new)"
+    if ! dwm_config_current "$dwm_build_custom" "$ROOT/vendor/suckless/dwm/config.h"; then
+     warn "Existing DWM config.h is not current (schema v$(dwm_config_version "$dwm_build_custom") < v$(dwm_config_version "$ROOT/vendor/suckless/dwm/config.h")); building the bundled config (your file is preserved as config.h.nirupi-new)"
      dwm_build_custom=""
     fi
    else
@@ -380,10 +397,10 @@ migrate_dwm_rebuild(){
  cp -a -- "$src_root/dwm/." "$stage/"
  local user_cfg="$HOME/.config/suckless/dwm/config.h"
  if [[ -f $user_cfg && ! -L $user_cfg ]]; then
-  if grep -q 'NIRUPI_CONFIG_VERSION' "$user_cfg"; then
+  if dwm_config_current "$user_cfg" "$src_root/dwm/config.h"; then
    cp -- "$user_cfg" "$stage/config.h"
   else
-   warn "Ignoring out-of-date DWM config.h; building the bundled config (merge config.h.nirupi-new first)"
+   warn "Ignoring out-of-date DWM config.h (schema v$(dwm_config_version "$user_cfg")); building the bundled config (merge config.h.nirupi-new first)"
   fi
  fi
  log "Rebuilding DWM ($VERSION)"

@@ -403,8 +403,13 @@ theme_render_tmux(){
 }
 
 # lazygit: no include support, so the whole (theme-only) config is generated.
+# Routed through the managed-config merge so a user-edited config.yml is
+# preserved (with a *.nirupi-new proposal) instead of being silently replaced.
 theme_render_lazygit(){
-  local dest="$(cfgdir)/lazygit/config.yml"
+  local dest="$(cfgdir)/lazygit/config.yml" tmp
+  [[ -L $(cfgdir)/lazygit ]] && { warn 'Preserving symlinked ~/.config/lazygit'; return 0; }
+  mkdir -p "$(dirname "$dest")"
+  tmp="$(mktemp "$(dirname "$dest")/.nirupi-lazygit.XXXXXXXX")"
   {
     printf '# NIRUPI theme — generated from tokens.env; do not edit.\n'
     printf 'gui:\n  theme:\n'
@@ -419,7 +424,10 @@ theme_render_lazygit(){
     printf '    defaultFgColor:\n      - '"'"'#%s'"'"'\n' "$NOIR_FG"
     printf '    searchingActiveBorderColor:\n      - '"'"'#%s'"'"'\n' "$NOIR_ANSI_3"
     printf '  authorColors:\n    '"'"'*'"'"': '"'"'#%s'"'"'\n' "$NOIR_ANSI_12"
-  } | theme_generate "$dest"
+  } > "$tmp"
+  chmod 0644 "$tmp"
+  managed_config_install 'lazygit/config.yml' "$tmp" "$dest" 0644
+  rm -f -- "$tmp"
 }
 
 # micro: one generated colorscheme file, selected via settings.json.
@@ -535,24 +543,25 @@ theme_render_statusbar(){
 theme_palette_dir(){ printf '%s/theme' "$(noir_dir)"; }
 
 # Resolve a theme name (file stem, alias, or display name) to a palette file.
+# Accepts the stems (Satie, Carl-Larsson), the display names the picker shows
+# (Noir, Noir warm, Carl Larsson) and the aliases (default, warm, cool).
+# Matching is case-insensitive and treats spaces and hyphens as equivalent.
 theme_palette_file(){
-  local n="${1:-noir}" d f base dn; d="$(theme_palette_dir)"
-  case "$n" in
+  local n="${1:-noir}" d f base dn key bk dk; d="$(theme_palette_dir)"
+  case "${n,,}" in
     ''|noir|default) printf '%s/tokens.env' "$d"; return 0;;
-    warm|Noir-warm)  printf '%s/Noir-warm.env' "$d"; return 0;;
-    cool|Noir-cool)  printf '%s/Noir-cool.env' "$d"; return 0;;
-    satie)           [[ -f $d/Satie.env ]] && { printf '%s' "$d/Satie.env"; return 0; };;
-    carl-larsson|carl|larsson) [[ -f $d/Carl-Larsson.env ]] && { printf '%s' "$d/Carl-Larsson.env"; return 0; };;
+    warm)  printf '%s/Noir-warm.env' "$d"; return 0;;
+    cool)  printf '%s/Noir-cool.env' "$d"; return 0;;
+    carl|larsson) [[ -f $d/Carl-Larsson.env ]] && { printf '%s' "$d/Carl-Larsson.env"; return 0; };;
   esac
   [[ -f "$d/$n.env" ]] && { printf '%s/%s.env' "$d" "$n"; return 0; }
-  # Case-insensitive match on the file stem or the display name.
+  key="${n,,}"; key="${key// /-}"
   for f in "$d"/*.env; do
     [[ -e $f ]] || continue
-    base="$(basename "$f" .env)"
-    [[ $base == tokens ]] && continue
-    [[ ${base,,} == "${n,,}" ]] && { printf '%s' "$f"; return 0; }
-    dn="$(palette_name "$f")"
-    [[ -n $dn && ${dn,,} == "${n,,}" ]] && { printf '%s' "$f"; return 0; }
+    base="$(basename "$f" .env)"; bk="${base,,}"; bk="${bk// /-}"
+    [[ $bk == "$key" ]] && { printf '%s' "$f"; return 0; }
+    dn="$(palette_name "$f")"; dk="${dn,,}"; dk="${dk// /-}"
+    [[ -n $dn && $dk == "$key" ]] && { printf '%s' "$f"; return 0; }
   done
   return 1
 }
@@ -654,6 +663,7 @@ theme_set(){
   [[ -n $f && -f $f ]] || die "Unknown theme: $n (see nirupi theme list)"
   nm="$(palette_name "$f")"; [[ -n $nm ]] || nm="$n"
   mkdir -p "$(cfgdir)/nirupi"
+  [[ ! -L "$(cfgdir)/nirupi/tokens.env" ]] || die "Refusing symlinked $(cfgdir)/nirupi/tokens.env"
   cp -f -- "$f" "$(cfgdir)/nirupi/tokens.env"
   mkdir -p "$(dirname "$(theme_mode_file)")"
   printf 'palette\n' > "$(theme_mode_file)"

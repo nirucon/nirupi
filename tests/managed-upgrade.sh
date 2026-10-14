@@ -5,7 +5,7 @@ TMP="$(mktemp -d)"; trap 'rm -rf -- "$TMP"' EXIT
 export HOME="$TMP/home" STATE="$TMP/state" BACKUP_DIR="$TMP/backups/run"
 mkdir -p "$HOME/.local/bin" "$STATE" "$BACKUP_DIR"
 # Source isolated functions without invoking OS-detection/root restrictions.
-eval "$(sed -n '/^backup_file(){/,/^}/p; /^put_file(){/,/^}/p' "$ROOT/lib/common.sh")"
+eval "$(sed -n '/^backup_dir(){/,/^}/p; /^backup_file(){/,/^}/p; /^put_file(){/,/^}/p' "$ROOT/lib/common.sh")"
 source "$ROOT/lib/managed.sh"
 die(){ echo "$*" >&2; exit 1; }
 warn(){ echo "$*" >&2; }

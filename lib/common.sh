@@ -22,14 +22,26 @@ if [[ $DISTRO == void ]] && command -v ldd >/dev/null 2>&1 && ldd --version 2>&1
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/nirupi"
 VERSION="$(<"$ROOT/VERSION")"
 require(){ command -v "$1" >/dev/null 2>&1 || die "Missing command: $1"; }
+# Resolve the per-run backup directory. The installer assigns BACKUP_DIR before
+# installing, but the maintenance entry points (`nirupi theme|dots|migrate`)
+# source this library without one, so derive a timestamped run directory lazily
+# instead of aborting under `set -u`.
+backup_dir(){
+ if [[ -z ${BACKUP_DIR:-} ]]; then
+  BACKUP_DIR="$STATE/backups/${RUN_ID:-$(date +%Y%m%d-%H%M%S)-$$}"
+ fi
+ mkdir -p -- "$BACKUP_DIR"
+ printf '%s' "$BACKUP_DIR"
+}
 backup_file(){
- local f="$1" dest
+ local f="$1" dest dir
  [[ -e $f || -L $f ]] || return 0
  [[ ! -d $f || -L $f ]] || die "Refusing directory replacement: $f"
- dest="$BACKUP_DIR$f"
+ dir="$(backup_dir)"
+ dest="$dir$f"
  mkdir -p "$(dirname "$dest")"
  cp -a -- "$f" "$dest"
- printf '%s\n' "$f" >> "$BACKUP_DIR/manifest.txt"
+ printf '%s\n' "$f" >> "$dir/manifest.txt"
 }
 put_file(){
  local src="$1" dest="$2" mode="${3:-0644}" tmp

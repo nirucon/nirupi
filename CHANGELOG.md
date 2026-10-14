@@ -2,6 +2,25 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.8.1
+- **Fix:** `nirupi theme set|apply|menu` (and therefore the `Super+Ctrl+t` picker)
+  aborted partway on an installed system with `BACKUP_DIR: unbound variable`:
+  the maintenance entry point sources the library without the installer's
+  per-run backup directory. The library now derives a timestamped one lazily, so
+  a live theme switch writes every fragment and restyles every app.
+- **Fix:** the theme picker's default row (`Noir`) did not resolve, so choosing
+  the default from the menu failed with `Unknown theme: Noir`. Theme names now
+  match stems, display names and aliases case-insensitively, treating spaces and
+  hyphens as equivalent (`Noir`, `noir`, `Noir warm`, `Carl Larsson`, …).
+- **Fix:** the generated lazygit config is now merged through the managed-config
+  path, so a hand-edited `~/.config/lazygit/config.yml` is preserved (with a
+  `*.nirupi-new` proposal) instead of being overwritten without a backup.
+- **Fix:** bump the DWM config schema to `v3`. A stale `config.h` (older schema)
+  is now detected by version and the bundled config is compiled instead, so the
+  new `Super+Ctrl+t` theme keybinding actually reaches the running DWM without
+  silently building the old keymap. The user's file is preserved as
+  `config.h.nirupi-new`. `nirupi migrate dwm --rebuild` applies the same check.
+
 ## 0.8.0
 - **Multiple themes with a picker.** The whole desktop is generated from a single
   palette, so switching a theme restyles terminals (kitty, alacritty, st), fish,
