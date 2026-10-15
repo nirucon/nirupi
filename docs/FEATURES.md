@@ -80,6 +80,17 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
   GTK/Qt, rofi, dunst, the SDDM theme and the status-bar accents — live, no
   rebuild. Dunst colours live in a `dunstrc.d` drop-in, so your own
   notification settings are preserved.
+
+## Clean installs
+- Installs what a vanilla system misses: X input driver, `mesa`, `alsa-ucm-conf`,
+  the PipeWire↔ALSA bridge, `man-db`, `bash-completion`, XDG desktop portals and
+  Noto fonts.
+- Auto-detects CPU/GPU vendor and adds matching microcode + VA-API/Vulkan
+  (best-effort; NVIDIA prints a hint).
+- Enables `tailscaled` and `bluetooth` (and NetworkManager when no competing
+  manager is active) so the desktop survives a reboot.
+- Arch: refreshes `archlinux-keyring` first, and (opt-in) installs `paru-bin`
+  from the AUR so AUR-only apps use the package manager.
 - **Theme picker** `Super+Ctrl+t` (`nirupi theme menu`): rofi with colour
   swatches per theme.
 - Shipped themes: `noir` (default), `Satie` (monochrome graphite, one muted-gold

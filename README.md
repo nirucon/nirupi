@@ -74,6 +74,11 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   the master factor (`Super+Button2`).
 - Migrates an existing system **non-destructively**: configs are merged, foreign
   binaries are archived (never deleted), customized files are preserved.
+- **Clean-install ready:** installs the pieces a vanilla system needs (X input
+  driver, `mesa`, `alsa-ucm-conf`, the PipeWire↔ALSA bridge, `man-db`,
+  `bash-completion`, XDG portals), auto-detects CPU/GPU for microcode +
+  VA-API/Vulkan, and enables `tailscaled`/`bluetooth`. On Arch it can (opt-in)
+  install an AUR helper (`paru-bin`) so AUR apps install via the package manager.
 - Provides safe, manifest-based rollback of configs and binary links.
 - **CI** (smoke on Debian + Arch, shellcheck), `nirupi doctor --fix`, and
   optional scheduled backups (`nirupi backup --schedule`).

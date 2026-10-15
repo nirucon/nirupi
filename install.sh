@@ -170,11 +170,13 @@ install_packages
 install_optional_packages
 install_custom_packages
 install_custom_repos
+ensure_aur_helper
 require make; require cc; require pkg-config
 ensure_nerd_font
 install_opencode
 export NIRUPI_REFRESH=$REFRESH
 install_desktop
+enable_services
 write_installed_state
 "$ROOT/tests/post-install-verify.sh" || warn "Post-install verification found missing components; inspect before reboot"
 log 'Installation finished. Verify graphical login before reboot; rollback restores NIRUPI links and configs, not system packages.'

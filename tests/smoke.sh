@@ -93,6 +93,8 @@ printf 'PASS: build-stage cleanup guard\n'
 
 "$ROOT/tests/extras.sh"
 
+"$ROOT/tests/distro-packages.sh"
+
 "$ROOT/tests/ui-fixes.sh"
 
 "$ROOT/tests/features-v07.sh"

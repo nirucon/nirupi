@@ -2,6 +2,25 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.12.0
+- **Clean-install completeness (Arch/Debian/Void):** the package list now
+  includes what a vanilla install otherwise misses — X input driver
+  (`xf86-input-libinput` / `xserver-xorg-input-libinput`), `mesa` (OpenGL),
+  `alsa-ucm-conf`, the PipeWire↔ALSA bridge (`pipewire-alsa` / `alsa-pipewire`),
+  `man-db`, `bash-completion`, XDG desktop portals and general Noto fonts.
+- **Vendor auto-detection:** CPU/GPU vendor is detected and matching microcode
+  and VA-API/Vulkan packages are installed best-effort (Intel/AMD; NVIDIA gets a
+  hint). Mesa is always installed.
+- **Arch AUR helper (opt-in):** if no `yay`/`paru` exists, `--apply` offers to
+  install `paru-bin` from the AUR, so AUR-only apps (the Helium browser) install
+  via the package manager instead of an upstream tarball.
+- **Services enabled on a clean install:** `tailscaled` and `bluetooth` (and
+  NetworkManager when no competing manager is active) are enabled so the
+  desktop's network/lock features survive a reboot.
+- **Arch:** refresh `archlinux-keyring` before the full upgrade.
+- `nirupi doctor` hints about a missing AUR helper, `man-db`, bash-completion,
+  unenabled Tailscale and missing audio sinks.
+
 ## 0.11.1
 - Fix `nirupi edit` topic resolution (a stray `:` in the resolved path) and add
   `nirupi edit --path TOPIC` to print the file path.

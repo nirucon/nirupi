@@ -13,6 +13,8 @@ packages(){
    playerctl brightnessctl maim xclip libnotify flameshot
    pipewire wireplumber pipewire-pulse dbus glib2
    picom xss-lock gammastep imagemagick unzip zip xdotool xdg-utils
+   xf86-input-libinput mesa sof-firmware alsa-ucm-conf pipewire-alsa
+   man-db bash-completion xdg-desktop-portal xdg-desktop-portal-gtk noto-fonts
    networkmanager bluez-utils papirus-icon-theme noto-fonts-emoji nsxiv
    python python-pip mpv yt-dlp pacman-contrib curl jq gawk fzf util-linux)
   OPTIONAL_PKGS=(xautolock xidlehook redshift acl
@@ -28,6 +30,8 @@ packages(){
    playerctl brightnessctl maim xclip libnotify-bin flameshot
    pipewire wireplumber pipewire-pulse dbus dbus-x11 libglib2.0-bin
    picom xss-lock gammastep imagemagick unzip zip xdotool xdg-utils
+   xserver-xorg-input-libinput libgl1-mesa-dri alsa-ucm-conf pipewire-alsa
+   man-db bash-completion xdg-desktop-portal xdg-desktop-portal-gtk fonts-noto-core
    network-manager bluez papirus-icon-theme fonts-noto-color-emoji sxiv
    python3 python3-pip python3-venv mpv yt-dlp curl jq gawk fzf util-linux)
   OPTIONAL_PKGS=(xautolock xidlehook redshift hunspell-sv
@@ -43,6 +47,8 @@ packages(){
    playerctl brightnessctl maim xclip libnotify flameshot
    pipewire wireplumber dbus glib
    picom xss-lock gammastep ImageMagick unzip zip xdotool xdg-utils
+   xf86-input-libinput mesa mesa-dri alsa-ucm-conf alsa-pipewire man-db
+   bash-completion xdg-desktop-portal xdg-desktop-portal-gtk noto-fonts-ttf sof-firmware
    NetworkManager bluez papirus-icon-theme noto-fonts-emoji sxiv
    python3 python3-pip mpv yt-dlp curl jq gawk fzf util-linux)
   OPTIONAL_PKGS=(xautolock xidlehook redshift hunspell-sv
@@ -59,6 +65,53 @@ packages(){
    void) PKGS+=(sddm qt6-declarative);;
   esac
  fi
+ # Vendor firmware/driver extras are best-effort (installed via the optional
+ # pass), so a name that is unavailable on one distro can never abort a clean
+ # install — it only produces a warning.
+ detect_hardware_packages
+}
+# Detect CPU/GPU vendor and queue the matching microcode + VA-API/Vulkan bits.
+# Mesa (OpenGL) is already in PKGS for every distro.
+detect_hardware_packages(){
+ local cpu="" gpu="" f v
+ grep -qm1 'GenuineIntel' /proc/cpuinfo 2>/dev/null && cpu=intel
+ grep -qm1 'AuthenticAMD' /proc/cpuinfo 2>/dev/null && cpu=amd
+ for f in /sys/class/drm/card*/device/vendor; do
+  [[ -r $f ]] || continue
+  v="$(cat "$f" 2>/dev/null)"
+  case "$v" in
+   0x8086) gpu=intel;;
+   0x1002|0x1022) gpu=amd;;
+   0x10de) gpu=nvidia;;
+  esac
+  [[ -n $gpu ]] && break
+ done
+ declare -F log >/dev/null 2>&1 && log "Detected CPU=$cpu GPU=${gpu:-unknown}"
+ case "$DISTRO" in
+  arch|cachyos)
+   [[ $cpu == intel ]] && OPTIONAL_PKGS+=(intel-ucode)
+   [[ $cpu == amd ]] && OPTIONAL_PKGS+=(amd-ucode)
+   case "$gpu" in
+    intel) OPTIONAL_PKGS+=(vulkan-intel intel-media-driver);;
+    amd)   OPTIONAL_PKGS+=(vulkan-radeon libva-mesa-driver);;
+   esac;;
+  debian)
+   [[ $cpu == intel ]] && OPTIONAL_PKGS+=(intel-microcode)
+   [[ $cpu == amd ]] && OPTIONAL_PKGS+=(amd64-microcode)
+   case "$gpu" in
+    intel) OPTIONAL_PKGS+=(mesa-vulkan-drivers intel-media-va-driver);;
+    amd)   OPTIONAL_PKGS+=(mesa-vulkan-drivers mesa-va-drivers);;
+   esac;;
+  void)
+   [[ $cpu == intel ]] && OPTIONAL_PKGS+=(intel-ucode)
+   [[ $cpu == amd ]] && OPTIONAL_PKGS+=(amd-ucode)
+   case "$gpu" in
+    intel) OPTIONAL_PKGS+=(vulkan-intel intel-media-driver);;
+    amd)   OPTIONAL_PKGS+=(vulkan-radeon mesa-va-driver);;
+   esac;;
+ esac
+ [[ $gpu == nvidia ]] && { declare -F warn >/dev/null 2>&1 && warn 'NVIDIA GPU detected: install the driver yourself (nvidia/nvidia-open) and rebuild the initramfs; see the Arch/Debian/Void wiki'; }
+ return 0
 }
 # Void package names are not always identical to their executable names.
 # Resolve all requested packages before starting an XBPS transaction.
@@ -83,6 +136,7 @@ install_packages(){
   printf 'Type UPGRADE to approve a full pacman system upgrade plus package installation: '
   read -r pacman_answer
   [[ $pacman_answer == UPGRADE ]] || die 'Pacman installation cancelled'
+  sudo pacman -Sy --needed --noconfirm archlinux-keyring || warn 'keyring refresh failed (continuing)'
   sudo pacman -Syu --needed -- "${PKGS[@]}";;
   debian) sudo apt-get update && sudo apt-get install -- "${PKGS[@]}";;
   void) void_packages_preflight; sudo xbps-install -S -- "${PKGS[@]}";;

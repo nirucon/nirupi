@@ -140,6 +140,30 @@ case "$cmd" in
       printf 'HINT install an idle-lock tool (xss-lock or xautolock) for automatic screen lock\n'
     fi
     command -v nmcli >/dev/null 2>&1 || printf 'HINT install NetworkManager (nmcli) for the Wi-Fi menu\n'
+    # Arch: AUR helper (used for AUR-only apps such as the Helium browser).
+    if [[ -r /etc/os-release ]]; then . /etc/os-release; fi
+    case "${ID:-}" in
+      arch|cachyos)
+        command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1 || \
+          printf 'HINT no AUR helper (yay/paru); AUR apps install from upstream tarballs\n';;
+    esac
+    # Man page + bash completion package (we ship both).
+    command -v man >/dev/null 2>&1 || printf 'HINT install man-db so `man nirupi` works\n'
+    if ! ls /usr/share/bash-completion/bash_completion >/dev/null 2>&1; then
+      printf 'HINT install the bash-completion package for shell completions\n'
+    fi
+    # Tailscale daemon not enabled -> the node disappears after reboot.
+    if command -v tailscale >/dev/null 2>&1; then
+      if command -v systemctl >/dev/null 2>&1; then
+        systemctl is-enabled tailscaled >/dev/null 2>&1 || printf 'HINT enable Tailscale at boot: sudo systemctl enable --now tailscaled\n'
+      elif command -v sv >/dev/null 2>&1; then
+        [[ -e /var/service/tailscaled ]] || printf 'HINT enable Tailscale at boot: sudo ln -s /etc/sv/tailscaled /var/service/\n'
+      fi
+    fi
+    # No audio sinks usually means firmware/UCM is missing (e.g. sof-firmware).
+    if command -v wpctl >/dev/null 2>&1 && ! wpctl status 2>/dev/null | grep -q 'Sinks:'; then
+      printf 'HINT no audio output found; on Intel install sof-firmware + alsa-ucm-conf\n'
+    fi
     [[ -e /usr/share/xsessions/nirupi-dwm.desktop ]] && echo 'OK   X11 session' || echo 'WARN X11 session missing'
     if [[ -r /etc/os-release ]]; then
       . /etc/os-release

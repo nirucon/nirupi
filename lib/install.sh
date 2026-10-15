@@ -442,6 +442,57 @@ HELIUM_DEB_REPO="${NIRUPI_HELIUM_DEB_REPO:-https://pkg.helium.computer/deb}"
 HELIUM_KEY_URL="${NIRUPI_HELIUM_KEY_URL:-https://raw.githubusercontent.com/imputnet/helium-linux/main/pubkey.asc}"
 HELIUM_API="${NIRUPI_HELIUM_API:-https://api.github.com/repos/imputnet/helium-linux/releases/latest}"
 
+# Arch/CachyOS: optionally bootstrap an AUR helper so AUR-only apps (such as the
+# Helium browser package) install through the package manager instead of an
+# upstream tarball. Opt-in: building from the AUR is a trust decision.
+ensure_aur_helper(){
+ [[ $DISTRO == arch || $DISTRO == cachyos ]] || return 0
+ if command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1; then return 0; fi
+ command -v makepkg >/dev/null 2>&1 || { warn 'makepkg unavailable; skipping the AUR helper'; return 0; }
+ printf 'No AUR helper (yay/paru) found. Install paru-bin from the AUR? Type AUR to install: '
+ local ans; read -r ans
+ [[ $ans == AUR ]] || { warn 'Skipping the AUR helper; AUR-only apps fall back to upstream tarballs'; return 0; }
+ local tmp; tmp="$(mktemp -d "${TMPDIR:-/tmp}/paru.XXXXXXXX")" || return 0
+ log 'Building paru-bin from the AUR'
+ if curl -fsSL 'https://aur.archlinux.org/cgit/aur.git/snapshot/paru-bin.tar.gz' -o "$tmp/paru-bin.tar.gz" 2>/dev/null \
+    && tar -xzf "$tmp/paru-bin.tar.gz" -C "$tmp" 2>/dev/null \
+    && ( cd "$tmp/paru-bin" && makepkg -si --noconfirm ); then
+  log 'AUR helper installed (paru)'
+ else
+  warn 'paru-bin install failed; AUR-only apps fall back to tarballs'
+ fi
+ rm -rf -- "$tmp"
+}
+
+# Best-effort enable of the services the desktop expects on a clean install, so
+# Tailscale/Bluetooth/Wi-Fi come up after a reboot. Never fatal.
+enable_services(){
+ local unit svc
+ case "$DISTRO" in
+  arch|cachyos|debian)
+   command -v systemctl >/dev/null 2>&1 || return 0
+   for unit in tailscaled bluetooth; do
+    systemctl list-unit-files "$unit.service" >/dev/null 2>&1 || continue
+    if sudo systemctl enable --now "$unit.service" >/dev/null 2>&1; then log "Enabled $unit.service"
+    else warn "Could not enable $unit.service"; fi
+   done
+   if command -v nmcli >/dev/null 2>&1 \
+      && ! systemctl is-active --quiet systemd-networkd 2>/dev/null \
+      && ! systemctl is-active --quiet iwd 2>/dev/null; then
+    systemctl list-unit-files NetworkManager.service >/dev/null 2>&1 \
+      && sudo systemctl enable --now NetworkManager.service >/dev/null 2>&1 \
+      && log 'Enabled NetworkManager.service'
+   fi;;
+  void)
+   for svc in tailscaled bluetoothd NetworkManager; do
+    [[ -e /etc/sv/$svc ]] || continue
+    [[ -e /var/service/$svc ]] && continue
+    if sudo ln -s "/etc/sv/$svc" /var/service/ 2>/dev/null; then log "Enabled $svc (runit)"
+    else warn "Could not enable $svc"; fi
+   done;;
+ esac
+}
+
 ensure_helium_tarball(){
   command -v curl >/dev/null 2>&1 && command -v tar >/dev/null 2>&1 || { warn 'curl/tar missing; cannot fetch Helium'; return 0; }
   local json url tmp appdir bin
