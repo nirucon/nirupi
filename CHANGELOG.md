@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.14.1
+- `nirupi lid` now handles **elogind** as well as systemd-logind (Void uses
+  elogind), writing to the correct drop-in directory and restarting the right
+  service.
+
 ## 0.14.0
 - **Arrow keys**: `Super+Left/Up` focus the previous window, `Super+Right/Down`
   the next; with `Shift` they move the focused window within the stack.
