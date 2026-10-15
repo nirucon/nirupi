@@ -306,6 +306,23 @@ notification: system packages and any `~/Git` repos that are behind. Apply with
 `nirupi update` (nirupi + repos) and `sudo nirupi updates` (packages). Silence
 notifications with `NIRUPI_NO_NOTIFY=1`.
 
+## Status-bar pop-ups
+
+Click a status segment for information in a floating panel: **Updates** lists
+pending packages (*Update now* runs the updater), **Temperature/CPU** opens
+`btop`, **Battery** shows health/power/remaining, **Disk** shows per-mount
+usage, and **Weather** shows the SMHI forecast (`jq`; set `WEATHER_LAT`/
+`WEATHER_LON` in `status.conf`). A **next-event** segment (`SHOW_NEXTEVENT`)
+shows the upcoming Google Calendar event from the synced iCal.
+
+## Fleet & changes
+
+- **`nirupi changes [VERSION]`** — the changelog for a version; `nirupi update`
+  prints the delta automatically.
+- **`nirupi fleet`** — read-only status across the hosts in
+  `~/.config/nirupi/fleet.conf` (one per line): version, session and pending
+  updates. Needs SSH keys; never uses sudo.
+
 ## Customize
 
 | File | Purpose |

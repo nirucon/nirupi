@@ -12,6 +12,10 @@ printf 'Updating %s ...\n' "$repo"
 git -C "$repo" pull --ff-only
 after="$(cat "$repo/VERSION" 2>/dev/null || echo unknown)"
 printf 'Version: %s -> %s\n' "$before" "$after"
+if [[ "$before" != "$after" && -f "$repo/CHANGELOG.md" ]]; then
+  printf '\nChanges in this update:\n'
+  awk -v stop="## $before" 'index($0, stop) == 1 { exit } /^## / { show = 1 } show { print }' "$repo/CHANGELOG.md"
+fi
 
 # Refresh the deployed bundle (scripts, theme, session config). Also updates the
 # dwm sources under ~/.local/lib so `reload` can rebuild from the new checkout.

@@ -233,6 +233,31 @@ def events_for(events, day):
     return items
 
 
+def next_event(events):
+    """Return a short line for the next upcoming event, or ''."""
+    now = datetime.datetime.now()
+    for offset in range(0, 14):
+        day = now.date() + datetime.timedelta(days=offset)
+        for tm, summary in events_for(events, day):
+            if tm.strip() == "all-day":
+                when = datetime.datetime.combine(day, datetime.time(0, 0))
+            else:
+                try:
+                    hh, mm = tm.split(":")
+                    when = datetime.datetime.combine(day, datetime.time(int(hh), int(mm)))
+                except ValueError:
+                    when = datetime.datetime.combine(day, datetime.time(0, 0))
+            if when < now:
+                continue
+            if offset == 0:
+                mins = int((when - now).total_seconds() // 60)
+                if mins < 600:
+                    return "in %dm %s" % (mins, summary)
+                return "%s %s" % (tm.strip(), summary)
+            return "%s %s %s" % (day.strftime("%a"), "" if tm.strip() == "all-day" else tm.strip(), summary)
+    return ""
+
+
 # ── drawing ──────────────────────────────────────────────────────────────────
 def put(stdscr, y, x, text, attr=0):
     """Draw text, truncated so it never wraps or touches the last cell."""
@@ -386,4 +411,12 @@ def main(stdscr):
 
 
 if __name__ == "__main__":
+    import sys
+    if "--next" in sys.argv:
+        _conf = read_conf()
+        _evs = parse_events(fetch_ics(_conf.get("ICS_URL", ""))) if _conf.get("ICS_URL") else []
+        _line = next_event(_evs) if _evs else ""
+        if _line:
+            print(_line)
+        sys.exit(0)
     curses.wrapper(main)

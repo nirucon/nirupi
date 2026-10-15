@@ -2,6 +2,24 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.17.0
+- **Richer status-bar pop-ups**: clicking a segment shows information in a
+  floating rofi/dmenu instead of opening a browser or terminal —
+  **Updates** (list of pending packages; *Update now* runs the updater),
+  **Temperature/CPU** (`btop` in a floating terminal), **Battery** (charge,
+  status, health, power draw, time remaining), **Disk** (per-mount usage) and
+  **Weather** (SMHI forecast; needs `jq`, `WEATHER_LAT`/`WEATHER_LON` override).
+- **Next calendar event in the status bar** (`SHOW_NEXTEVENT`), read from the
+  Google iCal the calendar is synced to (e.g. "in 25m Standup").
+- **`nirupi changes [VERSION]`** shows a version's changelog; `nirupi update`
+  now prints the changelog delta.
+- **`nirupi fleet`** — read-only status across the hosts in
+  `~/.config/nirupi/fleet.conf` (version, session, pending updates; needs SSH
+  keys, never sudo).
+- `doctor` now checks the **session** (is dwm under nirupi-session?) and the
+  **locale** (UTF-8), plus a legacy-session-file hint.
+- DWM config schema bumped to **v10** (float rule for the btop pop-up).
+
 ## 0.16.0
 - **Sticky windows** (`Super+Ctrl+Shift+S`): keep the focused window visible on
   every tag (music, notes, a reference).

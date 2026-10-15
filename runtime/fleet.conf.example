@@ -1,0 +1,5 @@
+# NIRU fleet hosts for `nirupi fleet` (read-only status). One host per line,
+# as an ssh target (from ~/.ssh/config or user@host). Needs SSH keys.
+# Example:
+othala
+void

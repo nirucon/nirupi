@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 9
+#define NIRUPI_CONFIG_VERSION 10
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -91,7 +91,8 @@ static const Rule rules[] = {
 	{ NULL,       NULL,     "Picture-in-Picture", 0,  1,          0,          0,         0,            -1 },
 	{ NULL,       NULL,     "Picture in picture", 0,  1,          0,          0,         0,            -1 },
 	/* The calendar pop-up opens centred and floating. */
-	{ "nirupi-calendar", NULL, NULL,      0,         1,          0,          0,         0,            -1 },
+  { "nirupi-calendar", NULL, NULL,      0,         1,          0,          0,         0,            -1 },
+  { "nirupi-btop", NULL, NULL,          0,         1,          0,          0,         0,            -1 },
 };
 
 /* === Custom layout funcs === */

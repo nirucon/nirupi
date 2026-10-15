@@ -59,16 +59,13 @@ case "$action" in
 
   # ── System info ────────────────────────────────────────────────────────────
   battery)
-    cap="$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -n1)"
-    st="$(cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -n1)"
-    ns "Battery" "${cap:-?}% ${st:-}";;
+    exec "$HOME/.local/bin/nirupi-battery-popup.sh";;
   temp)
-    t="$(for f in /sys/class/hwmon/hwmon*/temp*_input; do cat "$f" 2>/dev/null; done | sort -n | tail -n1)"
-    ns "Temperature" "$(( ${t:-0} / 1000 ))°C";;
+    exec "$HOME/.local/bin/nirupi-btop.sh";;
   memory) ns "Memory" "$(free -h 2>/dev/null | awk 'NR==2{print $3"/"$2" used"}')";;
   uptime) ns "Uptime" "$(uptime -p 2>/dev/null || uptime)";;
   sysinfo) ns "Memory / Uptime" "$(free -h 2>/dev/null | awk 'NR==2{print $3"/"$2" used"}')  ·  up $(uptime -p 2>/dev/null | sed 's/^up //' || uptime)";;
-  disk)   ns "Disk" "$(df -h / 2>/dev/null | awk 'NR==2{print $5" used, "$4" free"}')";;
+  disk)   exec "$HOME/.local/bin/nirupi-disk-popup.sh";;
   cpu)    ns "CPU" "$(ps -eo pcpu,comm --sort=-pcpu 2>/dev/null | sed -n '2,4p')";;
   load)   ns "Load" "$(cat /proc/loadavg 2>/dev/null) ($(nproc 2>/dev/null) cores)";;
   kernel) ns "Kernel" "$(uname -sr)";;
@@ -77,8 +74,8 @@ case "$action" in
   time)   ns "$(date '+%H:%M')" "$(date '+%A %Y-%m-%d')";;
 
   # ── Updates / cloud / weather ──────────────────────────────────────────────
-  updates)   exec "$HOME/.local/bin/nirupi-sysupdate.sh";;
+  updates)   exec "$HOME/.local/bin/nirupi-updates-popup.sh";;
   nextcloud) command -v nextcloud >/dev/null 2>&1 && exec nextcloud || ns "Nextcloud" "client not installed";;
-  weather)   exec "$HOME/.local/bin/nirupi-menu.sh" 'Weather';;
+  weather)   exec "$HOME/.local/bin/nirupi-weather-popup.sh";;
   *) exit 0;;
 esac

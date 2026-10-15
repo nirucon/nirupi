@@ -13,7 +13,9 @@ for s in nirupi-capture.sh nirupi-agent-selection.sh nirupi-agent-ask.sh \
          nirupi-edit.sh nirupi-ssh.sh nirupi-autostart.sh nirupi-battery.sh \
          nirupi-notifications.sh nirupi-launch.sh nirupi-rofi-clip.sh \
          nirupi-rofi-files.sh nirupi-usb.sh nirupi-lid.sh nirupi-barmode.sh \
-         nirupi-updatecheck.sh; do
+         nirupi-updatecheck.sh nirupi-popup.sh nirupi-updates-popup.sh \
+         nirupi-battery-popup.sh nirupi-disk-popup.sh nirupi-weather-popup.sh \
+         nirupi-btop.sh nirupi-changes.sh nirupi-fleet.sh; do
   [[ -f "$bin/$s" ]] || { echo "FAIL missing $s" >&2; exit 1; }
   bash -n "$bin/$s" || { echo "FAIL syntax $s" >&2; exit 1; }
   grep -q "$s" "$ROOT/lib/install.sh" || { echo "FAIL $s not deployed" >&2; exit 1; }
@@ -34,7 +36,7 @@ for cmd in capturecmd agentselectioncmd askscreencmd askcommandcmd agentrewritec
 done
 grep -q 'nirupi-launch.sh' "$DWM/config.h" || { echo 'FAIL launcher binding missing' >&2; exit 1; }
 grep -q 'nirupi-agent-rewrite.sh' "$DWM/config.h" || { echo 'FAIL rewrite binding missing' >&2; exit 1; }
-grep -q 'NIRUPI_CONFIG_VERSION 9' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
+grep -q 'NIRUPI_CONFIG_VERSION 10' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
 grep -q 'barmode,' "$DWM/config.h" && grep -q '^barmode(const Arg' "$DWM/dwm.c" \
   || { echo 'FAIL barmode missing' >&2; exit 1; }
 for fn in togglesticky movefloat resizefloat; do
@@ -76,6 +78,12 @@ grep -q 'LOCK_CLEAR_CLIPBOARD' "$ROOT/runtime/session.conf.example" || { echo 'F
 [[ -f "$ROOT/runtime/calendar.conf.example" ]] || { echo 'FAIL calendar example missing' >&2; exit 1; }
 grep -q 'nirupi-updatecheck.sh' "$ROOT/runtime-session.sh" || { echo 'FAIL daily update check not wired' >&2; exit 1; }
 grep -q 'calendar.conf' "$ROOT/lib/install.sh" || { echo 'FAIL calendar.conf not deployed' >&2; exit 1; }
+grep -q 'get_next_event' "$bin/dwm-status.sh" || { echo 'FAIL next-event segment missing' >&2; exit 1; }
+grep -q 'nirupi-updates-popup.sh' "$bin/nirupi-status-click.sh" || { echo 'FAIL updates popup not wired' >&2; exit 1; }
+grep -q 'nirupi-btop.sh' "$bin/nirupi-status-click.sh" || { echo 'FAIL btop on temp not wired' >&2; exit 1; }
+grep -q 'drow OK session' "$ROOT/runtime/nirupi" && grep -q 'drow HINT locale' "$ROOT/runtime/nirupi" \
+  || { echo 'FAIL doctor session/locale checks missing' >&2; exit 1; }
+[[ -f "$ROOT/runtime/fleet.conf.example" ]] || { echo 'FAIL fleet example missing' >&2; exit 1; }
 
 # Completions, man page, wallpaper example.
 [[ -f "$ROOT/vendor/noir/config/fish/completions/nirupi.fish" ]] || { echo 'FAIL fish completion' >&2; exit 1; }

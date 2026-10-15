@@ -54,6 +54,10 @@ a real login on real hardware.
 - [ ] `Super+Ctrl+Shift+s` keeps a window on all tags; `Super+Ctrl+e` selects the
       fibonacci layout; `Super+Ctrl+arrows` move a floating window.
 - [ ] The calendar pop-up fits a small floating window without wrapping.
+- [ ] Clicking updates lists pending packages; temp opens btop; battery/disk
+      show details; weather shows the forecast.
+- [ ] `nirupi changes` prints the changelog; `nirupi fleet` lists the hosts.
+- [ ] `nirupi doctor` reports the session and locale.
 - [ ] `Super+s` opens the SSH host picker (add a host to `~/.ssh/config` to see
       one). `nirupi reload` rebuilds+restarts dwm only when needed; `nirupi edit`
       opens a config.

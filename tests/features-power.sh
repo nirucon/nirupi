@@ -56,7 +56,8 @@ grep -q 'nirupi-calendar' "$ROOT/vendor/suckless/dwm/dwm.c" || fail 'calendar wi
 grep -q 'nirupi-calendar.sh' "$BIN/nirupi-status-click.sh" || fail 'date click does not open the calendar'
 [[ -x "$BIN/nirupi-sysupdate.sh" ]] || fail 'system update helper missing'
 for d in 'apt-get' 'xbps-install' 'pacman'; do grep -q "$d" "$BIN/nirupi-sysupdate.sh" || fail "sysupdate missing $d"; done
-grep -q 'nirupi-sysupdate.sh' "$BIN/nirupi-status-click.sh" || fail 'updates click does not open the updater terminal'
+grep -q 'nirupi-updates-popup.sh' "$BIN/nirupi-status-click.sh" || fail 'updates click does not open the updates popup'
+grep -q 'nirupi-sysupdate.sh' "$BIN/nirupi-updates-popup.sh" || fail 'updates popup cannot run the updater'
 grep -q 'nirupi-calendar.sh' "$ROOT/lib/install.sh" || fail 'calendar not deployed'
 grep -q 'nirupi-sysupdate.sh' "$ROOT/lib/install.sh" || fail 'sysupdate not deployed'
 

@@ -164,6 +164,9 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **Daily update check** with a notification when packages or repos are behind.
 - **Sticky windows**, **keyboard move/resize of floats** and a
   **fibonacci/dwindle layout** in dwm.
+- **Status-bar pop-ups** with real info (updates list, btop, battery, disk,
+  weather) and a **next-calendar-event** segment.
+- **`nirupi changes`** and **`nirupi fleet`** (read-only multi-machine status).
 
 ## Your apps & the web
 - **Default repositories** `nirupresence`, `nirunote`, `nplay` are cloned to
