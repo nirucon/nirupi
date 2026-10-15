@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.17.3
+- The **btop pop-up** (temperature/CPU click) now requests a comfortable size
+  (110×34, ≥ btop's 80×24 minimum) and centres its floating window.
+
 ## 0.17.2
 - **Calendar**: the iCal URL prompt now accepts arbitrary-length input (it used
   to truncate to the window width, so a pasted Google URL was cut and produced no
