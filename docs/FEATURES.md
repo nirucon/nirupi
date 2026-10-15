@@ -104,6 +104,14 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **Emoji picker** from the palette (bundled list, or `rofimoji` if installed).
 - **Ask the agent** `Super+Ctrl+a`: sends the current selection to `opencode`
   with a prompt menu (explain/summarise/translate/fix/…).
+- **Ask about a screen region** `Super+Ctrl+s`: capture a region, OCR it
+  (tesseract) and send the text to the agent.
+- **AI command** `Super+Ctrl+c`: describe a task, the agent proposes a shell
+  command, it opens **prefilled and editable** in a terminal and runs only on
+  Enter. Nothing is executed automatically.
+- **SSH/host picker** `Super+s`: hosts from `~/.ssh/config` and Tailscale.
+- **`nirupi reload`** rebuilds dwm only when its sources changed and restarts it
+  in place; **`nirupi edit [TOPIC]`** opens a config in `$EDITOR`.
 - **Audio output** picker in the control center (`wpctl`/PipeWire).
 - **`nirupi help COMMAND`** and a man page; **fish + bash completions**.
 

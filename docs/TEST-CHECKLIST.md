@@ -31,7 +31,12 @@ a real login on real hardware.
       **Noir day** restyles terminals, TUI tools, rofi, dunst and the bar live.
 - [ ] `Super+Ctrl+Shift+r` restarts dwm in place (windows survive, no logout).
 - [ ] `Super+Ctrl+Print` opens the capture menu; `Super+Ctrl+a` asks the agent
-      about the current selection.
+      about the current selection; `Super+Ctrl+s` asks about a screen region.
+- [ ] `Super+Ctrl+c` proposes a command you can edit and run on Enter; nothing
+      runs without confirmation.
+- [ ] `Super+s` opens the SSH host picker (add a host to `~/.ssh/config` to see
+      one). `nirupi reload` rebuilds+restarts dwm only when needed; `nirupi edit`
+      opens a config.
 - [ ] Per-workspace wallpapers: switching tags changes the background instantly;
       toggling *Wallpapers per workspace* in the control center turns it off/on.
 - [ ] `Super+Shift+r` reloads Xresources colors; `nirupi theme wallpaper IMAGE`

@@ -2,6 +2,21 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.11.0
+- **`nirupi reload`** — rebuild dwm only when its sources changed, then restart
+  it in place (safe: a failed build keeps the running dwm). Also in the control
+  center as *Reload desktop…*.
+- **`nirupi edit [TOPIC]`** — open a NIRUPI config (`status`, `session`, `apps`,
+  `agents`, `browser`, `wallpapers`, `theme`, `dwm`) in `$EDITOR`.
+- **SSH/host picker** on `Super+s` (from `~/.ssh/config` and Tailscale peers).
+- **Ask the agent about a screen region** on `Super+Ctrl+s`: region → OCR
+  (tesseract) → agent.
+- **AI command** on `Super+Ctrl+c`: describe a task, the agent suggests a shell
+  command shown **prefilled and editable** in a terminal; it runs only when you
+  press Enter. Nothing executes automatically.
+- Config schema bumped to **v5** (three new bindings). Palette and control
+  center entries for all of the above; docs, completions and man page updated.
+
 ## 0.10.4
 - **Removed the wallpaper crossfade entirely.** Per-workspace wallpaper
   switching is instant (`feh`/`xwallpaper`/`hsetroot`): no ImageMagick, no

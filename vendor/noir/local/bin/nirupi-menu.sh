@@ -106,6 +106,11 @@ nirunote
 nplay
 nirupresence
 Agent (AI)
+Ask agent about screen…
+AI command…
+SSH / host…
+Reload desktop…
+Edit config…
 System update
 Backup configs
 Check updates
@@ -152,6 +157,11 @@ case "$action" in
   nplay) exec "$HOME/.local/bin/nirupi-app.sh" nplay;;
   nirupresence) exec "$HOME/.local/bin/nirupi-app.sh" nirupresence;;
   'Agent (AI)') exec nirupi-agent;;
+  'Ask agent about screen…') exec "$HOME/.local/bin/nirupi-agent-screen.sh";;
+  'AI command…') exec "$HOME/.local/bin/nirupi-ask-command.sh";;
+  'SSH / host…') exec "$HOME/.local/bin/nirupi-ssh.sh";;
+  'Reload desktop…') exec "$HOME/.local/bin/nirupi-reload.sh";;
+  'Edit config…') exec "$HOME/.local/bin/nirupi-edit.sh";;
   'Backup configs') exec nirupi backup;;
   'Check updates') n="$(nirupi updates --refresh >/dev/null 2>&1; nirupi updates 2>/dev/null)"; notify "Updates: ${n:-0}";;
   *) ;;

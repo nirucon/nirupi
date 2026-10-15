@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 4
+#define NIRUPI_CONFIG_VERSION 5
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -212,6 +212,12 @@ static const char *menucmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-menu.
 static const char *agentcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent.sh", NULL };
 /* Ask the agent about the current selection (Super+Ctrl+a). */
 static const char *agentselectioncmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent-selection.sh", NULL };
+/* Ask the agent about a screen region, via OCR (Super+Ctrl+s). */
+static const char *askscreencmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent-screen.sh", NULL };
+/* AI command: describe a task, review the suggested command, run on Enter (Super+Ctrl+c). */
+static const char *askcommandcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-ask-command.sh", NULL };
+/* SSH/host picker (Super+s). */
+static const char *sshcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-ssh.sh", NULL };
 /* Capture menu: region/window/full + annotate + OCR (Super+Ctrl+Print). */
 static const char *capturecmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-capture.sh", NULL };
 /* Theme picker (Super+Ctrl+t): rofi with colour swatches, applies live. */
@@ -308,6 +314,9 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_grave,                 spawn,          {.v = menucmd } },         /* Super+` (US layouts) */
 	{ MODKEY,                       XK_a,                     spawn,          {.v = agentcmd } },        /* Super+a -> AI agent (opencode) */
 	{ MODKEY|ControlMask,           XK_a,                     spawn,          {.v = agentselectioncmd } }, /* Super+Ctrl+a -> ask agent about selection */
+	{ MODKEY|ControlMask,           XK_s,                     spawn,          {.v = askscreencmd } },  /* Super+Ctrl+s -> ask agent about screen (OCR) */
+	{ MODKEY|ControlMask,           XK_c,                     spawn,          {.v = askcommandcmd } },  /* Super+Ctrl+c -> AI command (confirm & run) */
+	{ MODKEY,                       XK_s,                     spawn,          {.v = sshcmd } },         /* Super+s -> SSH host picker */
 	{ MODKEY|ControlMask,           XK_t,                     spawn,          {.v = thememenu } },       /* Super+Ctrl+t -> theme picker */
 	{ MODKEY|ShiftMask,             XK_f,                     spawn,          {.v = fmcmd } },          /* Super+Shift+f -> pcmanfm */
 

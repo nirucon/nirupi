@@ -62,13 +62,16 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   cheat-sheet (`Super+a`, `Super+/`, ``Super+` ``).
 - **Quality of life:** capture (`Super+Ctrl+Print`: region/window/full +
   annotate + OCR-to-clipboard), ask the agent about the current selection
-  (`Super+Ctrl+a`), an emoji picker, clipboard transforms, an audio-output
-  picker, **fish + bash completions**, `nirupi help COMMAND` and a man page.
+  (`Super+Ctrl+a`) or a screen region (`Super+Ctrl+s`), an **AI command** helper
+  (`Super+Ctrl+c`: describe a task, review the suggested command, run on
+  Enter), an **SSH/host picker** (`Super+s`, `~/.ssh/config` + Tailscale), an
+  emoji picker, clipboard transforms, an audio-output picker, **fish + bash
+  completions**, `nirupi help COMMAND`, a man page, `nirupi edit TOPIC` and
+  `nirupi reload` (rebuild dwm only if needed + restart in place).
   **Per-workspace wallpapers** (`~/.config/nirupi/wallpapers.conf`) switch
   instantly on tag switch and toggle from the control center. dwm gains smart
-  gaps/borders,
-  an **in-place restart** (`Super+Ctrl+Shift+r`) and mouse-drag of the master
-  factor (`Super+Button2`).
+  gaps/borders, an **in-place restart** (`Super+Ctrl+Shift+r`) and mouse-drag of
+  the master factor (`Super+Button2`).
 - Migrates an existing system **non-destructively**: configs are merged, foreign
   binaries are archived (never deleted), customized files are preserved.
 - Provides safe, manifest-based rollback of configs and binary links.
@@ -138,6 +141,7 @@ nirupi rollback --binaries            # binary links only
 nirupi theme apply|status|diff|list|preview NAME|set NAME|menu
 nirupi theme wallpaper IMAGE|mode noir|wallpaper|palette
 nirupi wallpaper set FILE|next|per-tag on|off|toggle|status
+nirupi ssh                              nirupi edit [TOPIC]     nirupi reload
 nirupi migrate plan|dwm --rebuild     nirupi agent [profile]
 nirupi menu | nirupi keys | nirupi lock | nirupi webapp add|list|remove
 nirupi backup [--schedule|--unschedule]
@@ -149,7 +153,9 @@ nirupi browser status|set|reset       nirupi updates --refresh
 ```
 
 Keybindings: `Super+Return` terminal, `Super+b` browser, `Super+a` agent,
-`Super+Ctrl+a` ask agent about the selection, `Super+Ctrl+t` theme picker,
+`Super+Ctrl+a` ask agent about the selection, `Super+Ctrl+s` ask agent about a
+screen region, `Super+Ctrl+c` AI command, `Super+s` SSH hosts,
+`Super+Ctrl+t` theme picker,
 `Super+Shift+h` keybinding palette, `Super+Alt+k` full keybinding table (TUI),
 `Super+Shift+m` control center, `Super+Ctrl+Print` capture menu,
 `Super+Esc` lock,

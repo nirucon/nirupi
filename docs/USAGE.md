@@ -21,7 +21,10 @@ startup, run `nirupi theme apply`.
 | `Super+b` | Browser (resolver) |
 | `Super+a` | **Agent** (opencode) |
 | `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson/…) |
+| `Super+s` | **SSH hosts** (`~/.ssh/config` + Tailscale) |
 | `Super+Ctrl+a` | **Ask the agent** about the current selection |
+| `Super+Ctrl+s` | **Ask the agent** about a screen region (OCR) |
+| `Super+Ctrl+c` | **AI command** (describe → review → run) |
 | `Super+Ctrl+Print` | **Capture** menu (region/window/full + annotate + OCR) |
 | `Super+Ctrl+Shift+r` | **Restart dwm** in place (after a rebuild) |
 | `Super+Shift+h` | **Keybinding palette** (search everything) |
@@ -183,6 +186,21 @@ nirupi webapp remove "Work Mail"
 - **Ask the agent** (`Super+Ctrl+a`): select text anywhere, choose a prompt
   (explain / summarise / translate to EN or SV / fix / explain error /
   refactor), and the answer opens in a terminal via `opencode run`.
+- **Ask about a screen region** (`Super+Ctrl+s`): select a region, it is OCR'd
+  (tesseract) and sent to the agent — handy for errors you cannot select.
+- **AI command** (`Super+Ctrl+c`): describe what you want in plain language,
+  the agent suggests a shell command, and it opens in a terminal **prefilled and
+  editable** — nothing runs until you press Enter.
+
+## Fleet & maintenance
+
+- **SSH hosts** (`Super+s`): pick a host from `~/.ssh/config` and Tailscale
+  peers; opens a shell in a terminal.
+- **`nirupi reload`**: rebuild dwm **only if its sources changed**, then restart
+  it in place (safe: a failed build keeps the running dwm). Same as the control
+  center → *Reload desktop…*.
+- **`nirupi edit [TOPIC]`**: open a NIRUPI config (`status`, `session`, `apps`,
+  `agents`, `browser`, `wallpapers`, `theme`, `dwm`) in `$EDITOR`.
 
 ## Wallpapers
 

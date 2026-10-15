@@ -90,6 +90,11 @@ APP	Transform	nirupi-clip-transform.sh
 APP	Capture	nirupi-capture.sh
 APP	Audio	nirupi-audio.sh
 APP	Ask agent	nirupi-agent-selection.sh
+APP	Screen	nirupi-agent-screen.sh
+APP	AI	nirupi-ask-command.sh
+APP	SSH	nirupi-ssh.sh
+APP	Reload	nirupi-reload.sh
+APP	Edit	nirupi-edit.sh
 EOF
 }
 
@@ -143,6 +148,11 @@ else
     Capture) exec nirupi-capture.sh;;
     Audio) exec nirupi-audio.sh;;
     Ask) exec nirupi-agent-selection.sh;;
+    Screen) exec nirupi-agent-screen.sh;;
+    AI) exec nirupi-ask-command.sh;;
+    SSH) exec nirupi-ssh.sh;;
+    Reload) exec nirupi-reload.sh;;
+    Edit) exec nirupi-edit.sh;;
     *) ;;
   esac
 fi
