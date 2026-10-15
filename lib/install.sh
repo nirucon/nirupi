@@ -163,6 +163,12 @@ install_helpers(){
   mkdir -p "$HOME/.config/nirupi"
   put_file "$ROOT/runtime/wallpapers.conf.example" "$HOME/.config/nirupi/wallpapers.conf" 0644
  fi
+ # Session launcher is NIRUPI-owned: keep it fresh on --update-dots too.
+ managed_helper_install nirupi-session "$ROOT/runtime-session.sh" "$HOME/.local/bin/nirupi-session"
+ # Startx users: refresh ~/.xinitrc only when it already exists.
+ if [[ -f $HOME/.xinitrc && ! -L $HOME/.xinitrc ]]; then
+  managed_config_install 'session/xinitrc' "$ROOT/runtime-xinitrc" "$HOME/.xinitrc" 0755
+ fi
 }
 install_desktop() (
  local app stage bin_dir="$HOME/.local/lib/nirupi/$VERSION/bin" src dest desktop
