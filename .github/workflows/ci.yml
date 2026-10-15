@@ -46,14 +46,16 @@ jobs:
     runs-on: ubuntu-latest
     container: voidlinux/voidlinux:latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Point xbps at the default mirror
+      - name: Bootstrap (default mirror, git, libstdc++ for checkout)
         run: |
           for d in /etc/xbps.d /usr/share/xbps.d; do
             [ -d "$d" ] && sed -i 's#alpha.de.repo.voidlinux.org#repo-default.voidlinux.org#g' "$d"/*.conf || true
           done
+          xbps-install -Suy xbps
+          xbps-install -Sy git libstdc++
+      - uses: actions/checkout@v4
       - name: Install tools
-        run: xbps-install -Suy xbps bash python3 diffutils shadow findutils sudo
+        run: xbps-install -Sy bash python3 diffutils shadow findutils sudo
       - name: Smoke tests (non-root, as on a real install)
         run: |
           useradd -m -s /bin/bash ci
