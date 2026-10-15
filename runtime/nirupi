@@ -140,8 +140,16 @@ nirupi_doctor(){
     if command -v "$app" >/dev/null 2>&1; then drow OK "$app"; else drow WARN "$app" "missing"; fi
   done
   [[ -r /etc/os-release ]] && . /etc/os-release && ID="${ID:-}"
-  if ! command -v xidlehook >/dev/null 2>&1 && ! command -v xautolock >/dev/null 2>&1 && ! command -v xss-lock >/dev/null 2>&1; then
-    drow HINT idle-lock "install xss-lock or xautolock for automatic screen lock"
+  # Idle: name the engine that will actually be used, and be honest that
+  # xidlehook/xautolock are not packaged on Arch/Debian/Void.
+  if command -v xidlehook >/dev/null 2>&1; then
+    drow OK idle "xidlehook (dim, lock, DPMS, suspend)"
+  elif command -v xautolock >/dev/null 2>&1; then
+    drow OK idle "xautolock (lock)"
+  elif command -v xss-lock >/dev/null 2>&1; then
+    drow OK idle "xss-lock (lock + DPMS via xset)"
+  else
+    drow HINT idle "no idle tool: install xss-lock for lock, or xidlehook (AUR/cargo on Arch)"
   fi
   command -v nmcli >/dev/null 2>&1 || drow HINT networkmanager "install NetworkManager (nmcli) for the Wi-Fi menu"
   case "$ID" in

@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.5
+- Idle without xidlehook: `xss-lock` now also drives a **DPMS timeout** (`xset`)
+  so lock + screen-off work where xidlehook/xautolock are unavailable (they are
+  not packaged on Arch/Debian/Void). `doctor` names the engine actually in use.
+
 ## 0.23.4
 - Fix the Wi-Fi picker producing "No networks found": the row array was built
   inside a pipeline subshell (`sort | while`), so it was lost. Use process

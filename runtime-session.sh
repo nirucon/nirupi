@@ -141,7 +141,13 @@ start_idle() {
     return 0
   fi
   if [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null && command -v xss-lock >/dev/null 2>&1; then
-    xset s "$((IDLE_LOCK_MINUTES * 60))" "$((IDLE_LOCK_MINUTES * 60))" 2>/dev/null || :
+    # xss-lock handles the lock (and locks on suspend). Give it the DPMS step
+    # too, so the ladder works without xidlehook/xautolock.
+    if [ "$IDLE_DPMS_MINUTES" -gt 0 ] 2>/dev/null && command -v xset >/dev/null 2>&1; then
+      xset s "$((IDLE_LOCK_MINUTES * 60))" "$((IDLE_DPMS_MINUTES * 60))" 2>/dev/null || :
+    else
+      xset s "$((IDLE_LOCK_MINUTES * 60))" "$((IDLE_LOCK_MINUTES * 60))" 2>/dev/null || :
+    fi
     xss-lock -- "$LOCKER" & IDLE_PID=$!
     return 0
   fi
