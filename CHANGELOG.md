@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.21.3
+- Pop-ups open at a comfortable, fixed size (~520x440) centred on the monitor
+  instead of filling it. Schema v15.
+
 ## 0.21.2
 - Fix the empty panel windows: the spec is now passed via `--spec FILE` so the
   panel keeps a real TTY on stdin (curses aborts with "cbreak() returned ERR"

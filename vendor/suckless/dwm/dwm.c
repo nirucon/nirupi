@@ -2332,14 +2332,13 @@ barmode(const Arg *arg)
 void
 centerfloat(Client *c)
 {
-	/* Centre a floating client on its monitor, giving pop-up panels a
-	 * comfortable size when they are smaller than half the screen. */
+	/* Centre a pop-up on its monitor at a comfortable, content-ish size: the
+	 * framed panel looks right at ~52x18 cells, i.e. about 520x440 px, not
+	 * filling the screen. Falls back to a share of the monitor if tiny. */
 	Monitor *m = c->mon;
-	int w = c->w, h = c->h;
-	if (w < m->ww / 2 || h < m->wh / 2) {
-		w = m->ww * 2 / 3;
-		h = m->wh * 2 / 3;
-	}
+	int w = 520, h = 440;
+	if (w > m->ww - 40) w = m->ww - 40;
+	if (h > m->wh - 40) h = m->wh - 40;
 	c->x = m->wx + (m->ww - w) / 2;
 	c->y = m->wy + (m->wh - h) / 2;
 	resize(c, c->x, c->y, w, h, 0);
