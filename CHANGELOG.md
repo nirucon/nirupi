@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.14.5
+- `nirupi gc` now prunes release snapshots that reference version directories
+  which no longer exist (they cannot roll back), so their old version
+  directories are cleaned up too.
+
 ## 0.14.4
 - New `nirupi migrate binaries --rebuild`: rebuilds **dwm, dmenu and st** into
   the current version directory and relinks them. Upgrades done with

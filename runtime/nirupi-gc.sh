@@ -30,18 +30,37 @@ fi
 
 targets=()
 
-# Retained release snapshots (newest KEEP_SNAPSHOTS).
+# Release snapshots (newest first).
 snap_root="$STATE/release-snapshots"
 snaps=()
 if [[ -d $snap_root ]]; then
   mapfile -t snaps < <(find "$snap_root" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort -r)
 fi
-retained_snaps=("${snaps[@]:0:KEEP_SNAPSHOTS}")
-# Version dirs referenced by retained snapshots must be preserved.
+
+# A snapshot is a usable rollback anchor only if every version directory it
+# references still exists. Stale snapshots are pruned and protect nothing.
+snapshot_is_stale(){
+  local f="$snap_root/$1/links.tsv" rest v
+  [[ -f $f && ! -L $f ]] || return 1
+  while IFS=$'\t' read -r app tgt; do
+    [[ $tgt == "$LIBROOT/"* ]] || continue
+    rest="${tgt#"$LIBROOT"/}"; v="${rest%%/*}"
+    [[ -d $LIBROOT/$v ]] || return 0
+  done < "$f"
+  return 1
+}
+
+# Keep the newest KEEP_SNAPSHOTS usable snapshots and protect the version dirs
+# they reference; prune the rest (stale, or beyond the keep count).
+retained_snaps=()
 protected=()
-for sn in "${retained_snaps[@]}"; do
+for sn in "${snaps[@]}"; do
+  if snapshot_is_stale "$sn" || (( ${#retained_snaps[@]} >= KEEP_SNAPSHOTS )); then
+    targets+=("$snap_root/$sn")
+    continue
+  fi
+  retained_snaps+=("$sn")
   f="$snap_root/$sn/links.tsv"
-  [[ -f $f && ! -L $f ]] || continue
   while IFS=$'\t' read -r app tgt; do
     [[ $tgt == "$LIBROOT/"* ]] || continue
     rest="${tgt#"$LIBROOT"/}"; protected+=("${rest%%/*}")
@@ -72,12 +91,7 @@ if [[ -d $LIBROOT ]]; then
   done
 fi
 
-# Old release snapshots (beyond KEEP_SNAPSHOTS).
-for sn in "${snaps[@]}"; do
-  in_ret=0
-  for r in "${retained_snaps[@]}"; do if [[ $sn == "$r" ]]; then in_ret=1; fi; done
-  if (( in_ret == 0 )); then targets+=("$snap_root/$sn"); fi
-done
+# Old release snapshots are handled above (stale or beyond KEEP_SNAPSHOTS).
 
 prune_dir() {
   local root="$1" keep="$2" d
