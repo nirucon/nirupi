@@ -28,8 +28,12 @@ if command -v xdotool >/dev/null 2>&1; then
   if [[ -n ${id:-} ]]; then
     read -r sw sh < <(xdotool getdisplaygeometry 2>/dev/null || echo "1920 1080")
     eval "$(xdotool getwindowgeometry --shell "$id" 2>/dev/null || true)"
-    if [[ ${WIDTH:-0} -gt 0 && ${HEIGHT:-0} -gt 0 ]]; then
-      xdotool windowmove "$id" "$(( (sw - WIDTH) / 2 ))" "$(( (sh - HEIGHT) / 2 ))" 2>/dev/null || true
-    fi
+    # Guarantee a size that satisfies btop's 80x24 minimum, then centre.
+    w=$(( sw * 72 / 100 )); h=$(( sh * 85 / 100 ))
+    [[ $w -gt 1400 ]] && w=1400
+    [[ $h -gt 1000 ]] && h=1000
+    [[ ${WIDTH:-0} -lt "$(( sw * 60 / 100 ))" || ${HEIGHT:-0} -lt "$(( sh * 70 / 100 ))" ]] \
+      && xdotool windowsize "$id" "$w" "$h" 2>/dev/null || true
+    xdotool windowmove "$id" "$(( (sw - w) / 2 ))" "$(( (sh - h) / 2 ))" 2>/dev/null || true
   fi
 fi

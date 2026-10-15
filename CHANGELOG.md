@@ -2,6 +2,13 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.17.5
+- **Touchpad toggle** (`Super+Shift+t`): look the device up by its id instead of
+  its name. A disabled device is listed with a leading marker (e.g. `∼ `), so
+  re-enabling by name failed and the touchpad stayed off.
+- **btop pop-up**: force a size that satisfies btop's minimum via the window
+  manager, then centre (the kitty size alone was unreliable).
+
 ## 0.17.4
 - **btop pop-up**: set `remember_window_size=no` so kitty stops restoring the
   old (too small) size — it now opens large enough for btop's 80×24 minimum and
