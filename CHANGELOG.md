@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.14.2
+- `nirupi lid` detects machines without a lid switch (stationary desktops) and
+  says so instead of offering lid settings.
+
 ## 0.14.1
 - `nirupi lid` now handles **elogind** as well as systemd-logind (Void uses
   elogind), writing to the correct drop-in directory and restarting the right

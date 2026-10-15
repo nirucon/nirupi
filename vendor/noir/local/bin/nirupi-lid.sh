@@ -9,6 +9,12 @@ have(){ command -v "$1" >/dev/null 2>&1; }
 notify(){ if have notify-send; then notify-send -a NIRUPI "Lid" "$1" >/dev/null 2>&1; else printf 'Lid: %s\n' "$1"; fi; }
 menu(){ if have rofi; then rofi -dmenu -i -p 'Lid close'; elif have dmenu; then dmenu -i -p 'Lid close'; else head -n1; fi; }
 
+# Desktops have no lid switch; nothing to configure there.
+if ! compgen -G '/proc/acpi/button/lid/*/state' >/dev/null 2>&1; then
+  notify 'No lid on this machine (stationary desktop) — lid handling not applicable'
+  exit 0
+fi
+
 # Pick the logind flavour and where its drop-ins live.
 if [[ -d /etc/elogind ]]; then
   kind=elogind; confdir=/etc/elogind/logind.conf.d; label='elogind'
