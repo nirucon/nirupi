@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.2
+- Rofi pickers (Wi-Fi, Bluetooth, theme, …) float and are centred by dwm like
+  the TUI panels, so a picker no longer opens in the corner. Schema v16.
+
 ## 0.23.1
 - Network panel: correct interface type (a wired `eno1` no longer shows as
   "wifi") and human-readable up/down sizes (GiB/MiB, was "12.9 B").

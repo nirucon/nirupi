@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 15
+#define NIRUPI_CONFIG_VERSION 16
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -94,6 +94,8 @@ static const Rule rules[] = {
   { "nirupi-calendar", NULL, NULL,      0,         1,          0,          0,         0,            -1 },
   { "nirupi-btop", NULL, NULL,          0,         1,          0,          0,         0,            -1 },
   { "nirupi-info", NULL, NULL,          0,         1,          0,          0,         0,            -1 },
+	/* Rofi pickers (wifi/bluetooth/theme/…) float and are centred by dwm. */
+	{ "Rofi",     NULL,     NULL,         0,         1,          0,          0,         0,            -1 },
 };
 
 /* === Custom layout funcs === */

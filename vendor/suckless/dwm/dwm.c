@@ -388,7 +388,7 @@ applyrules(Client *c)
 	}
 	/* NIRUPI pop-up panels: float, centred, comfortable size. */
 	if ((strstr(class, "nirupi-info") || strstr(class, "nirupi-calendar") ||
-	     strstr(class, "nirupi-btop")) && c->isfloating)
+	     strstr(class, "nirupi-btop") || strcmp(class, "Rofi") == 0) && c->isfloating)
 		centerfloat(c);
 	if (ch.res_class)
 		XFree(ch.res_class);
