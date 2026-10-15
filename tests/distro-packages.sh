@@ -20,6 +20,8 @@ grep -q 'paru-bin' "$INS" || { echo 'FAIL paru-bin missing' >&2; exit 1; }
 grep -q 'yay-bin' "$INS" || { echo 'FAIL yay-bin fallback missing' >&2; exit 1; }
 grep -q 'enable_services' "$INS" || { echo 'FAIL enable_services missing' >&2; exit 1; }
 grep -q 'ensure_signal' "$INS" || { echo 'FAIL ensure_signal missing' >&2; exit 1; }
+grep -q 'ensure_nirupi_session' "$INS" || { echo 'FAIL ensure_nirupi_session missing' >&2; exit 1; }
+grep -q 'ensure_nirupi_session' "$ROOT/install.sh" || { echo 'FAIL ensure_nirupi_session not called' >&2; exit 1; }
 grep -q 'signal-desktop' "$PKG" || { echo 'FAIL signal-desktop not in packages' >&2; exit 1; }
 grep -q 'tailscaled' "$INS" || { echo 'FAIL tailscaled enable missing' >&2; exit 1; }
 

@@ -177,6 +177,7 @@ install_opencode
 export NIRUPI_REFRESH=$REFRESH
 install_desktop
 enable_services
+ensure_nirupi_session
 write_installed_state
 "$ROOT/tests/post-install-verify.sh" || warn "Post-install verification found missing components; inspect before reboot"
 log 'Installation finished. Verify graphical login before reboot; rollback restores NIRUPI links and configs, not system packages.'

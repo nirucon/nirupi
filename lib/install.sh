@@ -543,6 +543,29 @@ ensure_aur_helper(){
 
 # Best-effort enable of the services the desktop expects on a clean install, so
 # Tailscale/Bluetooth/Wi-Fi come up after a reboot. Never fatal.
+# A leftover plain dwm.desktop (from before NIRUPI) can shadow the NIRUPI
+# session, so the session-based features (idle, autostart, update check) would
+# not run. If its launcher is not already the NIRUPI session, repoint it to the
+# wrapper (backup kept). Best effort, systemd-agnostic.
+ensure_nirupi_session(){
+ local desk=/usr/share/xsessions/dwm.desktop target tmp
+ [[ -f $desk ]] || return 0
+ grep -q 'nirupi-session' "$desk" 2>/dev/null && return 0
+ target="$(sed -n 's/^Exec=//p' "$desk" 2>/dev/null | awk '{print $1}' | head -n1)"
+ [[ -n $target && -f $target ]] || return 0
+ grep -q 'nirupi-session' "$target" 2>/dev/null && return 0
+ log "Repointing legacy session launcher to the NIRUPI session: $target"
+ sudo cp -a -- "$target" "$target.bak-$(date +%Y%m%d-%H%M%S)" 2>/dev/null || :
+ tmp="$(mktemp)"
+ printf '#!/bin/sh\n# Repointed by NIRUPI: run the maintained nirupi session.\nexec "$HOME/.local/bin/nirupi-session" "$@"\n' > "$tmp"
+ if sudo cp -f -- "$tmp" "$target" && sudo chmod 0755 "$target"; then
+  log 'Legacy session now runs the NIRUPI session'
+ else
+  warn "Could not repoint $target"
+ fi
+ rm -f -- "$tmp"
+}
+
 enable_services(){
  local unit svc
  case "$DISTRO" in

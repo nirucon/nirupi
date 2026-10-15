@@ -2,6 +2,13 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.15.1
+- Installer guard: a leftover plain `dwm.desktop`/`dwm-session` (from before
+  NIRUPI) no longer shadows the NIRUPI session — `ensure_nirupi_session`
+  repoints the legacy launcher to `nirupi-session` (backup kept), so the
+  session-based features (idle, autostart, daily update check, per-tag
+  wallpapers) actually run.
+
 ## 0.15.0
 - **Status-bar media icons open their own folder**: the music/photo/video
   counts are now three separate clickable sections (Music, Pictures/Photos,
