@@ -442,6 +442,19 @@ HELIUM_DEB_REPO="${NIRUPI_HELIUM_DEB_REPO:-https://pkg.helium.computer/deb}"
 HELIUM_KEY_URL="${NIRUPI_HELIUM_KEY_URL:-https://raw.githubusercontent.com/imputnet/helium-linux/main/pubkey.asc}"
 HELIUM_API="${NIRUPI_HELIUM_API:-https://api.github.com/repos/imputnet/helium-linux/releases/latest}"
 
+# Build+install a prebuilt AUR helper package from its AUR snapshot (no helper
+# needed). $1 = AUR package name (e.g. paru-bin). Returns 0 on success.
+_aur_install_bin(){
+ local name="$1" tmp
+ tmp="$(mktemp -d "${TMPDIR:-/tmp}/$name.XXXXXXXX")" || return 1
+ if curl -fsSL "https://aur.archlinux.org/cgit/aur.git/snapshot/$name.tar.gz" -o "$tmp/$name.tar.gz" 2>/dev/null \
+    && tar -xzf "$tmp/$name.tar.gz" -C "$tmp" 2>/dev/null \
+    && ( cd "$tmp/$name" && makepkg -f --noconfirm >/dev/null 2>&1 ) \
+    && sudo pacman -U --noconfirm "$tmp/$name"/*.pkg.tar.zst >/dev/null 2>&1; then
+  rm -rf -- "$tmp"; return 0
+ fi
+ rm -rf -- "$tmp"; return 1
+}
 # Arch/CachyOS: optionally bootstrap an AUR helper so AUR-only apps (such as the
 # Helium browser package) install through the package manager instead of an
 # upstream tarball. Opt-in: building from the AUR is a trust decision.
@@ -449,19 +462,19 @@ ensure_aur_helper(){
  [[ $DISTRO == arch || $DISTRO == cachyos ]] || return 0
  if command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1; then return 0; fi
  command -v makepkg >/dev/null 2>&1 || { warn 'makepkg unavailable; skipping the AUR helper'; return 0; }
- printf 'No AUR helper (yay/paru) found. Install paru-bin from the AUR? Type AUR to install: '
+ printf 'No AUR helper (yay/paru) found. Install one from the AUR? Type AUR to install: '
  local ans; read -r ans
  [[ $ans == AUR ]] || { warn 'Skipping the AUR helper; AUR-only apps fall back to upstream tarballs'; return 0; }
- local tmp; tmp="$(mktemp -d "${TMPDIR:-/tmp}/paru.XXXXXXXX")" || return 0
- log 'Building paru-bin from the AUR'
- if curl -fsSL 'https://aur.archlinux.org/cgit/aur.git/snapshot/paru-bin.tar.gz' -o "$tmp/paru-bin.tar.gz" 2>/dev/null \
-    && tar -xzf "$tmp/paru-bin.tar.gz" -C "$tmp" 2>/dev/null \
-    && ( cd "$tmp/paru-bin" && makepkg -si --noconfirm ); then
-  log 'AUR helper installed (paru)'
- else
-  warn 'paru-bin install failed; AUR-only apps fall back to tarballs'
+ # Prefer paru-bin; if the prebuilt binary does not run (e.g. a libalpm soname
+ # mismatch after a pacman upgrade) fall back to yay-bin.
+ if _aur_install_bin paru-bin && paru --version >/dev/null 2>&1; then
+  log 'AUR helper installed (paru)'; return 0
  fi
- rm -rf -- "$tmp"
+ command -v paru >/dev/null 2>&1 && sudo pacman -Rns --noconfirm paru-bin >/dev/null 2>&1
+ if _aur_install_bin yay-bin && yay --version >/dev/null 2>&1; then
+  log 'AUR helper installed (yay)'; return 0
+ fi
+ warn 'Could not install an AUR helper; AUR-only apps fall back to tarballs'
 }
 
 # Best-effort enable of the services the desktop expects on a clean install, so

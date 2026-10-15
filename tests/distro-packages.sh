@@ -16,6 +16,7 @@ grep -q 'archlinux-keyring' "$PKG" || { echo 'FAIL keyring pre-step missing' >&2
 
 grep -q 'ensure_aur_helper' "$INS" || { echo 'FAIL ensure_aur_helper missing' >&2; exit 1; }
 grep -q 'paru-bin' "$INS" || { echo 'FAIL paru-bin missing' >&2; exit 1; }
+grep -q 'yay-bin' "$INS" || { echo 'FAIL yay-bin fallback missing' >&2; exit 1; }
 grep -q 'enable_services' "$INS" || { echo 'FAIL enable_services missing' >&2; exit 1; }
 grep -q 'tailscaled' "$INS" || { echo 'FAIL tailscaled enable missing' >&2; exit 1; }
 

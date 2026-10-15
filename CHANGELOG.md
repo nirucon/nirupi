@@ -2,6 +2,13 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.12.1
+- AUR bootstrap is now robust: prefer `paru-bin`, but **verify it actually
+  runs** and fall back to `yay-bin` when the prebuilt paru is incompatible
+  (e.g. a `libalpm` soname mismatch after a pacman upgrade). Build+install from
+  the AUR snapshot with `makepkg` + `pacman -U` instead of `makepkg -si` (which
+  needs a terminal).
+
 ## 0.12.0
 - **Clean-install completeness (Arch/Debian/Void):** the package list now
   includes what a vanilla install otherwise misses — X input driver
