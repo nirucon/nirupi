@@ -23,4 +23,14 @@ printf 'dwm\t%s\n' "$HOME/.local/lib/nirupi/0.4/bin/dwm" > "$snap/links.tsv"
 printf 'NIRUPI_VERSION=0.3\n' > "$XDG_STATE_HOME/nirupi/installed.env"
 plan="$(NIRUPI_KEEP_VERSIONS=0 NIRUPI_KEEP_SNAPSHOTS=1 "$ROOT/runtime/nirupi-gc.sh" --dry-run)"
 echo "$plan" | grep -q 'nirupi/0.4' && { echo "FAIL: snapshot-protected version listed" >&2; exit 1; }
+# A version referenced by an installed symlink is preserved even with
+# KEEP_VERSIONS=0 (e.g. dwm rebuilt to a newer dir while st/dmenu still point
+# at an older one).
+mkdir -p "$HOME/.local/lib/nirupi/0.5/bin" "$HOME/.local/bin"
+: > "$HOME/.local/lib/nirupi/0.5/bin/dmenu"
+ln -sf "$HOME/.local/lib/nirupi/0.5/bin/dmenu" "$HOME/.local/bin/dmenu"
+printf 'NIRUPI_VERSION=0.3\n' > "$XDG_STATE_HOME/nirupi/installed.env"
+plan="$(NIRUPI_KEEP_VERSIONS=0 NIRUPI_KEEP_SNAPSHOTS=0 "$ROOT/runtime/nirupi-gc.sh" --dry-run)"
+echo "$plan" | grep -q 'nirupi/0.5' && { echo "FAIL: symlink-protected version listed" >&2; exit 1; }
+
 echo 'PASS: nirupi gc prunes old versions/snapshots and preserves rollback targets'

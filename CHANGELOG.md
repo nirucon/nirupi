@@ -2,6 +2,14 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.9.2
+- `nirupi gc` now also preserves any version directory that an installed
+  symlink in `~/.local/bin` still points at, so pruning can never leave `dwm`,
+  `dmenu` or `st` dangling (for example after only dwm was rebuilt). Covered by
+  a regression test.
+- Documentation refreshed for the new themes and the picker (README, USAGE,
+  FEATURES, TEST-CHECKLIST).
+
 ## 0.9.1
 - Identify a pre-0.8 `tokens.env` (which has no `NOIR_THEME_NAME`) by its
   background colour, so `nirupi theme list`/`status` report the real active

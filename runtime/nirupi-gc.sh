@@ -48,6 +48,17 @@ for sn in "${retained_snaps[@]}"; do
   done < "$f"
 done
 
+# Versions referenced by installed symlinks must be preserved too: a component
+# can still point at an older version when only some were rebuilt.
+if [[ -d $HOME/.local/bin ]]; then
+  for lnk in "$HOME"/.local/bin/*; do
+    [[ -L $lnk ]] || continue
+    tgt="$(readlink -f "$lnk" 2>/dev/null || true)"
+    [[ $tgt == "$LIBROOT/"* ]] || continue
+    rest="${tgt#"$LIBROOT"/}"; protected+=("${rest%%/*}")
+  done
+fi
+
 # Versioned binary dirs: keep current + protected + newest KEEP_VERSIONS.
 if [[ -d $LIBROOT ]]; then
   mapfile -t all < <(find "$LIBROOT" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | grep -E '^[0-9]' | sort -V)
