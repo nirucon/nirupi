@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.20.1
+- Panel spec is now rendered **in the order given** (notes can sit between rows,
+  e.g. weather's per-day sections), and the width is computed from the widest
+  row, so nothing is clipped.
+
 ## 0.20.0
 - **Unified, framed TUI panels** for the status-bar pop-ups, via a new
   `nirupi-panel.py` (curses): double border with the title in the top edge, a

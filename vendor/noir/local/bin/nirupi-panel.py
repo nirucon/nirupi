@@ -2,20 +2,17 @@
 """NIRU status panel — a small, consistent TUI for the status-bar pop-ups.
 
 Reads a simple spec on stdin and draws a framed, palette-coloured panel that
-always fits and closes on any key. Used by the battery/disk/weather/updates
-pop-ups so they all look and behave the same.
+always fits and closes on any key. Used by the battery/disk/weather pop-ups so
+they all look and behave the same.
 
-Spec (line based):
+Spec (line based, rendered in the order given):
   @title   Battery
   @sub     ThinkPad · BAT0
   @accent  cyan            (cyan|green|yellow|red|blue|muted; default cyan)
-  @bar     83              0..100, optional used by the following line
-  @row     Charge|83 %
-  @row     Health|79 %
-  @note    Discharging — about 2 h 10 m left
-  @kv      Uptime|3 h 12 m
-  plain text                (dim note)
-Lines starting with # and blank lines are ignored.
+  @bar     83              a 0..100 bar, drawn on the following @row
+  @row     Charge|83 %     a label/value row
+  @note    any text        a dim line
+  other text               also a dim line
 """
 import curses
 import os
@@ -24,8 +21,7 @@ import sys
 TITLE = "NIRUPI"
 SUB = ""
 ACCENT = "cyan"
-ROWS = []          # list of (label, value, pct_or_None)
-NOTES = []         # list of str
+ITEMS = []     # ordered: ("sub"|"row"|"note", label, value, pct)
 
 
 def parse(stdin):
@@ -47,36 +43,27 @@ def parse(stdin):
             except ValueError:
                 pending_bar = None
         elif line.startswith("@row "):
-            body = line[5:]
-            label, _, value = body.partition("|")
-            ROWS.append((label.strip(), value.strip(), pending_bar))
-            pending_bar = None
-        elif line.startswith("@kv "):
-            body = line[4:]
-            label, _, value = body.partition("|")
-            ROWS.append((label.strip(), value.strip(), pending_bar))
+            label, _, value = line[5:].partition("|")
+            ITEMS.append(("row", label.strip(), value.strip(), pending_bar))
             pending_bar = None
         elif line.startswith("@note "):
-            NOTES.append(line[6:].strip())
+            ITEMS.append(("note", line[6:].strip(), "", None))
         else:
-            NOTES.append(line.strip())
-    # trailing note after rows
-    return
+            ITEMS.append(("note", line.strip(), "", None))
 
 
 def read_palette():
-    """Map palette tokens to nearest xterm-256 colour pairs (best effort)."""
     pal = {}
-    for path in (os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")),
-                              "nirupi", "theme", "status.env"),):
-        try:
-            with open(path) as fh:
-                for line in fh:
-                    if "=" in line and not line.startswith("#"):
-                        k, v = line.split("=", 1)
-                        pal[k.strip()] = v.strip().strip('"').lstrip("#")
-        except OSError:
-            pass
+    path = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")),
+                        "nirupi", "theme", "status.env")
+    try:
+        with open(path) as fh:
+            for line in fh:
+                if "=" in line and not line.startswith("#"):
+                    k, v = line.split("=", 1)
+                    pal[k.strip()] = v.strip().strip('"').lstrip("#")
+    except OSError:
+        pass
     want = {"red": ("NIRUPI_C_RED", "b87878"),
             "green": ("NIRUPI_C_GREEN", "83a18b"),
             "yellow": ("NIRUPI_C_YELLOW", "b5a47e"),
@@ -109,60 +96,60 @@ def render(scr, colors):
     scr.erase()
     h, w = scr.getmaxyx()
     c_accent = curses.color_pair(1)
-    c_labels = curses.color_pair(2)
-    c_values = curses.color_pair(3)
+    c_label = curses.color_pair(2)
+    c_value = curses.color_pair(3)
     c_muted = curses.color_pair(4)
     c_warn = curses.color_pair(5)
     c_ok = curses.color_pair(6)
-    c_bold = curses.A_BOLD
 
-    # geometry: inner content width
-    label_w = max([len(r[0]) for r in ROWS] or [0])
-    value_w = max([len(r[1]) for r in ROWS] or [0])
-    bar_w = 12 if any(r[2] is not None for r in ROWS) else 0
-    content = label_w + 2 + value_w + (bar_w + 1 if bar_w else 0)
-    inner = max(content, len(TITLE) + 4, len(SUB) + 2,
-                max([len(n) for n in NOTES] or [0]))
-    box_w = min(w - 2, inner + 4)
+    rows = [it for it in ITEMS if it[0] == "row"]
+    notes = [it for it in ITEMS if it[0] == "note"]
+    label_w = max([len(r[1]) for r in rows] or [0])
+    value_w = max([len(r[2]) for r in rows] or [0])
+    bar_w = 12 if any(r[3] is not None for r in rows) else 0
+    row_w = label_w + 2 + value_w + (bar_w + 2 if bar_w else 0)
+    notes_w = max([len(n[1]) + 2 for n in notes] or [0])
+    inner = max(row_w, len(TITLE) + 6, len(SUB) + 4, notes_w)
+    box_w = min(w - 2, max(inner + 4, 30))
     left = max(0, (w - box_w) // 2)
+    cw = box_w - 2                    # inner cell count
 
-    # vertical centering
-    body_h = len(ROWS) + (1 if NOTES else 0) + len(NOTES)
-    total = body_h + 4          # top border, blank line, bottom border, pad
+    n_sub = 1 if SUB else 0
+    total = 2 + n_sub + len(ITEMS) + 1
     top = max(0, (h - total) // 2)
 
-    # top border with embedded title
     label = " %s " % TITLE
-    bar = "\u2500" * max(0, box_w - 2 - len(label))
-    put(scr, top, left, "\u256d" + label + bar + "\u256e", c_accent | c_bold)
+    put(scr, top, left, "\u256d" + label + "\u2500" * max(0, cw - len(label)) + "\u256e",
+        c_accent | curses.A_BOLD)
+    y = top + 1
     if SUB:
-        sub = " %s " % SUB
-        put(scr, top + 1, left, "\u2502" + sub, c_muted)
-        put(scr, top + 1, left + box_w - 1, "\u2502", c_accent)
-
-    y = top + 2
-    for lab, val, pct in ROWS:
-        put(scr, y, left, "\u2502", c_accent)
-        put(scr, y, left + 2, lab.ljust(label_w), c_labels)
-        put(scr, y, left + 2 + label_w + 2, val.ljust(value_w),
-            c_warn if (pct is not None and pct <= 15) else c_values)
-        if pct is not None:
-            filled = int(pct / 100 * bar_w)
-            bx = left + 2 + label_w + 2 + value_w + 1
-            col = c_warn if pct <= 15 else (c_ok if pct >= 50 else c_muted)
-            put(scr, y, bx, "\u2588" * filled + "\u2591" * (bar_w - filled), col)
+        put(scr, y, left, "\u2502" + (" %s" % SUB), c_muted)
         put(scr, y, left + box_w - 1, "\u2502", c_accent)
         y += 1
 
-    if NOTES:
-        y += 1
-        for note in NOTES:
-            put(scr, y, left, "\u2502", c_accent)
-            put(scr, y, left + 2, note, c_muted)
-            put(scr, y, left + box_w - 1, "\u2502", c_accent)
-            y += 1
+    def rowline(lab, val, pct):
+        put(scr, y, left, "\u2502", c_accent)
+        put(scr, y, left + 2, lab.ljust(label_w), c_label)
+        vx = left + 2 + label_w + 2
+        put(scr, y, vx, val.ljust(value_w),
+            c_warn if (pct is not None and pct <= 15) else c_value)
+        if pct is not None:
+            filled = int(pct / 100 * bar_w)
+            col = c_warn if pct <= 15 else (c_ok if pct >= 50 else c_muted)
+            put(scr, y, vx + value_w + 1,
+                "\u2588" * filled + "\u2591" * (bar_w - filled), col)
+        put(scr, y, left + box_w - 1, "\u2502", c_accent)
 
-    put(scr, y, left, "\u2570" + "\u2500" * (box_w - 2) + "\u256f", c_accent | c_bold)
+    for it in ITEMS:
+        if it[0] == "row":
+            rowline(it[1], it[2], it[3])
+        else:
+            put(scr, y, left, "\u2502", c_accent)
+            put(scr, y, left + 2, it[1], c_muted)
+            put(scr, y, left + box_w - 1, "\u2502", c_accent)
+        y += 1
+
+    put(scr, y, left, "\u2570" + "\u2500" * cw + "\u256f", c_accent | curses.A_BOLD)
     hint = "press any key to close"
     put(scr, y + 2, max(0, (w - len(hint)) // 2), hint, c_muted)
     scr.refresh()
@@ -178,8 +165,9 @@ def main(scr):
     if curses.has_colors():
         try:
             curses.start_color()
-            pairs = [("accent", ACCENT if ACCENT in pal else "cyan"), ("labels", "muted"),
-                     ("values", "fg"), ("muted", "muted"), ("warn", "red"), ("ok", "green")]
+            pairs = [("accent", ACCENT if ACCENT in pal else "cyan"),
+                     ("label", "muted"), ("value", "fg"), ("muted", "muted"),
+                     ("warn", "red"), ("ok", "green")]
             for i, (_, key) in enumerate(pairs, start=1):
                 curses.init_pair(i, pal.get(key, 250), -1)
         except curses.error:
@@ -194,10 +182,11 @@ if __name__ == "__main__":
     try:
         curses.wrapper(main)
     except curses.error:
-        # No terminal (e.g. piped): print a plain version.
         print("%s%s" % (TITLE, (" — " + SUB) if SUB else ""))
-        for lab, val, pct in ROWS:
-            print("  %-*s %s%s" % (max([len(r[0]) for r in ROWS] or [0]), lab, val,
-                                   ("  %d%%" % pct) if pct is not None else ""))
-        for n in NOTES:
-            print("  " + n)
+        width = max([len(r[1]) for r in ITEMS if r[0] == "row"] or [0])
+        for it in ITEMS:
+            if it[0] == "row":
+                print("  %-*s %s%s" % (width, it[1], it[2],
+                                       ("  %d%%" % it[3]) if it[3] is not None else ""))
+            else:
+                print("  " + it[1])
