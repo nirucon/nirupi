@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.13.1
+- **Signal Desktop** is installed by default: Arch/CachyOS via `signal-desktop`
+  (extra), Debian via Signal's official apt repository (`ensure_signal`). Void
+  has no package, so it is skipped there.
+
 ## 0.13.0
 - **Unified launcher** on `Super+Shift+p`: one rofi for apps (incl. web apps),
   open windows, clipboard history and running a command.

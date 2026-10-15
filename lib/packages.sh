@@ -16,6 +16,7 @@ packages(){
    xf86-input-libinput mesa sof-firmware alsa-ucm-conf pipewire-alsa
    man-db bash-completion xdg-desktop-portal xdg-desktop-portal-gtk noto-fonts
    networkmanager bluez-utils papirus-icon-theme noto-fonts-emoji nsxiv
+   signal-desktop
    python python-pip mpv yt-dlp pacman-contrib curl jq gawk fzf util-linux)
   OPTIONAL_PKGS=(xautolock xidlehook redshift acl
    btop bat eza fd ripgrep zoxide fastfetch cava librespot

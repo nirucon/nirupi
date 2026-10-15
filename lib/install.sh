@@ -251,6 +251,7 @@ install_desktop() (
   install_helpers
  # Preferred browser + the personal default Git repositories in ~/Git.
  ensure_helium
+ ensure_signal
  install_default_repos
  # Only initialize GTK on clean profiles; upgrades preserve LXAppearance choices.
  "$HOME/.local/bin/nirupi-appearance" default || warn "GTK appearance setup skipped; use nirupi appearance status"
@@ -517,6 +518,27 @@ enable_services(){
     else warn "Could not enable $svc"; fi
    done;;
  esac
+}
+
+# Best-effort Signal Desktop provisioning. Arch ships signal-desktop (in PKGS);
+# Debian needs Signal's own apt repository. Void has no package (skipped).
+ensure_signal(){
+  command -v signal-desktop >/dev/null 2>&1 && return 0
+  case "$DISTRO" in
+    arch|cachyos) return 0;;
+    debian)
+      command -v curl >/dev/null 2>&1 && command -v gpg >/dev/null 2>&1 || { warn 'Signal: need curl+gpg'; return 0; }
+      log 'Installing Signal Desktop from the official apt repository'
+      if curl -fsSL 'https://updates.signal.org/desktop/apt/keys.asc' | sudo gpg --dearmor -o /usr/share/keyrings/signal-desktop-keyring.gpg 2>/dev/null \
+         && printf 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main\n' | sudo tee /etc/apt/sources.list.d/signal-xenial.list >/dev/null \
+         && sudo apt-get update >/dev/null 2>&1 \
+         && sudo apt-get install -y signal-desktop; then
+        log 'Signal Desktop installed'
+      else
+        warn 'Signal Desktop install failed (offline?)'
+      fi;;
+    *) return 0;;
+  esac
 }
 
 ensure_helium_tarball(){
