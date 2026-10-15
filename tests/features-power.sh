@@ -48,7 +48,7 @@ awk '/^drawscreensaver/,/^}/' "$SLOCK/slock.c" | grep -q 'centerline(dpy, lock, 
 awk '/^drawscreensaver/,/^}/' "$SLOCK/slock.c" | grep -q 'runicfontsmall' || fail 'screensaver hostname runes missing'
 
 # Agent bar icon matches the AI workspace tag glyph.
-grep -A1 'icon_agent()' "$BIN/dwm-status.sh" | grep -q 'U000f06a9' || fail 'agent icon is not the AI robot glyph'
+LC_ALL=C grep -A1 'icon_agent()' "$BIN/dwm-status.sh" | LC_ALL=C grep -qP '\xf3\xb0\x9a\xa9' || fail 'agent icon is not the AI robot glyph'
 
 # Calendar popup (centred) + system updater.
 [[ -f "$BIN/nirupi-calendar.py" && -x "$BIN/nirupi-calendar.sh" ]] || fail 'calendar helper missing'

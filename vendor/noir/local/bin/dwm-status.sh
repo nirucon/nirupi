@@ -3,6 +3,18 @@ set -u
 
 export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
 
+# Multibyte output (icons, °C) needs a UTF-8 locale. Bare installs often leave
+# LANG unset, which makes bash print '\uXXXX' escapes literally instead of the
+# glyph. Force a UTF-8 locale for this script when none is set and one exists.
+if [[ -z ${LC_ALL:-} && -z ${LANG:-} ]]; then
+  for _loc in C.UTF-8 en_US.UTF-8; do
+    if command -v locale >/dev/null 2>&1 && locale -a 2>/dev/null | grep -qxF "$_loc"; then
+      export LANG="$_loc"; break
+    fi
+  done
+  unset _loc
+fi
+
 XSETROOT="$(command -v xsetroot || true)"
 # Detect whether the running dwm supports status2d/statuscmd (built with the
 # NIRUPI patches). On an older dwm we must NOT emit colour codes or section
@@ -233,38 +245,38 @@ icon_play() {
 }
 
 icon_mic() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf130' || printf 'mic'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'mic'
 }
 
 icon_mic_mute() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf131' || printf 'mic-mute'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'mic-mute'
 }
 
 icon_dnd() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf1f6' || printf 'dnd'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'dnd'
 }
 
 icon_rec() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf111' || printf 'REC'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'REC'
 }
 icon_caffeine() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf0f4' || printf 'CAF'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'CAF'
 }
 
 icon_cloud() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf0c2' || printf 'cloud'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'cloud'
 }
 
 icon_cloud_off() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf0c2' || printf 'cloud-off'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'cloud-off'
 }
 
 icon_bluetooth() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\uf294' || printf 'bt'
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'bt'
 }
 
 icon_agent() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '\U000f06a9' || printf 'AI'  # same robot as the AI tag
+  [[ "$USE_ICONS" -eq 1 ]] && printf '󰚩' || printf 'AI'  # same robot as the AI tag
 }
 
 
@@ -284,14 +296,14 @@ wmo_emoji() {
     return 0
   fi
   case "$1" in
-    0)                        printf '\uf185' ;;  # sun
-    1|2|3)                    printf '\uf0c2' ;;  # cloud
-    45|48)                    printf '\uf0c2' ;;  # fog
-    51|53|55)                 printf '\uf043' ;;  # drizzle
-    61|63|65|66|67|80|81|82)  printf '\uf043' ;;  # rain
-    71|73|75|77|85|86)        printf '\uf2dc' ;;  # snow
-    95|96|99)                 printf '\uf0e7' ;;  # storm
-    *)                        printf '\uf128' ;;  # question
+    0)                        printf '' ;;  # sun
+    1|2|3)                    printf '' ;;  # cloud
+    45|48)                    printf '' ;;  # fog
+    51|53|55)                 printf '' ;;  # drizzle
+    61|63|65|66|67|80|81|82)  printf '' ;;  # rain
+    71|73|75|77|85|86)        printf '' ;;  # snow
+    95|96|99)                 printf '' ;;  # storm
+    *)                        printf '' ;;  # question
   esac
 }
 

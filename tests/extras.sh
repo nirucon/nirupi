@@ -38,6 +38,11 @@ grep -q 'XK_Left' "$DWM/config.h" || { echo 'FAIL arrow-key bindings missing' >&
 grep -q 'nirupi-rofi-files.sh' "$bin/nirupi-launch.sh" || { echo 'FAIL launcher lacks file search' >&2; exit 1; }
 grep -q 'migrate_binaries_rebuild' "$ROOT/lib/install.sh" || { echo 'FAIL binaries rebuild missing' >&2; exit 1; }
 grep -q 'binaries' "$ROOT/lib/migrate.sh" || { echo 'FAIL binaries subcommand missing' >&2; exit 1; }
+# Icons must be real UTF-8, never \u/\U printf escapes (bash only expands those
+# in a UTF-8 locale, so they render as literal text on bare installs).
+if grep -rnE '\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8}' "$bin"; then
+  echo 'FAIL locale-dependent \u escapes in helper scripts' >&2; exit 1
+fi
 
 # Control center + keybinding palette entries.
 for e in 'Wallpapers per workspace: toggle' 'Audio output' 'USB: mount/unmount…' 'Lid close…' 'SSH / host…' 'Reload desktop…' 'Edit config…' 'Ask agent about screen…' 'AI command…' 'Notifications: history…'; do

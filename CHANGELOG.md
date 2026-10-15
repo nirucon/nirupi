@@ -2,6 +2,13 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.14.6
+- Fix status-bar icons showing as literal `\uXXXX` text (e.g. the weather,
+  mic, DND, recording, Bluetooth, caffeine and AI glyphs) on systems with no
+  UTF-8 locale: the glyphs are now written as real UTF-8 in `dwm-status.sh`
+  instead of `\u`/`\U` printf escapes (which bash only expands in a UTF-8
+  locale). The script also picks a UTF-8 locale when the session has none.
+
 ## 0.14.5
 - `nirupi gc` now prunes release snapshots that reference version directories
   which no longer exist (they cannot roll back), so their old version
