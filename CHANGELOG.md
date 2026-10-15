@@ -2,6 +2,12 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.9.1
+- Identify a pre-0.8 `tokens.env` (which has no `NOIR_THEME_NAME`) by its
+  background colour, so `nirupi theme list`/`status` report the real active
+  theme and the picker marks the right row. A leftover `warm` palette, for
+  example, now shows as **Noir warm** instead of the misleading default.
+
 ## 0.9.0
 - **Two new themes: Hackerman** (phosphor green on black, CRT hacker look) and
   **Nord dark** (the Nord palette: Polar Night, frost and aurora accents).

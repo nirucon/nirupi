@@ -62,10 +62,13 @@ theme_load_tokens(){
 
 # Read one variable from a palette file without polluting the current shell.
 palette_field(){
-  local f="$1" v="$2"
+  local f="$1" v="$2" k
   [[ -f $f && ! -L $f ]] || return 0
   (
     set +u
+    # Never let an already-set NOIR_* variable (e.g. from an earlier
+    # theme_load_tokens) leak into a palette file that does not define it.
+    for k in ${!NOIR_@}; do unset "$k"; done
     # shellcheck disable=SC1090
     source "$f" >/dev/null 2>&1 || true
     printf '%s' "${!v:-}"
@@ -559,8 +562,19 @@ theme_palette_file(){
 
 # The theme currently in effect (user override, else the bundled default).
 theme_current(){
-  local tf="$(cfgdir)/nirupi/tokens.env" nm=""
+  local tf="$(cfgdir)/nirupi/tokens.env" nm="" bg f
   if [[ -f $tf && ! -L $tf ]]; then nm="$(palette_name "$tf")"; fi
+  if [[ -z $nm && -f $tf && ! -L $tf ]]; then
+    # Pre-0.8 palette files carry no NOIR_THEME_NAME: identify by background.
+    bg="$(palette_field "$tf" NOIR_BG)"
+    if [[ -n $bg ]]; then
+      for f in "$(theme_palette_dir)"/*.env; do
+        [[ -e $f ]] || continue
+        [[ "$(palette_field "$f" NOIR_BG)" == "$bg" ]] || continue
+        nm="$(palette_name "$f")"; [[ -n $nm ]] && break
+      done
+    fi
+  fi
   if [[ -z $nm ]]; then nm="$(palette_name "$(theme_palette_dir)/tokens.env")"; fi
   printf '%s' "${nm:-noir}"
 }

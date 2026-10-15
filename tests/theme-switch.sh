@@ -74,6 +74,12 @@ for name in Noir Satie "Carl Larsson" Hackerman "Nord dark" "Noir warm" "Noir co
   [[ -f $f ]] || fail "display name '$name' resolved to a missing file"
 done
 [[ "$(theme_palette_file Noir)" == */tokens.env ]] || fail 'Noir should resolve to tokens.env'
+
+# A pre-0.8 palette file (no NOIR_THEME_NAME) is identified by its background.
+printf 'NOIR_BG=120f0d\nNOIR_FG=e8e2d8\n' > "$HOME/.config/nirupi/tokens.env"
+[[ "$(theme_current)" == 'Noir warm' ]] || fail 'stale palette not identified by background'
+rm -f "$HOME/.config/nirupi/tokens.env"
+
 theme_set "Carl Larsson" >/dev/null || fail 'theme_set by display name failed'
 [[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#241a16' ]] || fail 'display-name apply not Carl Larsson'
 theme_set noir >/dev/null
