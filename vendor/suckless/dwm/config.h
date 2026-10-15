@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 12
+#define NIRUPI_CONFIG_VERSION 13
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -372,6 +372,8 @@ static const Key keys[] = {
 	{ MODKEY|ControlMask,           XK_e,                     setlayout,      {.v = &layouts[6]} },    /* Super+Ctrl+e -> fibonacci */
 	/* Sticky: keep the focused window on every tag (Super+Ctrl+Shift+s). */
 	{ MODKEY|ControlMask|ShiftMask, XK_s,                     togglesticky,   {0} },  /* Super+Ctrl+Shift+s -> sticky (keep on all tags) */
+	{ MODKEY|ControlMask|Mod1Mask,  XK_s,                     unsticky,       {.i = 0} }, /* Super+Ctrl+Alt+s -> unsticky (focused) */
+	{ MODKEY|ControlMask|Mod1Mask|ShiftMask, XK_s,            unsticky,       {.i = 1} }, /* Super+Ctrl+Alt+Shift+s -> unsticky (all) */
 	/* Move / resize the focused floating window (no mouse needed). */
 	{ MODKEY|ControlMask,           XK_Left,                  movefloat,      {.i = 1} },  /* Super+Ctrl+Left -> move floating left */
 	{ MODKEY|ControlMask,           XK_Right,                 movefloat,      {.i = 2} },  /* Super+Ctrl+Right -> move floating right */

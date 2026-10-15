@@ -436,6 +436,7 @@ BEGIN {
   FUNCS["togglebar"]      = "show/hide bar"
   FUNCS["barmode"]        = "bar mode (cycle)"
   FUNCS["togglesticky"]   = "sticky window"
+  FUNCS["unsticky"]       = "unsticky window"
   FUNCS["movefloat"]      = "move float"
   FUNCS["resizefloat"]    = "resize float"
   FUNCS["dwindle"]        = "fibonacci"

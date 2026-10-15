@@ -285,6 +285,49 @@ def put(stdscr, y, x, text, attr=0):
         pass
 
 
+def init_colors():
+    """Optional palette colours from the generated status.env (best effort)."""
+    try:
+        if not curses.has_colors():
+            return {}
+    except curses.error:
+        return {}
+    pal = {}
+    for path in (os.path.join(CONF_DIR, "theme", "status.env"),
+                 os.path.join(CONF_DIR, "theme", "tokens.env")):
+        try:
+            with open(path) as fh:
+                for line in fh:
+                    if "=" in line and not line.startswith("#"):
+                        k, v = line.split("=", 1)
+                        pal[k.strip()] = v.strip().strip('"').lstrip("#")
+        except OSError:
+            continue
+    want = {"cyan": ("NIRUPI_C_CYAN", "NOIR_ANSI_6"),
+            "green": ("NIRUPI_C_GREEN", "NOIR_ANSI_2"),
+            "accent": ("NIRUPI_C_BLUE", "NOIR_ANSI_4"),
+            "muted": ("NIRUPI_C_MUTED", "NOIR_MUTED")}
+    out = {}
+    try:
+        curses.start_color()
+        curses.use_default_colors()
+        idx = 1
+        for key, (primary, fallback) in want.items():
+            hexv = pal.get(primary) or pal.get(fallback) or ""
+            if len(hexv) != 6:
+                continue
+            try:
+                r, g, b = (int(hexv[i:i + 2], 16) for i in (0, 2, 4))
+            except ValueError:
+                continue
+            curses.init_pair(idx, 16 + (r * 5 // 255) * 36 + (g * 5 // 255) * 6 + (b * 5 // 255), -1)
+            out[key] = curses.color_pair(idx)
+            idx += 1
+    except curses.error:
+        return out
+    return out
+
+
 def draw(stdscr, state):
     stdscr.erase()
     h, w = stdscr.getmaxyx()
@@ -296,32 +339,35 @@ def draw(stdscr, state):
     left = max(0, (w - grid_w) // 2)
 
     # ── title ──
+    col = state.get("col") or {}
     title = "%s %d" % (MONTHS[m - 1], y)
     wk = "Week %d" % sel.isocalendar()[1]
-    put(stdscr, 1, left, title, curses.A_BOLD)
-    put(stdscr, 1, left + len(title) + 2, wk, curses.A_DIM)
-    put(stdscr, 2, left, "\u2500" * min(grid_w, max(0, w - left - 1)), curses.A_DIM)
+    put(stdscr, 1, left, title, curses.A_BOLD | col.get("accent", 0))
+    put(stdscr, 1, left + len(title) + 2, wk, curses.A_DIM | col.get("cyan", 0))
+    put(stdscr, 2, left, "\u2500" * min(grid_w, max(0, w - left - 1)), curses.A_DIM | col.get("muted", 0))
 
     # ── weekday header ──
-    put(stdscr, 4, left, "    " + "".join("%-3s" % d for d in WD), curses.A_BOLD)
+    put(stdscr, 4, left, "    " + "".join("%-3s" % d for d in WD), curses.A_BOLD | col.get("muted", 0))
     row = 5
     for week in cal_month(y, m):
         dim = week[0].isocalendar()[1] % 2 == 0
         put(stdscr, row, left, "w%02d " % week[0].isocalendar()[1], curses.A_DIM)
         for i, day in enumerate(week):
             weekend = i >= 5
-            attr = curses.A_DIM if (day.month != m or (weekend and dim)) else curses.A_NORMAL
-            if weekend and day.month == m:
+            attr = curses.A_NORMAL
+            if day.month != m:
                 attr |= curses.A_DIM
+            elif weekend:
+                attr |= curses.A_DIM | col.get("muted", 0)
             if day == today and day != sel:
-                attr = curses.A_UNDERLINE | curses.A_BOLD
+                attr = curses.A_UNDERLINE | curses.A_BOLD | col.get("green", col.get("accent", 0))
             if day == sel:
                 attr = curses.A_REVERSE | curses.A_BOLD
             put(stdscr, row, left + 4 + i * 3, "%3d" % day.day, attr)
         row += 1
 
     # ── divider + events ──
-    put(stdscr, row, left, "\u2500" * min(grid_w, max(0, w - left - 1)), curses.A_DIM)
+    put(stdscr, row, left, "\u2500" * min(grid_w, max(0, w - left - 1)), curses.A_DIM | col.get("muted", 0))
     ev_top = row + 1
     footer_row = h - 2
     avail = footer_row - ev_top - 1
@@ -333,13 +379,12 @@ def draw(stdscr, state):
             items = events_for(state["events"], sel)
             ncal = len(conf["ICS_URLS"])
             head = "%s  ·  %d calendar%s" % (sel.strftime("%a %d %b %Y"), ncal, "" if ncal == 1 else "s")
-            put(stdscr, ev_top, left, head, curses.A_BOLD)
+            put(stdscr, ev_top, left, head, curses.A_BOLD | col.get("accent", 0))
             if state.get("errors"):
                 put(stdscr, ev_top + 1, left, "sync: %s" % state["errors"][0], curses.A_DIM)
             elif items:
                 for i, (tm, summary) in enumerate(items[:max(0, avail - 1)]):
-                    bullet = "\u2022" if i < avail - 1 else " "
-                    put(stdscr, ev_top + 1 + i, left, "%s %-7s %s" % (bullet, tm, summary))
+                    put(stdscr, ev_top + 1 + i, left, "\u2022 %-7s %s" % (tm, summary), col.get("cyan", 0))
             else:
                 put(stdscr, ev_top + 1, left, "  (none today)", curses.A_DIM)
 
@@ -414,7 +459,8 @@ def main(stdscr):
     except curses.error:
         pass
     today = datetime.date.today()
-    state = {"sel": today, "conf": read_conf(), "msg": "", "events": [], "errors": []}
+    state = {"sel": today, "conf": read_conf(), "msg": "", "events": [], "errors": [],
+             "col": init_colors()}
     reload(state)
 
     while True:
@@ -447,6 +493,8 @@ def main(stdscr):
         elif ch == ord("o"):
             if not open_google(sel):
                 state["msg"] = "Could not open a browser."
+            else:
+                state["msg"] = "Opened in Google Calendar."
         elif ch == ord("s"):
             url = prompt(stdscr, "iCal URL: ")
             if url.strip():

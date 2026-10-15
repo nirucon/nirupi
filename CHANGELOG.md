@@ -2,6 +2,15 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.19.0
+- **Unsticky**: `Super+Ctrl+Alt+s` un-stickies the focused window,
+  `Super+Ctrl+Alt+Shift+s` clears every sticky window on the monitor; also in the
+  control center (*Unsticky all windows*).
+- **Calendar colours**: the view now uses the active palette (title/date/events)
+  and opens Google Calendar to the *week* for the selected day, with a clearer
+  confirmation message.
+- DWM config schema bumped to **v13**.
+
 ## 0.18.0
 - **Gaps can be restored again**: `Super+g` now always returns to a known gap
   size (15) instead of "whatever it was", which could be 0 after a restart with

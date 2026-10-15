@@ -26,6 +26,8 @@ startup, run `nirupi theme apply`.
 | `Super+Ctrl+b` | Show/hide the bar |
 | `Super+Ctrl+Shift+b` | Cycle bar: padded → full-bleed → hidden |
 | `Super+Ctrl+Shift+s` | Sticky: keep the window on all tags |
+| `Super+Ctrl+Alt+s` | Unsticky the focused window |
+| `Super+Ctrl+Alt+Shift+s` | Clear every sticky window |
 | `Super+Ctrl+e` | Fibonacci / dwindle layout |
 | `Super+Ctrl+arrows` | Move the focused floating window |
 | `Super+Ctrl+Shift+arrows` | Resize the focused floating window |

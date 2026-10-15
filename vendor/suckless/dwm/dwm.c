@@ -240,6 +240,7 @@ static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void barmode(const Arg *arg);
 static void togglesticky(const Arg *arg);
+static void unsticky(const Arg *arg);
 static void movefloat(const Arg *arg);
 static void resizefloat(const Arg *arg);
 static void dwindle(Monitor *m);
@@ -331,7 +332,7 @@ static xcb_connection_t *xcon;
 #ifndef NIRUPI_CONFIG_VERSION
 #error "This dwm config.h is out of date. A newer version is written as config.h.nirupi-new. Merge it (or run: nirupi migrate dwm --rebuild)."
 #endif
-#if NIRUPI_CONFIG_VERSION < 12
+#if NIRUPI_CONFIG_VERSION < 13
 #error "This dwm config.h is too old for this dwm. Merge config.h.nirupi-new and rebuild."
 #endif
 
@@ -2338,6 +2339,26 @@ togglesticky(const Arg *arg)
 	c->tags = c->issticky ? TAGMASK : c->mon->tagset[c->mon->seltags];
 	arrange(c->mon);
 	drawbar(c->mon);
+}
+
+void
+unsticky(const Arg *arg)
+{
+	/* Drop sticky from the focused window; with arg->i != 0, from every
+	 * window on this monitor (recovering "I lost track of what was sticky"). */
+	Client *c;
+	int all = arg && arg->i;
+
+	for (c = selmon->clients; c; c = c->next) {
+		if (!c->issticky)
+			continue;
+		if (!all && c != selmon->sel)
+			continue;
+		c->issticky = 0;
+		c->tags = c->mon->tagset[c->mon->seltags];
+	}
+	arrange(selmon);
+	drawbar(selmon);
 }
 
 void
