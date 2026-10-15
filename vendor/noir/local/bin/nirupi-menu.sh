@@ -149,8 +149,8 @@ case "$action" in
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
   'Wallpapers per workspace: toggle') exec "$HOME/.local/bin/nirupi-wallpaper.sh" per-tag toggle;;
   'Tailscale: toggle') tailscale_toggle;;
-  'Wi-Fi') wifi;;
-  Bluetooth) bluetooth;;
+  'Wi-Fi') exec "$HOME/.local/bin/nirupi-wifi.sh";;
+  Bluetooth) exec "$HOME/.local/bin/nirupi-bluetooth.sh";;
   'Audio output…') exec "$HOME/.local/bin/nirupi-audio.sh";;
   'USB: mount/unmount…') exec "$HOME/.local/bin/nirupi-usb.sh";;
   'Lid close…') if command -v kitty >/dev/null 2>&1; then exec kitty -e "$HOME/.local/bin/nirupi-lid.sh"; else exec "$HOME/.local/bin/nirupi-lid.sh"; fi;;

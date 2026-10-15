@@ -15,7 +15,7 @@ for s in nirupi-capture.sh nirupi-agent-selection.sh nirupi-agent-ask.sh \
          nirupi-rofi-files.sh nirupi-usb.sh nirupi-lid.sh nirupi-barmode.sh \
          nirupi-updatecheck.sh nirupi-popup.sh nirupi-updates-popup.sh \
          nirupi-battery-popup.sh nirupi-disk-popup.sh nirupi-weather-popup.sh \
-         nirupi-btop.sh nirupi-changes.sh nirupi-fleet.sh nirupi-panel.py; do
+         nirupi-btop.sh nirupi-changes.sh nirupi-fleet.sh nirupi-panel.py nirupi-net-popup.sh nirupi-wifi.sh nirupi-bluetooth.sh; do
   [[ -f "$bin/$s" ]] || { echo "FAIL missing $s" >&2; exit 1; }
   case "$s" in *.py) python3 -m py_compile "$bin/$s";; *) bash -n "$bin/$s";; esac || { echo "FAIL syntax $s" >&2; exit 1; }
   grep -q "$s" "$ROOT/lib/install.sh" || { echo "FAIL $s not deployed" >&2; exit 1; }

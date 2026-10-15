@@ -568,7 +568,7 @@ get_network() {
     | awk -F: '$2=="ethernet" && $3=="connected" {print $1; exit}')"
 
   if [[ -n "${eth:-}" ]]; then
-    printf '%s online' "$(icon_net)"
+    printf '%s' "$(icon_net)"
     return 0
   fi
 
@@ -579,10 +579,20 @@ get_network() {
   wifi_signal="${wifi_line##*:}"
 
   if [[ -n "${wifi_name:-}" ]]; then
-    if [[ -n "${wifi_signal:-}" ]]; then
-      printf '%s %s %s%%' "$(icon_wifi)" "$wifi_name" "$wifi_signal"
+    # Just the icon and signal strength: the SSID eats bar space and is visible
+    # in the click picker. Set SHOW_SSID=1 in status.conf to include it.
+    if [[ "${SHOW_SSID:-0}" -eq 1 ]]; then
+      if [[ -n "${wifi_signal:-}" ]]; then
+        printf '%s %s %s%%' "$(icon_wifi)" "$wifi_name" "$wifi_signal"
+      else
+        printf '%s %s' "$(icon_wifi)" "$wifi_name"
+      fi
     else
-      printf '%s %s' "$(icon_wifi)" "$wifi_name"
+      if [[ -n "${wifi_signal:-}" ]]; then
+        printf '%s %s%%' "$(icon_wifi)" "$wifi_signal"
+      else
+        printf '%s' "$(icon_wifi)"
+      fi
     fi
     return 0
   fi

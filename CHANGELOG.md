@@ -2,6 +2,20 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.0
+- **Network click is now context aware**: a wired connection opens a framed
+  **network info panel** (interface, type, IPv4/IPv6, gateway, DNS, MAC, speed,
+  up/down, Tailscale) instead of an empty Wi-Fi menu; Wi-Fi opens a proper
+  **picker** with the connected network first (marked), strength bars and a
+  disconnect entry.
+- **Wi-Fi bar segment**: just the icon and signal strength (no SSID), saving
+  space; `SHOW_SSID=1` in `status.conf` brings the name back.
+- **Updates** is a framed panel (pending count, package list, AUR on Arch,
+  last checked) and asks for **confirmation** before starting the upgrade.
+- **Bluetooth** follows the same rule: an info panel when the adapter is off,
+  a picker (connected device first, scan, disable) when it is on.
+- New helpers: `nirupi-net-popup.sh`, `nirupi-wifi.sh`, `nirupi-bluetooth.sh`.
+
 ## 0.22.0
 - **Six new themes**: `commodore-64` (VIC-II blue/light-blue PETSCII),
   `commando` (field camo at dusk), `gruvbox-dark`, `tokyo-night`, `amber-crt`

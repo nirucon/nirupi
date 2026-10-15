@@ -25,14 +25,21 @@ case "$action" in
   agent)     exec "$HOME/.local/bin/nirupi-agent.sh";;
   menu)      exec "$HOME/.local/bin/nirupi-menu.sh";;
   keys)      exec "$HOME/.local/bin/nirupi-keys.sh";;
-  bluetooth) exec "$HOME/.local/bin/nirupi-menu.sh" 'Bluetooth';;
+  bio)       exec "$HOME/.local/bin/nirupi-bluetooth.sh";;
+  bluetooth) exec "$HOME/.local/bin/nirupi-bluetooth.sh";;
 
   # ── Network ────────────────────────────────────────────────────────────────
   network)
     if [[ "${BUTTON:-1}" == 3 ]]; then
-      ns "Network" "$(nmcli -t -f DEVICE,TYPE,STATE,CONNECTION device status 2>/dev/null; ip -brief addr show 2>/dev/null)"
+      exec "$HOME/.local/bin/nirupi-net-popup.sh"
     else
-      exec "$HOME/.local/bin/nirupi-menu.sh" 'Wi-Fi'
+      # Wired (or no Wi-Fi) -> info panel; Wi-Fi -> the network picker.
+      dev_type="$(nmcli -t -f DEVICE,TYPE,STATE device status 2>/dev/null | awk -F: '$3=="connected"{print $2; exit}')"
+      if [[ $dev_type == wifi ]]; then
+        exec "$HOME/.local/bin/nirupi-wifi.sh"
+      else
+        exec "$HOME/.local/bin/nirupi-net-popup.sh"
+      fi
     fi;;
 
   # ── Media / audio ──────────────────────────────────────────────────────────
