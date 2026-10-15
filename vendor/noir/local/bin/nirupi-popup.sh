@@ -1,19 +1,29 @@
 #!/usr/bin/env bash
-# nirupi-popup.sh [TITLE] — show lines read on stdin in a floating panel.
-# Default: a rofi/dmenu list (selectable). With NIRUPI_POPUP=tui it shows a
-# centred read-only terminal (kitty) for nicer info panels (battery, weather).
+# nirupi-popup.sh [TITLE] — show a spec read on stdin.
+#   default        : rofi/dmenu picker (selectable)
+#   NIRUPI_POPUP=tui: a framed, palette-coloured TUI panel (nirupi-panel.py),
+#                     always centred and sized to fit, closes on any key.
 set -Eeuo pipefail
 
 title="NIRUPI"
 [[ -n ${1:-} ]] && title="$1"
+spec="$(cat)"
 
-if [[ "${NIRUPI_POPUP:-menu}" == tui ]]; then
+# TUI panel mode.
+if [[ "${NIRUPI_POPUP:-menu}" == tui ]] && command -v python3 >/dev/null 2>&1 \
+   && [[ -x "$HOME/.local/bin/nirupi-panel.py" ]]; then
+  cols=46
+  lines="$(printf '%s\n' "$spec" | sed -n 's/^@\(row\|kv\|note\|title\|sub\) /\1 /p' | wc -l)"
+  # width from the longest visible field, height from the number of lines
+  longest="$(printf '%s\n' "$spec" | sed -E 's/^@[a-z]+ //' | awk '{print length}' | sort -rn | head -1)"
+  [[ ${longest:-0} -gt 40 ]] && cols=$(( longest + 6 ))
+  [[ $cols -gt 76 ]] && cols=76
+  rows=$(( lines + 6 ))
+  [[ $rows -lt 9 ]] && rows=9
+  [[ $rows -gt 34 ]] && rows=34
+
   term="$(command -v kitty || command -v alacritty || command -v st || true)"
   if [[ -n $term ]]; then
-    body="$(cat)"
-    tmp="$(mktemp)"
-    printf '%s\n' "$body" > "$tmp"
-    # centre once mapped (dwm floats it via the nirupi-info rule)
     if command -v xdotool >/dev/null 2>&1; then
       (
         for _ in $(seq 1 60); do
@@ -29,23 +39,25 @@ if [[ "${NIRUPI_POPUP:-menu}" == tui ]]; then
       ) >/dev/null 2>&1 &
     fi
     if [[ "$(basename "$term")" == kitty ]]; then
-      setsid kitty --class nirupi-info --title "$title" \
+      printf '%s\n' "$spec" | setsid kitty --class nirupi-info --title "$title" \
         --override remember_window_size=no \
-        --override initial_window_width=64c --override initial_window_height=22c \
+        --override initial_window_width="${cols}c" --override initial_window_height="${rows}c" \
         --override font_size=13 \
-        -e bash -lc 'clear; printf "\n"; sed "s/^/  /" "$1"; printf "\n\n  Press any key to close.\n"; IFS= read -rn1 -s _; rm -f "$1"' _ "$tmp" >/dev/null 2>&1 &
+        -e python3 "$HOME/.local/bin/nirupi-panel.py" >/dev/null 2>&1 &
     else
-      setsid "$term" --title "$title" -e bash -c 'sed "s/^/  /" "$1"; read -rn1 _; rm -f "$1"' _ "$tmp" >/dev/null 2>&1 &
+      printf '%s\n' "$spec" | setsid "$term" --title "$title" \
+        -e python3 "$HOME/.local/bin/nirupi-panel.py" >/dev/null 2>&1 &
     fi
     exit 0
   fi
-  # fall through to menu if no terminal
 fi
 
+# Picker mode.
+printf '%s\n' "$spec" | sed -n 's/^@row /\1/p' >/dev/null 2>&1 || true
 if command -v rofi >/dev/null 2>&1; then
-  exec rofi -dmenu -i -p "$title"
+  printf '%s\n' "$spec" | sed -n 's/^@\(row\|note\) /\1 /p' | sed 's/^row //; s/^note //' \
+    | rofi -dmenu -i -p "$title"
 elif command -v dmenu >/dev/null 2>&1; then
-  exec dmenu -i -p "$title"
-else
-  cat >/dev/null
+  printf '%s\n' "$spec" | sed -n 's/^@\(row\|note\) /\1 /p' | sed 's/^row //; s/^note //' \
+    | dmenu -i -p "$title"
 fi

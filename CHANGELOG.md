@@ -2,6 +2,16 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.20.0
+- **Unified, framed TUI panels** for the status-bar pop-ups, via a new
+  `nirupi-panel.py` (curses): double border with the title in the top edge, a
+  palette-coloured layout, label/value rows, optional **usage bars**, dim notes,
+  warning colours, correct centring and a size that always fits.
+- **Battery** (charge bar, health, status, power, voltage, time remaining),
+  **Disk** (per-mount bars) and **Weather** (current + hours + days) now all use
+  the panel; the **updates** picker stays a rofi menu (it runs the updater).
+- Removed a dead `nirupi-popup-tui.sh` stub.
+
 ## 0.19.0
 - **Unsticky**: `Super+Ctrl+Alt+s` un-stickies the focused window,
   `Super+Ctrl+Alt+Shift+s` clears every sticky window on the monitor; also in the
