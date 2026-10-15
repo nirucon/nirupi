@@ -17,7 +17,8 @@ startup, run `nirupi theme apply`.
 | `Super+Enter` | Terminal (kitty) |
 | `Super+Shift+Enter` | Alacritty |
 | `Super+p` | dmenu launcher |
-| `Super+Shift+p` | rofi run |
+| `Super+Shift+p` | **Unified launcher** (apps, windows, clipboard, run) |
+| `Super+Ctrl+r` | Rewrite the selection in place (AI) |
 | `Super+b` | Browser (resolver) |
 | `Super+a` | **Agent** (opencode) |
 | `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson/…) |
@@ -212,6 +213,43 @@ nirupi webapp remove "Work Mail"
   the control center (*Wallpapers per workspace: toggle*).
 - **Theme from wallpaper:** `nirupi theme wallpaper IMAGE`.
 
+## Launcher — `Super+Shift+p`
+
+One rofi for everything: **type to run a command**, or pick an installed app
+(including your web apps), an open window (*window* mode) or a clipboard entry
+(*clip* mode). Switch modes with `Ctrl+Tab`. `nirupi launch` opens the same.
+
+## Autostart — `~/.config/nirupi/autostart/*.sh`
+
+Files here run once at login, after dwm is up. Each file is a small shell script
+whose leading comments carry directives:
+
+```sh
+# name: Agent            # label shown by `nirupi autostart list`
+# tag: 2                 # open on workspace 2 (1-9); omit for the current one
+# settle: 3              # seconds to wait after launching on that tag
+# enabled: false         # skip without deleting the file
+exec kitty -e opencode   # desktop app: the command line goes here
+```
+
+- **Desktop app:** the command directly, e.g. `exec helium-browser`.
+- **TUI app:** wrap it in a terminal so it gets a window, e.g.
+  `exec kitty -e btop` (or `st -e cmus`).
+- Files run in lexical order — prefix `10-`, `20-` to control the order.
+- `nirupi autostart list` shows what is configured; `nirupi autostart run` runs
+  it now (handy for testing). Placement briefly switches to the tag, launches
+  the app, waits `settle` seconds, then returns to workspace 1 — increase
+  `settle` for slow starters.
+
+## Notifications & battery
+
+- **History:** `nirupi notifications` (control center → *Notifications:
+  history…*) lists recent notifications; picking one re-pops it.
+- **Clipboard on lock:** cleared when the screen locks (set
+  `LOCK_CLEAR_CLIPBOARD=0` in `session.conf` to keep it).
+- **Battery (laptops):** warn at `BATTERY_WARN` %, critical at `BATTERY_CRIT` %,
+  optional suspend with `BATTERY_SUSPEND=1` — all in `~/.config/nirupi/session.conf`.
+
 ## Customize
 
 | File | Purpose |
@@ -225,6 +263,7 @@ nirupi webapp remove "Work Mail"
 | `~/.config/nirupi/theme/` | Generated colour fragments (do not edit) |
 | `~/.config/dunst/dunstrc.d/90-nirupi.conf` | Generated dunst colours (do not edit) |
 | `~/.config/nirupi/wallpapers.conf` | Per-workspace wallpapers (`nirupi wallpaper per-tag …`) |
+| `~/.config/nirupi/autostart/` | Login autostart entries (`*.sh`, per-workspace) |
 
 DWM keybindings/colors are compiled in `vendor/suckless/dwm/config.h`; rebuild
 after editing with `nirupi migrate dwm --rebuild`.

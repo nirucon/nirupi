@@ -81,7 +81,7 @@ palette_name(){ palette_field "$1" NOIR_THEME_NAME; }
 # Theme configuration directories that live under ~/.config. The bundled
 # dunstrc is deployed as the *base* config; its colours come from a generated
 # drop-in (see theme_render_dunst), which outranks the base in dunst.
-NIRUPI_THEME_APPS=(kitty alacritty fish tmux lazygit micro aerc picom rofi cmus dunst)
+NIRUPI_THEME_APPS=(kitty alacritty fish tmux lazygit micro aerc rofi cmus dunst)
 
 theme_apply_configs(){
   local noir="$1" app src dest
@@ -260,6 +260,37 @@ theme_render_dunst(){
     printf '[urgency_critical]\n    background = "#%s"\n    foreground = "#%s"\n    frame_color = "#%s"\n    timeout = 0\n' \
       "$NOIR_BG" "$NOIR_ANSI_9" "$NOIR_ANSI_1"
   } | theme_generate "$dest"
+}
+
+# picom: compositor colours from the palette (tinted shadow, palette-driven
+# opacity/fading). No rounded corners (corner-radius = 0).
+theme_render_picom(){
+  local dest="$(cfgdir)/picom/picom.conf"
+  [[ -L $(cfgdir)/picom ]] && { warn 'Preserving symlinked ~/.config/picom'; return 0; }
+  cat <<EOF | theme_generate "$dest"
+# NIRUPI theme — generated from tokens.env; do not edit. Re-run: nirupi theme apply
+# Compositor settings; shadow tinted from the active palette. No rounded corners.
+backend = "glx";
+vsync = true;
+shadow = true;
+shadow-radius = 12;
+shadow-offset-x = -12;
+shadow-offset-y = -12;
+shadow-opacity = 0.45;
+shadow-color = "#$NOIR_BG";
+shadow-exclude = [ "class_g = 'slock'", "class_g = 'Dunst'", "class_g = 'rofi'" ];
+corner-radius = 0;
+fading = true;
+fade-in-step = 0.06;
+fade-out-step = 0.06;
+inactive-opacity = 0.96;
+active-opacity = 1.0;
+inactive-dim = 0.0;
+blur-background = false;
+detect-client-opacity = true;
+unredir-if-possible = true;
+focus-exclude = [ "class_g = 'slock'" ];
+EOF
 }
 
 # SDDM theme colors generated from tokens into a user-writable staging dir that
@@ -675,11 +706,17 @@ theme_set(){
   f="$(theme_palette_file "$n")" || die "Unknown theme: $n (see nirupi theme list)"
   [[ -n $f && -f $f ]] || die "Unknown theme: $n (see nirupi theme list)"
   nm="$(palette_name "$f")"; [[ -n $nm ]] || nm="$n"
-  mkdir -p "$(cfgdir)/nirupi"
-  [[ ! -L "$(cfgdir)/nirupi/tokens.env" ]] || die "Refusing symlinked $(cfgdir)/nirupi/tokens.env"
-  cp -f -- "$f" "$(cfgdir)/nirupi/tokens.env"
   mkdir -p "$(dirname "$(theme_mode_file)")"
-  printf 'palette\n' > "$(theme_mode_file)"
+  if [[ $f == "$(theme_palette_dir)/tokens.env" ]]; then
+    # The bundled default: keep no user override (same as `theme mode noir`).
+    rm -f -- "$(cfgdir)/nirupi/tokens.env"
+    printf 'noir\n' > "$(theme_mode_file)"
+  else
+    mkdir -p "$(cfgdir)/nirupi"
+    [[ ! -L "$(cfgdir)/nirupi/tokens.env" ]] || die "Refusing symlinked $(cfgdir)/nirupi/tokens.env"
+    cp -f -- "$f" "$(cfgdir)/nirupi/tokens.env"
+    printf 'palette\n' > "$(theme_mode_file)"
+  fi
   log "Theme set to $nm"
   theme_apply
   # Best-effort feedback so a live switch is obvious. Suppressed in tests and
@@ -702,6 +739,7 @@ theme_apply(){
   theme_install_fonts
   theme_render_rofi
   theme_render_dunst
+  theme_render_picom
   theme_render_sddm
   theme_render_kitty
   theme_render_alacritty

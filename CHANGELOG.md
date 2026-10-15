@@ -2,6 +2,30 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.13.0
+- **Unified launcher** on `Super+Shift+p`: one rofi for apps (incl. web apps),
+  open windows, clipboard history and running a command.
+- **AI rewrite** on `Super+Ctrl+r`: rewrite the current selection in place (the
+  result is typed back into the focused field/editor).
+- **Autostart** (`~/.config/nirupi/autostart/*.sh`), run at login after dwm is
+  up. Per-entry directives: `tag: 1-9` opens the app on that workspace,
+  `settle:` waits for slow starters and `enabled: false` skips a file.
+  Documented for desktop apps and TUI apps (wrap in a terminal).
+- **Low-battery guard** (laptops): warn at `BATTERY_WARN`, critical at
+  `BATTERY_CRIT`, optional `BATTERY_SUSPEND` (all in session.conf).
+- **Notification history** (`nirupi notifications`, control center) and the
+  **clipboard is cleared on lock** (`LOCK_CLEAR_CLIPBOARD`, default on).
+- **Themed picom** generated from the palette (tinted shadow + fading); no
+  rounded corners.
+- **`nirupi doctor --json`**; `nirupi update` now refreshes scripts/theme and
+  rebuilds+restarts dwm if needed (packages still need `--apply`).
+- Clean installs enable **`fstrim.timer`** (SSD) and **`paccache.timer`**.
+- Fixes: the status-bar host segment works without the `hostname` binary (and
+  the host click falls back to `ip`); the dwm-status cache is cleared when the
+  bar restarts after an upgrade; `doctor` hints about Debian non-free-firmware;
+  `theme set noir` no longer writes a redundant override.
+- DWM config schema bumped to **v6**.
+
 ## 0.12.2
 - Void: enable the nonfree repository (`void-repo-nonfree`) and use the correct
   vendor package names (`mesa-vulkan-intel`/`mesa-vulkan-radeon`,

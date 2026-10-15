@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 5
+#define NIRUPI_CONFIG_VERSION 6
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -194,8 +194,8 @@ static const char *browsercmd[] = { "nirupi-browser", NULL };
 static const char *bravecmd[]   = { "brave", NULL };
 static const char *wallnext[]     = { "/bin/sh", "-c", "$HOME/.local/bin/wallrotate.sh next", NULL };
 
-/* Rofi (Run mode) */
-static const char *rofiruncmd[]   = { "rofi", "-show", "run", NULL };
+/* Unified launcher (Super+Shift+p): apps + windows + clipboard + run command. */
+static const char *rofiruncmd[]   = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-launch.sh", NULL };
 
 /* Keybindings viewer (TUI) */
 static const char *keybindingscmd[] = { 
@@ -214,6 +214,8 @@ static const char *agentcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agen
 static const char *agentselectioncmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent-selection.sh", NULL };
 /* Ask the agent about a screen region, via OCR (Super+Ctrl+s). */
 static const char *askscreencmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent-screen.sh", NULL };
+/* Rewrite the current selection in place (Super+Ctrl+r). */
+static const char *agentrewritecmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent-rewrite.sh", NULL };
 /* AI command: describe a task, review the suggested command, run on Enter (Super+Ctrl+c). */
 static const char *askcommandcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-ask-command.sh", NULL };
 /* SSH/host picker (Super+s). */
@@ -316,6 +318,7 @@ static const Key keys[] = {
 	{ MODKEY|ControlMask,           XK_a,                     spawn,          {.v = agentselectioncmd } }, /* Super+Ctrl+a -> ask agent about selection */
 	{ MODKEY|ControlMask,           XK_s,                     spawn,          {.v = askscreencmd } },  /* Super+Ctrl+s -> ask agent about screen (OCR) */
 	{ MODKEY|ControlMask,           XK_c,                     spawn,          {.v = askcommandcmd } },  /* Super+Ctrl+c -> AI command (confirm & run) */
+	{ MODKEY|ControlMask,           XK_r,                     spawn,          {.v = agentrewritecmd } }, /* Super+Ctrl+r -> rewrite the selection in place */
 	{ MODKEY,                       XK_s,                     spawn,          {.v = sshcmd } },         /* Super+s -> SSH host picker */
 	{ MODKEY|ControlMask,           XK_t,                     spawn,          {.v = thememenu } },       /* Super+Ctrl+t -> theme picker */
 	{ MODKEY|ShiftMask,             XK_f,                     spawn,          {.v = fmcmd } },          /* Super+Shift+f -> pcmanfm */

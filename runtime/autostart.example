@@ -1,0 +1,27 @@
+# NIRU autostart — example. Copy to ~/.config/nirupi/autostart/NAME.sh
+#
+# Each file is a small shell script run once at login. Leading comments are
+# directives; the commands below them are what actually runs.
+#
+#   # name:   label shown by `nirupi autostart list`
+#   # tag:    1-9  → open the app on that dwm workspace
+#   # settle: seconds to wait after launching on that tag (slow apps)
+#   # enabled: false → skip this file without deleting it
+#
+# Desktop app (runs directly):
+#   exec helium-browser            # or brave, pcmanfm, ...
+#
+# TUI app (wrap it in a terminal so it gets a window):
+#   exec kitty -e btop             # or: kitty -e nvim, st -e cmus, ...
+#
+# Notes
+# - Files run in lexical order (prefix them 10-, 20-, ... to control order).
+# - Placement on a tag works by briefly switching dwm to that tag, launching the
+#   app, waiting `settle` seconds, then returning to workspace 1. Increase
+#   `settle` if a slow app ends up on the wrong workspace.
+# - `nirupi autostart list` shows what is configured; `nirupi autostart run`
+#   runs it now (also handy for testing).
+
+# name: Files
+# tag: 5
+exec pcmanfm

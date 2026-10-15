@@ -27,3 +27,15 @@ START_DUNST=1
 
 # Start the compositor (picom) with the session if installed.
 START_PICOM=1
+
+# ── Battery (laptops) ────────────────────────────────────────────────────────
+# Warn at BATTERY_WARN%, critical at BATTERY_CRIT%. Set BATTERY_SUSPEND=1 to
+# suspend at the critical level. BATTERY_POLL is the check interval in seconds.
+BATTERY_WARN=15
+BATTERY_CRIT=5
+BATTERY_SUSPEND=0
+BATTERY_POLL=60
+
+# ── Lock ─────────────────────────────────────────────────────────────────────
+# Clear the clipboard and primary selection when the screen locks.
+LOCK_CLEAR_CLIPBOARD=1

@@ -58,7 +58,7 @@ if [ "$PER_TAG" = 1 ]; then
   fi
 fi
 
-STATUS_PID= WALL_PID= DUNST_PID= PICOM_PID= IDLE_PID= LOCK_PID= CLIP_PID=
+STATUS_PID= WALL_PID= DUNST_PID= PICOM_PID= IDLE_PID= LOCK_PID= CLIP_PID= BAT_PID=
 if [ "$START_PICOM" = 1 ] && command -v picom >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x picom >/dev/null 2>&1; then
   picom & PICOM_PID=$!
 fi
@@ -152,11 +152,30 @@ if [ "$LOCK_ON_SUSPEND" = 1 ] && command -v xss-lock >/dev/null 2>&1; then
 fi
 
 cleanup() {
-  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID" "$CLIP_PID"; do
+  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID" "$CLIP_PID" "$BAT_PID"; do
     [ -z "$pid" ] || kill "$pid" 2>/dev/null || :
   done
 }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM HUP
+
+# NIRU autostart: run once dwm is up so apps land on their chosen workspace.
+if [ -x "$HOME/.local/bin/nirupi-autostart.sh" ]; then
+  (
+    i=0
+    while [ "$i" -lt 100 ]; do
+      pgrep -u "$(id -u)" -x dwm >/dev/null 2>&1 && break
+      sleep 0.2; i=$((i + 1))
+    done
+    sleep 1
+    "$HOME/.local/bin/nirupi-autostart.sh" run
+  ) >/dev/null 2>&1 &
+fi
+
+# Battery guard (laptops): warn/suspend on low battery.
+if [ -x "$HOME/.local/bin/nirupi-battery.sh" ] && ls /sys/class/power_supply/BAT* >/dev/null 2>&1; then
+  "$HOME/.local/bin/nirupi-battery.sh" & BAT_PID=$!
+fi
+
 "$HOME/.local/bin/dwm"

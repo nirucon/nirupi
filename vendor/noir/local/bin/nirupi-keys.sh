@@ -95,6 +95,8 @@ APP	AI	nirupi-ask-command.sh
 APP	SSH	nirupi-ssh.sh
 APP	Reload	nirupi-reload.sh
 APP	Edit	nirupi-edit.sh
+APP	Launcher	nirupi-launch.sh
+APP	Notifications	nirupi-notifications.sh
 EOF
 }
 
@@ -153,6 +155,8 @@ else
     SSH) exec nirupi-ssh.sh;;
     Reload) exec nirupi-reload.sh;;
     Edit) exec nirupi-edit.sh;;
+    Launcher) exec nirupi-launch.sh;;
+    Notifications) exec nirupi-notifications.sh;;
     *) ;;
   esac
 fi

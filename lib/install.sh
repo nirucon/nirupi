@@ -117,6 +117,8 @@ restart_statusbar_if_running(){
  xauth="$(tr '\0' '\n' < "/proc/$dp/environ" 2>/dev/null | sed -n 's/^XAUTHORITY=//p' | head -n1 || true)"
  [[ -n $display ]] || return 0
  pkill -f '[d]wm-status.sh' 2>/dev/null || true
+ # Drop the segment cache so identity/kernel/host segments refresh after an upgrade.
+ rm -rf -- "${XDG_CACHE_HOME:-$HOME/.cache}/dwm-status"
  sleep 1
  setsid env DISPLAY="$display" ${xauth:+XAUTHORITY="$xauth"} "$HOME/.local/bin/dwm-status.sh" </dev/null >/dev/null 2>&1 &
  log 'Restarted the running status bar with the updated script'
@@ -136,7 +138,7 @@ install_helpers(){
   rm -f -- "$HOME/.local/bin/nirupi-status-click"
   log 'Removed legacy nirupi-status-click compatibility symlink'
  fi
- for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-power.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh nirupi-clipd.sh nirupi-calendar.sh nirupi-calendar.py nirupi-sysupdate.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh nirupi-emoji.sh nirupi-clip-transform.sh nirupi-audio.sh nirupi-capture.sh nirupi-agent-selection.sh nirupi-wallpaper.sh nirupi-tag-wallpaper.sh nirupi-reload.sh nirupi-edit.sh nirupi-ssh.sh nirupi-agent-ask.sh nirupi-agent-screen.sh nirupi-ask-command.sh; do
+ for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-power.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh nirupi-clipd.sh nirupi-calendar.sh nirupi-calendar.py nirupi-sysupdate.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh nirupi-emoji.sh nirupi-clip-transform.sh nirupi-audio.sh nirupi-capture.sh nirupi-agent-selection.sh nirupi-wallpaper.sh nirupi-tag-wallpaper.sh nirupi-reload.sh nirupi-edit.sh nirupi-ssh.sh nirupi-agent-ask.sh nirupi-agent-screen.sh nirupi-ask-command.sh nirupi-autostart.sh nirupi-battery.sh nirupi-notifications.sh nirupi-launch.sh nirupi-rofi-clip.sh nirupi-agent-rewrite.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
    dest="$HOME/.local/bin/$app"
@@ -162,6 +164,11 @@ install_helpers(){
  if [[ ! -e $HOME/.config/nirupi/wallpapers.conf && -f $ROOT/runtime/wallpapers.conf.example ]]; then
   mkdir -p "$HOME/.config/nirupi"
   put_file "$ROOT/runtime/wallpapers.conf.example" "$HOME/.config/nirupi/wallpapers.conf" 0644
+ fi
+ # Autostart: the directory (entries run at login) + a documentation example.
+ mkdir -p "$HOME/.config/nirupi/autostart"
+ if [[ -f $ROOT/runtime/autostart.example ]]; then
+  managed_config_install 'autostart/example' "$ROOT/runtime/autostart.example" "$HOME/.config/nirupi/autostart.example" 0644
  fi
  # Session launcher is NIRUPI-owned: keep it fresh on --update-dots too.
  managed_helper_install nirupi-session "$ROOT/runtime-session.sh" "$HOME/.local/bin/nirupi-session"
@@ -265,7 +272,7 @@ install_desktop() (
   # version that was just built; a modified/untracked config is preserved and
   # receives a sibling *.nirupi-new proposal. Binary and config never diverge.
   managed_config_install 'dwm/config.h' "$ROOT/vendor/suckless/dwm/config.h" "$dwm_cfg"
-  for app in kitty fish picom rofi alacritty gtk-3.0 cmus tmux lazygit micro aerc dunst; do
+  for app in kitty fish rofi alacritty gtk-3.0 cmus tmux lazygit micro aerc dunst; do
   [[ -d $ROOT/vendor/noir/config/$app ]] || continue
   if [[ -L $HOME/.config/$app ]]; then warn "Preserving symlink ~/.config/$app"; continue; fi
   if [[ -e $HOME/.config/$app && ! -d $HOME/.config/$app ]]; then
@@ -287,6 +294,7 @@ install_desktop() (
    NIRUPI_NOIR_DIR="$ROOT/vendor/noir" theme_load_tokens
    theme_render_rofi
    theme_render_dunst
+   theme_render_picom
    theme_render_sddm
    # Generated per-app colour fragments (included by the bundled app configs).
    theme_render_kitty
@@ -495,7 +503,12 @@ enable_services(){
     systemctl list-unit-files NetworkManager.service >/dev/null 2>&1 \
       && sudo systemctl enable --now NetworkManager.service >/dev/null 2>&1 \
       && log 'Enabled NetworkManager.service'
-   fi;;
+   fi
+   # Small maintenance timers: SSD trim + pacman cache cleanup.
+   for unit in fstrim.timer paccache.timer; do
+    systemctl list-unit-files "$unit" >/dev/null 2>&1 || continue
+    sudo systemctl enable --now "$unit" >/dev/null 2>&1 && log "Enabled $unit"
+   done;;
   void)
    for svc in tailscaled bluetoothd NetworkManager; do
     [[ -e /etc/sv/$svc ]] || continue

@@ -34,6 +34,13 @@ a real login on real hardware.
       about the current selection; `Super+Ctrl+s` asks about a screen region.
 - [ ] `Super+Ctrl+c` proposes a command you can edit and run on Enter; nothing
       runs without confirmation.
+- [ ] `Super+Shift+p` opens the unified launcher (apps / window / clipboard /
+      run); `Super+Ctrl+r` rewrites the selected text in place.
+- [ ] An autostart entry with `# tag: N` in `~/.config/nirupi/autostart/` opens
+      on workspace N at login (`nirupi autostart list` shows it).
+- [ ] Low-battery warning appears when discharging below `BATTERY_WARN`.
+- [ ] `nirupi notifications` lists history; the clipboard is cleared on lock.
+- [ ] picom runs with a palette-tinted shadow and no rounded corners.
 - [ ] `Super+s` opens the SSH host picker (add a host to `~/.ssh/config` to see
       one). `nirupi reload` rebuilds+restarts dwm only when needed; `nirupi edit`
       opens a config.

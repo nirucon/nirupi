@@ -77,6 +77,9 @@ Wallpaper
 
 Session & apps
   nirupi menu | nirupi keys | nirupi lock
+  nirupi launch                      unified launcher (also Super+Shift+p)
+  nirupi autostart list|run          login autostart entries (per workspace)
+  nirupi notifications               dunst notification history
   nirupi ssh                         pick a host (~/.ssh/config + Tailscale)
   nirupi edit [TOPIC]                open a NIRUPI config in $EDITOR
   nirupi reload                      rebuild dwm if needed + restart in place
@@ -104,21 +107,102 @@ EOF
     printf "No help for '%s'. Run 'nirupi help'.\n" "$t"
   fi
 }
+nirupi_version(){
+  local v="" target
+  if [[ -r "$HOME/.local/state/nirupi/installed.env" ]]; then
+    v="$(sed -n 's/^NIRUPI_VERSION=//p' "$HOME/.local/state/nirupi/installed.env" | head -n1)"
+  fi
+  if [[ -z $v ]]; then
+    target="$(readlink "$HOME/.local/bin/dwm" 2>/dev/null || true)"
+    [[ $target =~ /nirupi/([^/]+)/ ]] && v="${BASH_REMATCH[1]}"
+  fi
+  printf '%s' "${v:-unknown}"
+}
+
+# doctor: collect "<STATUS>\t<name>\t<detail>" rows, then print text or JSON.
+_jq(){ printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+DROWS=()
+drow(){ DROWS+=("$1"$'\t'"$2"$'\t'"${3:-}"); }
+nirupi_doctor(){
+  local json=0 app pid running ID="" row s n d fail=0
+  [[ ${1:-} == --json ]] && json=1
+  DROWS=()
+  for app in dwm dmenu st nirupi-session dwm-status.sh nirupi-updates nirupi-browser; do
+    if [[ -x $HOME/.local/bin/$app ]]; then drow OK "$app"; else drow FAIL "$app" "not installed"; fi
+  done
+  for app in Xorg xsetroot kitty rofi opencode slock xss-lock xidlehook xautolock nextcloud; do
+    if command -v "$app" >/dev/null 2>&1; then drow OK "$app"; else drow WARN "$app" "missing"; fi
+  done
+  [[ -r /etc/os-release ]] && . /etc/os-release && ID="${ID:-}"
+  if ! command -v xidlehook >/dev/null 2>&1 && ! command -v xautolock >/dev/null 2>&1 && ! command -v xss-lock >/dev/null 2>&1; then
+    drow HINT idle-lock "install xss-lock or xautolock for automatic screen lock"
+  fi
+  command -v nmcli >/dev/null 2>&1 || drow HINT networkmanager "install NetworkManager (nmcli) for the Wi-Fi menu"
+  case "$ID" in
+    arch|cachyos)
+      command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1 || \
+        drow HINT aur "no AUR helper (yay/paru); AUR apps install from upstream tarballs";;
+  esac
+  command -v man >/dev/null 2>&1 || drow HINT man-db "install man-db so 'man nirupi' works"
+  ls /usr/share/bash-completion/bash_completion >/dev/null 2>&1 || drow HINT bash-completion "install the bash-completion package for shell completions"
+  if command -v tailscale >/dev/null 2>&1; then
+    if command -v systemctl >/dev/null 2>&1; then
+      systemctl is-enabled tailscaled >/dev/null 2>&1 || drow HINT tailscaled "enable Tailscale at boot: sudo systemctl enable --now tailscaled"
+    elif command -v sv >/dev/null 2>&1; then
+      [[ -e /var/service/tailscaled ]] || drow HINT tailscaled "enable Tailscale at boot: sudo ln -s /etc/sv/tailscaled /var/service/"
+    fi
+  fi
+  if command -v wpctl >/dev/null 2>&1 && wpctl status >/dev/null 2>&1 \
+     && ! wpctl status 2>/dev/null | grep -q 'Sinks:'; then
+    drow HINT audio "no audio output found; on Intel install sof-firmware + alsa-ucm-conf"
+  fi
+  case "$ID" in
+    debian)
+      if ! grep -rsq 'non-free-firmware' /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null; then
+        drow HINT non-free-firmware "Debian has no non-free-firmware component; Intel audio firmware/microcode may be missing"
+      fi;;
+  esac
+  [[ -e /usr/share/xsessions/nirupi-dwm.desktop ]] && drow OK x11-session || drow WARN x11-session "missing"
+  if [[ $ID == void ]]; then
+    if [[ -L /var/service/sddm ]]; then drow OK runit-sddm "service symlink"; else drow INFO runit-sddm "not enabled (or using startx)"; fi
+  fi
+  if command -v pgrep >/dev/null 2>&1; then
+    pid="$(pgrep -u "$(id -u)" -x dwm | head -n 1 || true)"
+    if [[ -n $pid && -e /proc/$pid/exe ]]; then
+      running="$(readlink -f "/proc/$pid/exe" 2>/dev/null || true)"
+      if [[ $running == "$HOME/.local/lib/nirupi/"*"/bin/dwm" ]]; then drow OK running-dwm "$running"; else drow INFO running-dwm "${running:-unknown}"; fi
+    fi
+  fi
+  if (( json )); then
+    printf '{"version":"%s","distro":"%s","checks":[' "$(nirupi_version)" "${ID:-unknown}"
+    local first=1
+    for row in "${DROWS[@]}"; do
+      IFS=$'\t' read -r s n d <<<"$row"
+      (( first )) || printf ','
+      first=0
+      printf '{"status":"%s","name":"%s","detail":"%s"}' "$(_jq "$s")" "$(_jq "$n")" "$(_jq "$d")"
+    done
+    printf ']}\n'
+    return 0
+  fi
+  for row in "${DROWS[@]}"; do
+    IFS=$'\t' read -r s n d <<<"$row"
+    if [[ -n $d ]]; then printf '%-4s %s (%s)\n' "$s" "$n" "$d"; else printf '%-4s %s\n' "$s" "$n"; fi
+    [[ $s == FAIL ]] && fail=$((fail+1))
+  done
+  return "$fail"
+}
 case "$cmd" in
-  version|--version|-V)
-    v=""
-    if [[ -r "$HOME/.local/state/nirupi/installed.env" ]]; then
-      v="$(sed -n 's/^NIRUPI_VERSION=//p' "$HOME/.local/state/nirupi/installed.env" | head -n1)"
-    fi
-    if [[ -z "$v" ]]; then
-      target="$(readlink "$HOME/.local/bin/dwm" 2>/dev/null || true)"
-      [[ "$target" =~ /nirupi/([^/]+)/ ]] && v="${BASH_REMATCH[1]}"
-    fi
-    printf '%s\n' "${v:-unknown}";;
+  version|--version|-V) nirupi_version; printf '
+';;
+
   browser) exec "$HOME/.local/bin/nirupi-browser" "$@";;
   appearance) exec "$HOME/.local/bin/nirupi-appearance" "$@";;
   wallpaper) exec "$HOME/.local/bin/nirupi-wallpaper.sh" "$@";;
   ssh) exec "$HOME/.local/bin/nirupi-ssh.sh" "$@";;
+  autostart) exec "$HOME/.local/bin/nirupi-autostart.sh" "$@";;
+  notifications) exec "$HOME/.local/bin/nirupi-notifications.sh" "$@";;
+  launch) exec "$HOME/.local/bin/nirupi-launch.sh" "$@";;
   edit) exec "$HOME/.local/bin/nirupi-edit.sh" "$@";;
   reload) exec "$HOME/.local/bin/nirupi-reload.sh" "$@";;
   updates) exec "$HOME/.local/bin/nirupi-updates" "$@";;
@@ -128,74 +212,10 @@ case "$cmd" in
     esac
     printf 'Session: %s\nDisplay: %s\n' "${XDG_SESSION_TYPE:-unknown}" "${DISPLAY:-none}"; pgrep -af '[d]wm-status.sh' || :;;
   doctor)
-    if [[ "${1:-}" == --fix ]]; then shift || :; niru_doctor_fix; fi
-    failures=0
-    for app in dwm dmenu st nirupi-session dwm-status.sh nirupi-updates nirupi-browser; do
-      if [[ -x "$HOME/.local/bin/$app" ]]; then printf 'OK   %s\n' "$app"; else printf 'FAIL %s\n' "$app"; failures=$((failures+1)); fi
-    done
-    for app in Xorg xsetroot kitty rofi opencode slock xss-lock xidlehook xautolock nextcloud; do
-      if command -v "$app" >/dev/null 2>&1; then printf 'OK   %s\n' "$app"; else printf 'WARN %s missing\n' "$app"; fi
-    done
-    if ! command -v xidlehook >/dev/null 2>&1 && ! command -v xautolock >/dev/null 2>&1 && ! command -v xss-lock >/dev/null 2>&1; then
-      printf 'HINT install an idle-lock tool (xss-lock or xautolock) for automatic screen lock\n'
-    fi
-    command -v nmcli >/dev/null 2>&1 || printf 'HINT install NetworkManager (nmcli) for the Wi-Fi menu\n'
-    # Arch: AUR helper (used for AUR-only apps such as the Helium browser).
-    if [[ -r /etc/os-release ]]; then . /etc/os-release; fi
-    case "${ID:-}" in
-      arch|cachyos)
-        command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1 || \
-          printf 'HINT no AUR helper (yay/paru); AUR apps install from upstream tarballs\n';;
-    esac
-    # Man page + bash completion package (we ship both).
-    command -v man >/dev/null 2>&1 || printf 'HINT install man-db so `man nirupi` works\n'
-    if ! ls /usr/share/bash-completion/bash_completion >/dev/null 2>&1; then
-      printf 'HINT install the bash-completion package for shell completions\n'
-    fi
-    # Tailscale daemon not enabled -> the node disappears after reboot.
-    if command -v tailscale >/dev/null 2>&1; then
-      if command -v systemctl >/dev/null 2>&1; then
-        systemctl is-enabled tailscaled >/dev/null 2>&1 || printf 'HINT enable Tailscale at boot: sudo systemctl enable --now tailscaled\n'
-      elif command -v sv >/dev/null 2>&1; then
-        [[ -e /var/service/tailscaled ]] || printf 'HINT enable Tailscale at boot: sudo ln -s /etc/sv/tailscaled /var/service/\n'
-      fi
-    fi
-    # No audio sinks usually means firmware/UCM is missing (e.g. sof-firmware).
-    # Only when wpctl can actually reach the session (avoid SSH false positives).
-    if command -v wpctl >/dev/null 2>&1 && wpctl status >/dev/null 2>&1 \
-       && ! wpctl status 2>/dev/null | grep -q 'Sinks:'; then
-      printf 'HINT no audio output found; on Intel install sof-firmware + alsa-ucm-conf\n'
-    fi
-    [[ -e /usr/share/xsessions/nirupi-dwm.desktop ]] && echo 'OK   X11 session' || echo 'WARN X11 session missing'
-    if [[ -r /etc/os-release ]]; then
-      . /etc/os-release
-      if [[ ${ID:-} == void ]]; then
-        if [[ -L /var/service/sddm ]]; then
-          printf 'OK   runit SDDM enabled (service symlink)\n'
-          if command -v sv >/dev/null 2>&1; then
-            if sv status sddm >/dev/null 2>&1; then
-              printf 'OK   runit SDDM status accessible\n'
-            else
-              printf 'INFO runit status requires permissions; try: sudo sv status sddm\n'
-            fi
-          fi
-        else
-          printf 'INFO runit SDDM not enabled (or using startx)\n'
-        fi
-      fi
-    fi
-    if command -v pgrep >/dev/null 2>&1; then
-      pid="$(pgrep -u "$(id -u)" -x dwm | head -n 1 || :)"
-      if [[ -n $pid && -e /proc/$pid/exe ]]; then
-        running="$(readlink -f "/proc/$pid/exe" 2>/dev/null || :)"
-        if [[ $running == "$HOME/.local/lib/nirupi/"*"/bin/dwm" ]]; then
-          printf 'OK   running NIRUPI DWM: %s\n' "$running"
-        else
-          printf 'INFO running DWM is not NIRUPI-managed: %s\n' "${running:-unknown}"
-        fi
-      fi
-    fi
-    [[ "$failures" == 0 ]];;
+    fix=0; json=0
+    for a in "$@"; do case "$a" in --fix) fix=1;; --json) json=1;; esac; done
+    (( fix )) && niru_doctor_fix
+    if (( json )); then nirupi_doctor --json; else nirupi_doctor; fi;;
   config) printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf";;
   history) printf 'Use: bash ~/Git/nirupi/install.sh --history\n';;
   rollback|theme|dots|migrate|apps|maintenance)

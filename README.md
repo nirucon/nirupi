@@ -72,6 +72,12 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   instantly on tag switch and toggle from the control center. dwm gains smart
   gaps/borders, an **in-place restart** (`Super+Ctrl+Shift+r`) and mouse-drag of
   the master factor (`Super+Button2`).
+- **Daily-driver extras:** a **unified launcher** (`Super+Shift+p`: apps, open
+  windows, clipboard history, run a command), **AI rewrite in place**
+  (`Super+Ctrl+r`), **autostart** with per-entry workspace
+  (`~/.config/nirupi/autostart/*.sh`), a **low-battery guard**, **notification
+  history**, clipboard cleared on lock, a **palette-themed picom**, and
+  `nirupi doctor --json`.
 - Migrates an existing system **non-destructively**: configs are merged, foreign
   binaries are archived (never deleted), customized files are preserved.
 - **Clean-install ready:** installs the pieces a vanilla system needs (X input
@@ -158,8 +164,9 @@ nirupi browser status|set|reset       nirupi updates --refresh
 ```
 
 Keybindings: `Super+Return` terminal, `Super+b` browser, `Super+a` agent,
-`Super+Ctrl+a` ask agent about the selection, `Super+Ctrl+s` ask agent about a
-screen region, `Super+Ctrl+c` AI command, `Super+s` SSH hosts,
+`Super+Shift+p` unified launcher, `Super+Ctrl+a` ask agent about the selection,
+`Super+Ctrl+s` ask agent about a screen region, `Super+Ctrl+c` AI command,
+`Super+Ctrl+r` rewrite the selection, `Super+s` SSH hosts,
 `Super+Ctrl+t` theme picker,
 `Super+Shift+h` keybinding palette, `Super+Alt+k` full keybinding table (TUI),
 `Super+Shift+m` control center, `Super+Ctrl+Print` capture menu,

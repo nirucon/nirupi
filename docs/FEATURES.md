@@ -138,6 +138,19 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
   re-exec), **drag the master factor** (`Super+Button2`), and float rules for
   dialogs/tools (PiP, pavucontrol, Steam, Lutris).
 
+## Launcher, autostart, laptop
+- **Unified launcher** `Super+Shift+p` (and `nirupi launch`): one rofi that
+  combines installed apps (incl. web apps), **open windows**, the **clipboard
+  history** and running a command.
+- **Autostart** `~/.config/nirupi/autostart/*.sh`, run at login after dwm is up,
+  with `tag: 1-9` to open an app on a workspace and `settle:` for slow starters.
+- **Battery guard** for laptops (warn/critical/optional suspend).
+- **Notification history** (`nirupi notifications`) and **clipboard cleared on
+  lock**.
+- **picom is generated from the palette** (tinted shadow, fading); no rounded
+  corners.
+- **`nirupi doctor --json`** for a machine-readable readiness check.
+
 ## Your apps & the web
 - **Default repositories** `nirupresence`, `nirunote`, `nplay` are cloned to
   `~/Git/` on install and updated by `--update-dots`.

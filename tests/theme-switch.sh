@@ -45,6 +45,8 @@ grep -q 'colorscheme nirupi' "$HOME/.config/cmus/rc" || fail 'cmus rc missing'
 grep -q 'set -g fish_color_normal e6e6e6' "$HOME/.config/nirupi/theme/fish.fish" || fail 'fish not Satie'
 grep -q 'bg=#232326' "$HOME/.config/nirupi/theme/tmux.conf" || fail 'tmux not Satie'
 grep -q 'NIRUPI_C_RED=a89a97' "$HOME/.config/nirupi/theme/status.env" || fail 'status accents not Satie'
+grep -q 'corner-radius = 0' "$HOME/.config/picom/picom.conf" || fail 'picom not generated (no rounded corners)'
+grep -q 'generated from tokens.env' "$HOME/.config/picom/picom.conf" || fail 'picom not themed'
 grep -q 'background = "#232326"' "$HOME/.config/dunst/dunstrc.d/90-nirupi.conf" || fail 'dunst drop-in not Satie'
 
 theme_set carl-larsson >/dev/null
