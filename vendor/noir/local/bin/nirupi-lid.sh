@@ -11,7 +11,7 @@ menu(){ if have rofi; then rofi -dmenu -i -p 'Lid close'; elif have dmenu; then 
 
 # Desktops have no lid switch; nothing to configure there.
 if ! compgen -G '/proc/acpi/button/lid/*/state' >/dev/null 2>&1; then
-  notify 'No lid on this machine (stationary desktop) — lid handling not applicable'
+  printf 'No lid on this machine (stationary desktop) — lid handling not applicable\n'
   exit 0
 fi
 

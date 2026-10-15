@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.14.3
+- `nirupi lid` prints the desktop (no-lid) message to stdout so it is visible in
+  a terminal, not just as a notification.
+
 ## 0.14.2
 - `nirupi lid` detects machines without a lid switch (stationary desktops) and
   says so instead of offering lid settings.
