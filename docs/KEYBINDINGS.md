@@ -2,7 +2,7 @@
 
 <!-- Generated from vendor/suckless/dwm/config.h by tools/gen-keybindings.sh. Do not edit by hand. -->
 
-130 bindings. `Super` is the Mod4/Win key.
+131 bindings. `Super` is the Mod4/Win key.
 
 | Keys | Action |
 | --- | --- |
@@ -100,7 +100,8 @@
 | `Super+Ctrl+Shift+9` | Toggle window on tag 9 |
 | `Super+0` | view |
 | `Super+Shift+0` | tag |
-| `Super+Ctrl+B` | togglebar |
+| `Super+Ctrl+B` | hide/show bar |
+| `Super+Ctrl+Shift+B` | cycle bar mode |
 | `Super+Q` | kill focused |
 | `Super+Shift+Q` | power menu |
 | `Super+Ctrl+Shift+Q` | quit immediately |

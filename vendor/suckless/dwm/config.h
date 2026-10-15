@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 7
+#define NIRUPI_CONFIG_VERSION 8
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -29,8 +29,8 @@ static const unsigned int snap      = 32;       /* snap pixel */
 static const int swallowfloating    = 0;        /* 1 = terminal also swallows floating windows */
 static const int showbar            = 1;        /* 0 hides bar */
 static const int topbar             = 1;        /* 0 bottom bar */
-static const unsigned int vertpad   = 8;        /* vertical padding of the bar */
-static const unsigned int sidepad   = 8;        /* horizontal padding of the bar */
+static unsigned int vertpad         = 8;        /* vertical padding of the bar (barmode) */
+static unsigned int sidepad         = 8;        /* horizontal padding of the bar (barmode) */
 
 static const char *fonts[]          = {
 	"JetBrainsMono Nerd Font:size=11",
@@ -90,6 +90,8 @@ static const Rule rules[] = {
 	{ "Lutris",   NULL,     NULL,         0,         1,          0,          0,         0,            -1 },
 	{ NULL,       NULL,     "Picture-in-Picture", 0,  1,          0,          0,         0,            -1 },
 	{ NULL,       NULL,     "Picture in picture", 0,  1,          0,          0,         0,            -1 },
+	/* The calendar pop-up opens centred and floating. */
+	{ "nirupi-calendar", NULL, NULL,      0,         1,          0,          0,         0,            -1 },
 };
 
 /* === Custom layout funcs === */
@@ -150,8 +152,8 @@ static const StatusCmd statuscmds[] = {
 	{ "$HOME/.local/bin/nirupi-status-click.sh mic",      18 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh dnd",      19 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh recording",20 },
-	{ "$HOME/.local/bin/nirupi-status-click.sh memory",   21 },
-	{ "$HOME/.local/bin/nirupi-status-click.sh uptime",   22 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh sysinfo",  21 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh photos",   22 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh disk",     23 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh cpu",      24 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh load",     25 },
@@ -159,7 +161,7 @@ static const StatusCmd statuscmds[] = {
 	{ "$HOME/.local/bin/nirupi-status-click.sh kernel",   27 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh host",     28 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh date",     29 },
-	{ "$HOME/.local/bin/nirupi-status-click.sh time",      30 },
+	{ "$HOME/.local/bin/nirupi-status-click.sh videos",   30 },
 	{ "$HOME/.local/bin/nirupi-status-click.sh caffeine",  31 },
 };
 static const char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
@@ -387,7 +389,8 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_0,                     tag,            {.ui = ~0 } },
 
 	/* Bar toggle */
-	{ MODKEY|ControlMask, 		XK_b, 			  togglebar,      {0} },
+	{ MODKEY|ControlMask, 		XK_b, 			  togglebar,      {0} },     /* Super+Ctrl+b -> hide/show bar */
+	{ MODKEY|ControlMask|ShiftMask,	XK_b, 			  barmode,        {0} },     /* Super+Ctrl+Shift+b -> cycle bar mode */
 
 	/* Kill active window & restart dwm */
 	{ MODKEY,                       XK_q,                     killclient,     {0} },          /* Super+q -> kill focused */

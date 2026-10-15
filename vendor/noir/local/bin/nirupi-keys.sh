@@ -99,6 +99,8 @@ APP	Launcher	nirupi-launch.sh
 APP	Notifications	nirupi-notifications.sh
 APP	USB	nirupi-usb.sh
 APP	Lock	nirupi-lid.sh
+APP	Bar-mode	nirupi-barmode.sh
+APP	Calendar	nirupi-calendar.sh
 EOF
 }
 
@@ -161,6 +163,8 @@ else
     Notifications) exec nirupi-notifications.sh;;
     USB) exec nirupi-usb.sh;;
     Lock) exec nirupi-lid.sh;;
+    Bar-mode) exec nirupi-barmode.sh;;
+    Calendar) exec nirupi-calendar.sh;;
     *) ;;
   esac
 fi

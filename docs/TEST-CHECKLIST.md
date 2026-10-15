@@ -46,6 +46,11 @@ a real login on real hardware.
 - [ ] The launcher's *files* mode finds and opens a file (`Ctrl+Tab` to switch).
 - [ ] Control center → *USB: mount/unmount…* mounts a removable drive.
 - [ ] `nirupi lid` reports the lid-close behaviour (systemd systems).
+- [ ] Clicking each media icon opens Music / Pictures / Videos.
+- [ ] `Super+Ctrl+Shift+b` cycles padded → full-bleed → hidden bar.
+- [ ] `nirupi calendar`: English UI, Mon..Sun, ISO weeks; `s` sets the iCal URL
+      and `o` opens the selected day in Google Calendar.
+- [ ] The daily update check pops a notification when updates exist.
 - [ ] `Super+s` opens the SSH host picker (add a host to `~/.ssh/config` to see
       one). `nirupi reload` rebuilds+restarts dwm only when needed; `nirupi edit`
       opens a config.

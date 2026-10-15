@@ -12,7 +12,8 @@ for s in nirupi-capture.sh nirupi-agent-selection.sh nirupi-agent-ask.sh \
          nirupi-wallpaper.sh nirupi-tag-wallpaper.sh nirupi-reload.sh \
          nirupi-edit.sh nirupi-ssh.sh nirupi-autostart.sh nirupi-battery.sh \
          nirupi-notifications.sh nirupi-launch.sh nirupi-rofi-clip.sh \
-         nirupi-rofi-files.sh nirupi-usb.sh nirupi-lid.sh; do
+         nirupi-rofi-files.sh nirupi-usb.sh nirupi-lid.sh nirupi-barmode.sh \
+         nirupi-updatecheck.sh; do
   [[ -f "$bin/$s" ]] || { echo "FAIL missing $s" >&2; exit 1; }
   bash -n "$bin/$s" || { echo "FAIL syntax $s" >&2; exit 1; }
   grep -q "$s" "$ROOT/lib/install.sh" || { echo "FAIL $s not deployed" >&2; exit 1; }
@@ -33,7 +34,14 @@ for cmd in capturecmd agentselectioncmd askscreencmd askcommandcmd agentrewritec
 done
 grep -q 'nirupi-launch.sh' "$DWM/config.h" || { echo 'FAIL launcher binding missing' >&2; exit 1; }
 grep -q 'nirupi-agent-rewrite.sh' "$DWM/config.h" || { echo 'FAIL rewrite binding missing' >&2; exit 1; }
-grep -q 'NIRUPI_CONFIG_VERSION 7' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
+grep -q 'NIRUPI_CONFIG_VERSION 8' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
+grep -q 'barmode,' "$DWM/config.h" && grep -q '^barmode(const Arg' "$DWM/dwm.c" \
+  || { echo 'FAIL barmode missing' >&2; exit 1; }
+grep -q 'nirupi-status-click.sh photos' "$DWM/config.h" \
+  && grep -q 'nirupi-status-click.sh videos' "$DWM/config.h" \
+  || { echo 'FAIL media click ids missing' >&2; exit 1; }
+grep -q 'sect 22 ' "$bin/dwm-status.sh" && grep -q 'sect 30 ' "$bin/dwm-status.sh" \
+  || { echo 'FAIL media sections not split' >&2; exit 1; }
 grep -q 'XK_Left' "$DWM/config.h" || { echo 'FAIL arrow-key bindings missing' >&2; exit 1; }
 grep -q 'nirupi-rofi-files.sh' "$bin/nirupi-launch.sh" || { echo 'FAIL launcher lacks file search' >&2; exit 1; }
 grep -q 'migrate_binaries_rebuild' "$ROOT/lib/install.sh" || { echo 'FAIL binaries rebuild missing' >&2; exit 1; }
@@ -45,10 +53,10 @@ if grep -rnE '\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8}' "$bin"; then
 fi
 
 # Control center + keybinding palette entries.
-for e in 'Wallpapers per workspace: toggle' 'Audio output' 'USB: mount/unmount…' 'Lid close…' 'SSH / host…' 'Reload desktop…' 'Edit config…' 'Ask agent about screen…' 'AI command…' 'Notifications: history…'; do
+for e in 'Wallpapers per workspace: toggle' 'Audio output' 'USB: mount/unmount…' 'Lid close…' 'Bar mode (padded/full/none)' 'SSH / host…' 'Reload desktop…' 'Edit config…' 'Ask agent about screen…' 'AI command…' 'Notifications: history…'; do
   grep -qF "$e" "$bin/nirupi-menu.sh" || { echo "FAIL menu missing: $e" >&2; exit 1; }
 done
-for e in nirupi-emoji.sh nirupi-agent-selection.sh nirupi-capture.sh nirupi-agent-screen.sh nirupi-ask-command.sh nirupi-ssh.sh nirupi-reload.sh nirupi-edit.sh nirupi-launch.sh nirupi-notifications.sh nirupi-usb.sh nirupi-lid.sh; do
+for e in nirupi-emoji.sh nirupi-agent-selection.sh nirupi-capture.sh nirupi-agent-screen.sh nirupi-ask-command.sh nirupi-ssh.sh nirupi-reload.sh nirupi-edit.sh nirupi-launch.sh nirupi-notifications.sh nirupi-usb.sh nirupi-lid.sh nirupi-barmode.sh nirupi-calendar.sh; do
   grep -q "$e" "$bin/nirupi-keys.sh" || { echo "FAIL palette missing: $e" >&2; exit 1; }
 done
 
@@ -59,6 +67,9 @@ grep -q 'autostart' "$ROOT/lib/install.sh" || { echo 'FAIL autostart not deploye
 [[ -f "$ROOT/runtime/autostart.example" ]] || { echo 'FAIL autostart example missing' >&2; exit 1; }
 grep -q 'BATTERY_WARN' "$ROOT/runtime/session.conf.example" || { echo 'FAIL battery config missing' >&2; exit 1; }
 grep -q 'LOCK_CLEAR_CLIPBOARD' "$ROOT/runtime/session.conf.example" || { echo 'FAIL lock clipboard config missing' >&2; exit 1; }
+[[ -f "$ROOT/runtime/calendar.conf.example" ]] || { echo 'FAIL calendar example missing' >&2; exit 1; }
+grep -q 'nirupi-updatecheck.sh' "$ROOT/runtime-session.sh" || { echo 'FAIL daily update check not wired' >&2; exit 1; }
+grep -q 'calendar.conf' "$ROOT/lib/install.sh" || { echo 'FAIL calendar.conf not deployed' >&2; exit 1; }
 
 # Completions, man page, wallpaper example.
 [[ -f "$ROOT/vendor/noir/config/fish/completions/nirupi.fish" ]] || { echo 'FAIL fish completion' >&2; exit 1; }
@@ -68,7 +79,7 @@ grep -q 'LOCK_CLEAR_CLIPBOARD' "$ROOT/runtime/session.conf.example" || { echo 'F
 
 # nirupi help + subtools.
 out="$(bash "$ROOT/runtime/nirupi" help 2>/dev/null)"
-for t in ssh edit reload launch autostart notifications usb lid; do
+for t in ssh edit reload launch autostart notifications usb lid barmode calendar; do
   grep -q "nirupi $t" <<< "$out" || { echo "FAIL help $t" >&2; exit 1; }
 done
 bash "$bin/nirupi-edit.sh" --list | grep -q '^  status ' || { echo 'FAIL edit --list' >&2; exit 1; }

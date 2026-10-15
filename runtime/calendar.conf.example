@@ -1,0 +1,9 @@
+# NIRU calendar settings (user-owned, edited in the TUI with `s`).
+#
+# To sync (read-only) with Google Calendar:
+#   Google Calendar -> Settings -> <your calendar> -> "Secret address in
+#   iCal format" -> copy the URL below. Editing still happens in the web app;
+#   press `o` in the calendar to open the selected day in Google Calendar.
+#
+# Leave empty to disable syncing (the calendar still works).
+ICS_URL=

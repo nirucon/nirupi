@@ -857,7 +857,7 @@ get_media_counts() {
   video_count="$(count_files_in_dir "$videos_dir" \
     -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.mov" -o -iname "*.avi" -o -iname "*.webm" -o -iname "*.m4v")"
 
-  media_line="$(icon_music) ${mp3_count:-0} $(icon_photos) ${photo_count:-0} $(icon_videos) ${video_count:-0}"
+  media_line="$(icon_music) ${mp3_count:-0}"$'\n'"$(icon_photos) ${photo_count:-0}"$'\n'"$(icon_videos) ${video_count:-0}"
 
   printf '%s\n' "$media_line" > "$MEDIA_CACHE_FILE" 2>/dev/null || true
   printf '%s\n' "$now" > "$MEDIA_CACHE_STAMP" 2>/dev/null || true
@@ -1146,14 +1146,19 @@ build_status_line() {
   [[ -n "${nextcloud:-}" ]] && nextcloud="$(sect 7 "$nextcloud")"
   [[ -n "${battery:-}" ]] && battery="$(sect 14 "$battery")"
   [[ -n "${temp:-}" ]] && temp="$(sect 15 "$temp")"
-  [[ -n "${media:-}" ]] && media="$(sect 16 "$media")"
+  if [[ -n "${media:-}" ]]; then
+    local -a _mp=()
+    mapfile -t _mp <<< "$media"
+    # Separate clickable sections so each icon opens its own folder (16/9/10).
+    media="$(sect 16 "${_mp[0]:-}") $(sect 22 "${_mp[1]:-}") $(sect 30 "${_mp[2]:-}")"
+  fi
   [[ -n "${nowplaying:-}" ]] && nowplaying="$(sect 17 "$nowplaying")"
   [[ -n "${mic:-}" ]] && mic="$(sect 18 "$mic")"
   [[ -n "${dnd:-}" ]] && dnd="$(sect 19 "$dnd")"
   [[ -n "${recording:-}" ]] && recording="$(sect 20 "$recording")"
   [[ -n "${caffeine:-}" ]] && caffeine="$(sect 31 "$caffeine")"
   [[ -n "${memory:-}" ]] && memory="$(sect 21 "$memory")"
-  [[ -n "${uptime:-}" ]] && uptime="$(sect 22 "$uptime")"
+  [[ -n "${uptime:-}" ]] && uptime="$(sect 21 "$uptime")"
   [[ -n "${disk:-}" ]] && disk="$(sect 23 "$disk")"
   [[ -n "${cpu:-}" ]] && cpu="$(sect 24 "$cpu")"
   [[ -n "${load:-}" ]] && load="$(sect 25 "$load")"
@@ -1161,7 +1166,7 @@ build_status_line() {
   [[ -n "${kernel:-}" ]] && kernel="$(sect 27 "$kernel")"
   [[ -n "${host:-}" ]] && host="$(sect 28 "$host")"
   [[ -n "${datepart:-}" ]] && datepart="$(sect 29 "$datepart")"
-  [[ -n "${timepart:-}" ]] && timepart="$(sect 30 "$timepart")"
+  [[ -n "${timepart:-}" ]] && timepart="$(sect 29 "$timepart")"
   [[ -n "${updates:-}" ]] && updates="$(sect 5 "$updates")"
   [[ -n "${weather:-}" ]] && weather="$(sect 4 "$weather")"
   if bar_color_on; then

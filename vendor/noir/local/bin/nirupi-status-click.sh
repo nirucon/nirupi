@@ -6,6 +6,19 @@ set -Eeuo pipefail
 action="${1:-}"
 ns(){ if command -v notify-send >/dev/null 2>&1; then notify-send -a NIRUPI "$@"; else printf 'NIRUPI: %s\n' "$*"; fi; }
 open_dir(){ command -v pcmanfm >/dev/null 2>&1 && exec pcmanfm "$1" ; command -v xdg-open >/dev/null 2>&1 && exec xdg-open "$1"; }
+# Resolve the media folders (same rules/defaults as the status bar; MEDIA_*_DIR
+# in ~/.config/nirupi/status.conf overrides).
+media_dir(){
+  local kind="$1" d
+  local conf="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf"
+  [[ -r $conf ]] && . "$conf"
+  case "$kind" in
+    music)  for d in "${MEDIA_MUSIC_DIR:-}" "$HOME/Music" "$HOME/mp3" "$HOME/media/Music"; do [[ -n $d && -d $d ]] && { printf '%s' "$d"; return; }; done;;
+    photos) for d in "${MEDIA_PHOTOS_DIR:-}" "$HOME/Pictures" "$HOME/Photos" "$HOME/media/Pictures"; do [[ -n $d && -d $d ]] && { printf '%s' "$d"; return; }; done;;
+    videos) for d in "${MEDIA_VIDEOS_DIR:-}" "$HOME/Videos" "$HOME/media/Videos"; do [[ -n $d && -d $d ]] && { printf '%s' "$d"; return; }; done;;
+  esac
+  printf '%s' "$HOME"
+}
 
 case "$action" in
   # ── Launchers ──────────────────────────────────────────────────────────────
@@ -23,7 +36,9 @@ case "$action" in
     fi;;
 
   # ── Media / audio ──────────────────────────────────────────────────────────
-  media)      open_dir "${NIRUPI_MUSIC_DIR:-$HOME/Music}";;
+  media)      open_dir "$(media_dir music)";;
+  photos)     open_dir "$(media_dir photos)";;
+  videos)     open_dir "$(media_dir videos)";;
   nowplaying)
     if command -v playerctl >/dev/null 2>&1; then exec playerctl play-pause
     elif command -v cmus-remote >/dev/null 2>&1; then exec cmus-remote -C player-pause
@@ -52,6 +67,7 @@ case "$action" in
     ns "Temperature" "$(( ${t:-0} / 1000 ))°C";;
   memory) ns "Memory" "$(free -h 2>/dev/null | awk 'NR==2{print $3"/"$2" used"}')";;
   uptime) ns "Uptime" "$(uptime -p 2>/dev/null || uptime)";;
+  sysinfo) ns "Memory / Uptime" "$(free -h 2>/dev/null | awk 'NR==2{print $3"/"$2" used"}')  ·  up $(uptime -p 2>/dev/null | sed 's/^up //' || uptime)";;
   disk)   ns "Disk" "$(df -h / 2>/dev/null | awk 'NR==2{print $5" used, "$4" free"}')";;
   cpu)    ns "CPU" "$(ps -eo pcpu,comm --sort=-pcpu 2>/dev/null | sed -n '2,4p')";;
   load)   ns "Load" "$(cat /proc/loadavg 2>/dev/null) ($(nproc 2>/dev/null) cores)";;

@@ -23,6 +23,8 @@ startup, run `nirupi theme apply`.
 | `Super+Right` / `Super+Down` | Focus the next window |
 | `Super+Shift+Left` / `Super+Shift+Up` | Move the focused window back |
 | `Super+Shift+Right` / `Super+Shift+Down` | Move the focused window forward |
+| `Super+Ctrl+b` | Show/hide the bar |
+| `Super+Ctrl+Shift+b` | Cycle bar: padded → full-bleed → hidden |
 | `Super+b` | Browser (resolver) |
 | `Super+a` | **Agent** (opencode) |
 | `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson/…) |
@@ -262,6 +264,33 @@ exec kitty -e opencode   # desktop app: the command line goes here
 - **Laptop lid:** `nirupi lid` shows the current behaviour and, from a terminal,
   sets `HandleLidSwitch` (lock, suspend, ignore, …) in a logind drop-in. systemd
   systems only; the control center entry opens it in a terminal.
+
+## Calendar — click the clock, or `nirupi calendar`
+
+A month view (English UI, **Monday-first**, ISO week numbers, today
+highlighted). Keys: arrows move the day, `PgUp`/`PgDn` change month, `</>`
+change year, `t` today, `q` quit.
+
+- **Google Calendar (optional, read-only):** press `s` and paste your calendar's
+  **secret iCal URL** (Google Calendar → Settings → *Secret address in iCal
+  format*). That day's events are then listed under the grid; `o` opens the
+  selected day in Google Calendar for editing. The URL lives in
+  `~/.config/nirupi/calendar.conf`. For two-way sync, `gcalcli` or
+  `vdirsyncer` + `khal` are documented opt-ins.
+
+## Bar modes
+
+`Super+Ctrl+Shift+b` (or control center → *Bar mode*) cycles **padded** (default,
+floating bar) → **full-bleed** (bar and windows flush to the screen edges) →
+**hidden** (focus mode). `Super+Ctrl+b` still just shows/hides the bar; windows
+and dmenu follow the mode automatically.
+
+## Updates at a glance
+
+Once a day (while the session runs) nirupi checks for updates and pops a
+notification: system packages and any `~/Git` repos that are behind. Apply with
+`nirupi update` (nirupi + repos) and `sudo nirupi updates` (packages). Silence
+notifications with `NIRUPI_NO_NOTIFY=1`.
 
 ## Customize
 

@@ -238,6 +238,7 @@ static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
+static void barmode(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglescratch(const Arg *arg);
 static void toggletag(const Arg *arg);
@@ -326,7 +327,7 @@ static xcb_connection_t *xcon;
 #ifndef NIRUPI_CONFIG_VERSION
 #error "This dwm config.h is out of date. A newer version is written as config.h.nirupi-new. Merge it (or run: nirupi migrate dwm --rebuild)."
 #endif
-#if NIRUPI_CONFIG_VERSION < 7
+#if NIRUPI_CONFIG_VERSION < 8
 #error "This dwm config.h is too old for this dwm. Merge config.h.nirupi-new and rebuild."
 #endif
 
@@ -2285,6 +2286,34 @@ togglebar(const Arg *arg)
 	selmon->showbar = selmon->pertag->showbars[selmon->pertag->curtag] = !selmon->showbar;
 	updatebarpos(selmon);
 	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, bh);
+	arrange(selmon);
+}
+
+void
+barmode(const Arg *arg)
+{
+	/* Cycle the bar: padded (sidepad/vertpad) -> full-bleed -> hidden. */
+	if (!selmon->showbar) {
+		selmon->showbar = 1;
+		sidepad = 8;
+		vertpad = 8;
+	} else if (sidepad || vertpad) {
+		sidepad = 0;
+		vertpad = 0;
+	} else {
+		selmon->showbar = 0;
+	}
+	selmon->pertag->showbars[selmon->pertag->curtag] = selmon->showbar;
+	updatebarpos(selmon);
+	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, bh);
+	{
+		/* Keep the dmenu top offset in sync with the current bar mode. */
+		char dmenuy[16];
+		snprintf(dmenuy, sizeof dmenuy, "%d",
+			(selmon->showbar && topbar) ? (int)vertpad + bh : 0);
+		setenv("NIRUPI_DMENU_Y", dmenuy, 1);
+	}
+	focus(NULL);
 	arrange(selmon);
 }
 

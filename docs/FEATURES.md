@@ -157,6 +157,11 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **USB mount/unmount** (`nirupi usb`) and **laptop lid control** (`nirupi lid`)
   in the control center.
 - **CI smokes Void** as well as Arch and Debian.
+- **Status-bar media icons** open the matching folder (Music, Pictures/Photos,
+  Videos) when clicked.
+- **Bar modes** (`Super+Ctrl+Shift+b`): padded → full-bleed → hidden.
+- **Calendar** month view with optional Google iCal sync (`nirupi calendar`).
+- **Daily update check** with a notification when packages or repos are behind.
 
 ## Your apps & the web
 - **Default repositories** `nirupresence`, `nirunote`, `nplay` are cloned to

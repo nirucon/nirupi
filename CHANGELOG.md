@@ -2,6 +2,28 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.15.0
+- **Status-bar media icons open their own folder**: the music/photo/video
+  counts are now three separate clickable sections (Music, Pictures/Photos,
+  Videos). Two section ids were consolidated (memory+uptime, date+time) to free
+  ids without touching the forbidden whitespace id range (9–13).
+- **Bar modes**: `Super+Ctrl+Shift+b` cycles padded bar → full-bleed bar →
+  hidden (also in the control center as *Bar mode*). `Super+Ctrl+b` still
+  toggles show/hide.
+- **Calendar rewrite**: English UI, Monday-first (Mon..Sun), ISO week numbers,
+  a cleaner layout with today highlighted and adjacent-month days dimmed.
+  Optional **Google Calendar sync** via a secret iCal URL set from inside the
+  TUI (`s`); the selected day's events are listed and `o` opens that day in
+  Google Calendar. `nirupi calendar`.
+- **Daily update check**: once a day (in the session, so it works on Arch,
+  Debian and Void), it notifies "Updates available" with the package and repo
+  counts and how to run the update. `nirupi-updatecheck.sh`; respects
+  `NIRUPI_NO_NOTIFY=1`.
+- **Terminal/status alignment**: the terminal text inset now matches the bar
+  (kitty `window_padding_width` 8); the full-bleed bar mode removes the side
+  padding entirely.
+- DWM config schema bumped to **v8**.
+
 ## 0.14.6
 - Fix status-bar icons showing as literal `\uXXXX` text (e.g. the weather,
   mic, DND, recording, Bluetooth, caffeine and AI glyphs) on systems with no

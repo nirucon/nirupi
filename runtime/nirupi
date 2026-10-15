@@ -82,6 +82,8 @@ Session & apps
   nirupi notifications               dunst notification history
   nirupi usb                         mount/unmount removable drives
   nirupi lid                         laptop lid-close behaviour (systemd)
+  nirupi calendar                    month view (optional Google iCal sync)
+  nirupi barmode                     cycle bar: padded -> full-bleed -> none
   nirupi ssh                         pick a host (~/.ssh/config + Tailscale)
   nirupi edit [TOPIC]                open a NIRUPI config in $EDITOR
   nirupi reload                      rebuild dwm if needed + restart in place
@@ -205,6 +207,8 @@ case "$cmd" in
   autostart) exec "$HOME/.local/bin/nirupi-autostart.sh" "$@";;
   notifications) exec "$HOME/.local/bin/nirupi-notifications.sh" "$@";;
   launch) exec "$HOME/.local/bin/nirupi-launch.sh" "$@";;
+  barmode) exec "$HOME/.local/bin/nirupi-barmode.sh" "$@";;
+  calendar) exec "$HOME/.local/bin/nirupi-calendar.sh" "$@";;
   usb) exec "$HOME/.local/bin/nirupi-usb.sh" "$@";;
   lid) exec "$HOME/.local/bin/nirupi-lid.sh" "$@";;
   edit) exec "$HOME/.local/bin/nirupi-edit.sh" "$@";;

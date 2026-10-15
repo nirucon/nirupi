@@ -178,4 +178,9 @@ if [ -x "$HOME/.local/bin/nirupi-battery.sh" ] && ls /sys/class/power_supply/BAT
   "$HOME/.local/bin/nirupi-battery.sh" & BAT_PID=$!
 fi
 
+# Daily update check (at most once a day; notifies when updates are available).
+if [ -x "$HOME/.local/bin/nirupi-updatecheck.sh" ]; then
+  "$HOME/.local/bin/nirupi-updatecheck.sh" >/dev/null 2>&1 &
+fi
+
 "$HOME/.local/bin/dwm"
