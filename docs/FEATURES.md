@@ -162,6 +162,8 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **Bar modes** (`Super+Ctrl+Shift+b`): padded → full-bleed → hidden.
 - **Calendar** month view with optional Google iCal sync (`nirupi calendar`).
 - **Daily update check** with a notification when packages or repos are behind.
+- **Sticky windows**, **keyboard move/resize of floats** and a
+  **fibonacci/dwindle layout** in dwm.
 
 ## Your apps & the web
 - **Default repositories** `nirupresence`, `nirunote`, `nplay` are cloned to

@@ -25,6 +25,10 @@ startup, run `nirupi theme apply`.
 | `Super+Shift+Right` / `Super+Shift+Down` | Move the focused window forward |
 | `Super+Ctrl+b` | Show/hide the bar |
 | `Super+Ctrl+Shift+b` | Cycle bar: padded → full-bleed → hidden |
+| `Super+Ctrl+Shift+s` | Sticky: keep the window on all tags |
+| `Super+Ctrl+e` | Fibonacci / dwindle layout |
+| `Super+Ctrl+arrows` | Move the focused floating window |
+| `Super+Ctrl+Shift+arrows` | Resize the focused floating window |
 | `Super+b` | Browser (resolver) |
 | `Super+a` | **Agent** (opencode) |
 | `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson/…) |
@@ -284,6 +288,16 @@ change year, `t` today, `q` quit.
 floating bar) → **full-bleed** (bar and windows flush to the screen edges) →
 **hidden** (focus mode). `Super+Ctrl+b` still just shows/hides the bar; windows
 and dmenu follow the mode automatically.
+
+## Floating windows & layouts
+
+- **Move/resize without the mouse:** focus a floating window and use
+  `Super+Ctrl+arrows` to nudge it, `Super+Ctrl+Shift+arrows` to resize it
+  (tiled windows are untouched).
+- **Sticky** (`Super+Ctrl+Shift+s`): the focused window stays visible on every
+  tag — handy for music, notes or a reference.
+- **Fibonacci/dwindle** (`Super+Ctrl+e`, layout `[F]`): each split halves the
+  remaining area.
 
 ## Updates at a glance
 

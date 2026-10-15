@@ -6,6 +6,10 @@ optionally read a Google Calendar "secret iCal" (ICS) URL, set from inside the
 TUI with `s`; that day's events are listed next to the grid and `o` opens the
 selected day in Google Calendar (for editing, since ICS here is read-only).
 
+The drawing is adaptive: every line is truncated to the window width and the
+event list only uses the rows that fit, so it never wraps or spills in a small
+floating terminal.
+
 Keys: arrows/hjkl move the day, PgUp/PgDn month, </> year, t today,
       s settings (ICS URL), o open in Google Calendar, q quit.
 """
@@ -231,6 +235,11 @@ def events_for(events, day):
 
 # ── drawing ──────────────────────────────────────────────────────────────────
 def put(stdscr, y, x, text, attr=0):
+    """Draw text, truncated so it never wraps or touches the last cell."""
+    h, w = stdscr.getmaxyx()
+    if y < 0 or y >= h or x < 0 or x >= w:
+        return
+    text = text[:max(0, w - x - 1)]
     try:
         stdscr.addstr(y, x, text, attr)
     except curses.error:
@@ -244,25 +253,21 @@ def draw(stdscr, state):
     y, m = sel.year, sel.month
     today = datetime.date.today()
 
-    title = "%s %d" % (MONTHS[m - 1], y)
-    wk = sel.isocalendar()[1]
-    put(stdscr, 1, max(2, (w - len(title)) // 2), title, curses.A_BOLD)
-    put(stdscr, 1, max(2, (w + len(title)) // 2 + 2), "Week %d" % wk, curses.A_DIM)
-
-    grid_w = 4 + 7 * 3
+    grid_w = 4 + 7 * 3          # week column + 7 day cells (3 wide each)
     left = max(0, (w - grid_w) // 2)
+
+    title = "%s %d" % (MONTHS[m - 1], y)
+    put(stdscr, 1, left, title, curses.A_BOLD)
+    put(stdscr, 1, left + len(title) + 2, "Week %d" % sel.isocalendar()[1], curses.A_DIM)
 
     put(stdscr, 3, left, "    " + "".join("%-3s" % d for d in WD), curses.A_DIM)
     cal = calendar.Calendar(0)
     row = 4
     for week in cal.monthdatescalendar(y, m):
-        isowk = week[0].isocalendar()[1]
-        put(stdscr, row, left, "w%-3d" % isowk, curses.A_DIM)
+        put(stdscr, row, left, "w%02d " % week[0].isocalendar()[1], curses.A_DIM)
         for i, day in enumerate(week):
             attr = curses.A_NORMAL
-            if day.month != m:
-                attr |= curses.A_DIM
-            if i >= 5:
+            if day.month != m or i >= 5:
                 attr |= curses.A_DIM
             if day == today:
                 attr |= curses.A_REVERSE
@@ -271,25 +276,28 @@ def draw(stdscr, state):
             put(stdscr, row, left + 4 + i * 3, "%3d" % day.day, attr)
         row += 1
 
-    # events panel
-    ey = row + 1
-    conf = state["conf"]
-    if conf.get("ICS_URL"):
-        items = events_for(state["events"], sel)
-        put(stdscr, ey, left, "Events — %s" % sel.strftime("%a %d %b %Y"), curses.A_BOLD)
-        if items:
-            for i, (tm, summary) in enumerate(items[:8]):
-                put(stdscr, ey + 1 + i, left, "  %-8s %s" % (tm, summary))
-        else:
-            put(stdscr, ey + 1, left, "  (none)", curses.A_DIM)
-    else:
-        put(stdscr, ey, left, "No calendar synced. Press s to add a Google iCal URL.",
-            curses.A_DIM)
+    footer_row = h - 2
+    msg_row = h - 3
+    ev_top = row + 1
+    avail = footer_row - ev_top - 1     # rows available for the events panel
+    if avail > 0:
+        conf = state["conf"]
+        if conf.get("ICS_URL"):
+            items = events_for(state["events"], sel)
+            put(stdscr, ev_top, left, "Events — %s" % sel.strftime("%a %d %b %Y"), curses.A_BOLD)
+            if items:
+                for i, (tm, summary) in enumerate(items[:max(0, avail - 1)]):
+                    put(stdscr, ev_top + 1 + i, left, "  %-8s %s" % (tm, summary))
+            else:
+                put(stdscr, ev_top + 1, left, "  (none today)", curses.A_DIM)
+        elif avail >= 2:
+            put(stdscr, ev_top, left, "No calendar synced — press s to add a Google iCal URL.",
+                curses.A_DIM)
 
     if state.get("msg"):
-        put(stdscr, h - 3, left, state["msg"], curses.A_DIM)
-    footer = "<> day  PgUp/PgDn month  t today  s settings  o open in Google  q quit"
-    put(stdscr, h - 2, max(2, (w - len(footer)) // 2), footer, curses.A_DIM)
+        put(stdscr, msg_row, left, state["msg"], curses.A_DIM)
+    footer = "</> day  PgUp/Dn month  t today  s sync  o Google  q quit"
+    put(stdscr, footer_row, max(0, (w - len(footer)) // 2), footer, curses.A_DIM)
     stdscr.refresh()
 
 
@@ -302,8 +310,8 @@ def prompt(stdscr, label, initial=""):
     curses.echo()
     curses.curs_set(1)
     try:
-        stdscr.move(y, 3 + len(label) + len(initial))
-        raw = stdscr.getstr(y, 3 + len(label), 300).decode("utf-8", "replace")
+        stdscr.move(y, min(w - 2, 3 + len(label) + len(initial)))
+        raw = stdscr.getstr(y, 3 + len(label), max(1, w - 5 - len(label))).decode("utf-8", "replace")
     except curses.error:
         raw = ""
     finally:
@@ -344,6 +352,8 @@ def main(stdscr):
         state["msg"] = ""
         if ch in (ord("q"), 27):
             break
+        elif ch == curses.KEY_RESIZE:
+            continue
         elif ch in (curses.KEY_LEFT, ord("h")):
             sel -= datetime.timedelta(days=1)
         elif ch in (curses.KEY_RIGHT, ord("l")):

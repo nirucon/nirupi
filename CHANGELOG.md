@@ -2,6 +2,19 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.16.0
+- **Sticky windows** (`Super+Ctrl+Shift+S`): keep the focused window visible on
+  every tag (music, notes, a reference).
+- **Keyboard move/resize of floating windows**: `Super+Ctrl+arrows` move,
+  `Super+Ctrl+Shift+arrows` resize. No mouse needed for floats/PiP/dialogs.
+- **Fibonacci/dwindle layout** (`Super+Ctrl+E`): each split halves the remaining
+  area (new `[F]` layout).
+- **Calendar pop-up fits its window**: the drawing is now adaptive — every line
+  is truncated and the event list only uses the rows that fit, so a small
+  floating terminal no longer wraps; `KEY_RESIZE` is handled and the default
+  window is a little larger.
+- DWM config schema bumped to **v9**.
+
 ## 0.15.1
 - Installer guard: a leftover plain `dwm.desktop`/`dwm-session` (from before
   NIRUPI) no longer shadows the NIRUPI session — `ensure_nirupi_session`

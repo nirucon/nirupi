@@ -2,7 +2,7 @@
 
 <!-- Generated from vendor/suckless/dwm/config.h by tools/gen-keybindings.sh. Do not edit by hand. -->
 
-131 bindings. `Super` is the Mod4/Win key.
+141 bindings. `Super` is the Mod4/Win key.
 
 | Keys | Action |
 | --- | --- |
@@ -54,6 +54,16 @@
 | `Super+M` | monocle |
 | `Super+C` | centered master |
 | `Super+U` | centered floating master |
+| `Super+Ctrl+E` | fibonacci |
+| `Super+Ctrl+Shift+S` | togglesticky |
+| `Super+Ctrl+Left` | move floating |
+| `Super+Ctrl+Right` | movefloat 2 |
+| `Super+Ctrl+Up` | movefloat 3 |
+| `Super+Ctrl+Down` | movefloat 4 |
+| `Super+Ctrl+Shift+Left` | resize floating |
+| `Super+Ctrl+Shift+Right` | resizefloat 2 |
+| `Super+Ctrl+Shift+Up` | resizefloat 3 |
+| `Super+Ctrl+Shift+Down` | resizefloat 4 |
 | `Super+Ctrl+,` | previous layout |
 | `Super+Ctrl+.` | next layout |
 | `Super+Shift+E` | actual fullscreen |

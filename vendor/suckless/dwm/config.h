@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 8
+#define NIRUPI_CONFIG_VERSION 9
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -113,6 +113,7 @@ static const Layout layouts[] = {
     { "[M]",      monocle },                   /* [3] monocle */
     { "|M|",      centeredmaster },            /* [4] centered master */
     { ">M>",      centeredfloatingmaster },    /* [5] centered floating master */
+    { "[F]",      dwindle },                   /* [6] fibonacci / dwindle */
     { NULL,       NULL },                      /* sentinel: required last for cyclelayouts */
 };
 
@@ -362,6 +363,18 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_m,                     setlayout,      {.v = &layouts[3]} },    /* Super+m -> monocle */
 	{ MODKEY,                       XK_c,                     setlayout,      {.v = &layouts[4]} },    /* Super+c -> centered master */
 	{ MODKEY,                       XK_u,                     setlayout,      {.v = &layouts[5]} },    /* Super+u -> centered floating master */
+	{ MODKEY|ControlMask,           XK_e,                     setlayout,      {.v = &layouts[6]} },    /* Super+Ctrl+e -> fibonacci */
+	/* Sticky: keep the focused window on every tag (Super+Ctrl+Shift+s). */
+	{ MODKEY|ControlMask|ShiftMask, XK_s,                     togglesticky,   {0} },
+	/* Move / resize the focused floating window (no mouse needed). */
+	{ MODKEY|ControlMask,           XK_Left,                  movefloat,      {.i = 1} },  /* move floating */
+	{ MODKEY|ControlMask,           XK_Right,                 movefloat,      {.i = 2} },
+	{ MODKEY|ControlMask,           XK_Up,                    movefloat,      {.i = 3} },
+	{ MODKEY|ControlMask,           XK_Down,                  movefloat,      {.i = 4} },
+	{ MODKEY|ControlMask|ShiftMask, XK_Left,                  resizefloat,    {.i = 1} },  /* resize floating */
+	{ MODKEY|ControlMask|ShiftMask, XK_Right,                 resizefloat,    {.i = 2} },
+	{ MODKEY|ControlMask|ShiftMask, XK_Up,                    resizefloat,    {.i = 3} },
+	{ MODKEY|ControlMask|ShiftMask, XK_Down,                  resizefloat,    {.i = 4} },
 	{ MODKEY|ControlMask,           XK_comma,                 cyclelayout,    {.i = -1 } },            /* Super+Ctrl+, -> previous layout */
 	{ MODKEY|ControlMask,           XK_period,                cyclelayout,    {.i = +1 } },            /* Super+Ctrl+. -> next layout */
 

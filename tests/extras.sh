@@ -34,9 +34,15 @@ for cmd in capturecmd agentselectioncmd askscreencmd askcommandcmd agentrewritec
 done
 grep -q 'nirupi-launch.sh' "$DWM/config.h" || { echo 'FAIL launcher binding missing' >&2; exit 1; }
 grep -q 'nirupi-agent-rewrite.sh' "$DWM/config.h" || { echo 'FAIL rewrite binding missing' >&2; exit 1; }
-grep -q 'NIRUPI_CONFIG_VERSION 8' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
+grep -q 'NIRUPI_CONFIG_VERSION 9' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
 grep -q 'barmode,' "$DWM/config.h" && grep -q '^barmode(const Arg' "$DWM/dwm.c" \
   || { echo 'FAIL barmode missing' >&2; exit 1; }
+for fn in togglesticky movefloat resizefloat; do
+  grep -q "$fn," "$DWM/config.h" && grep -q "^$fn(const Arg" "$DWM/dwm.c" \
+    || { echo "FAIL $fn missing" >&2; exit 1; }
+done
+grep -q 'dwindle }' "$DWM/config.h" && grep -q '^dwindle(Monitor' "$DWM/dwm.c" \
+  || { echo 'FAIL fibonacci/dwindle layout missing' >&2; exit 1; }
 grep -q 'nirupi-status-click.sh photos' "$DWM/config.h" \
   && grep -q 'nirupi-status-click.sh videos' "$DWM/config.h" \
   || { echo 'FAIL media click ids missing' >&2; exit 1; }

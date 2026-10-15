@@ -239,6 +239,10 @@ static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void barmode(const Arg *arg);
+static void togglesticky(const Arg *arg);
+static void movefloat(const Arg *arg);
+static void resizefloat(const Arg *arg);
+static void dwindle(Monitor *m);
 static void togglefloating(const Arg *arg);
 static void togglescratch(const Arg *arg);
 static void toggletag(const Arg *arg);
@@ -327,7 +331,7 @@ static xcb_connection_t *xcon;
 #ifndef NIRUPI_CONFIG_VERSION
 #error "This dwm config.h is out of date. A newer version is written as config.h.nirupi-new. Merge it (or run: nirupi migrate dwm --rebuild)."
 #endif
-#if NIRUPI_CONFIG_VERSION < 8
+#if NIRUPI_CONFIG_VERSION < 9
 #error "This dwm config.h is too old for this dwm. Merge config.h.nirupi-new and rebuild."
 #endif
 
@@ -2315,6 +2319,88 @@ barmode(const Arg *arg)
 	}
 	focus(NULL);
 	arrange(selmon);
+}
+
+void
+togglesticky(const Arg *arg)
+{
+	/* Keep the focused window visible on every tag (sticky), or drop it back
+	 * onto the currently viewed tag. */
+	Client *c = selmon->sel;
+	if (!c)
+		return;
+	c->tags = (c->tags == TAGMASK) ? c->mon->tagset[c->mon->seltags] : TAGMASK;
+	arrange(c->mon);
+}
+
+void
+movefloat(const Arg *arg)
+{
+	/* Nudge the focused floating window (arg->i: 1 left, 2 right, 3 up,
+	 * 4 down). Tiled windows are left alone. */
+	Client *c = selmon->sel;
+	int step = 25;
+	if (!c || !c->isfloating)
+		return;
+	switch (arg->i) {
+	case 1: c->x -= step; break;
+	case 2: c->x += step; break;
+	case 3: c->y -= step; break;
+	case 4: c->y += step; break;
+	}
+	resize(c, c->x, c->y, c->w, c->h, 1);
+}
+
+void
+resizefloat(const Arg *arg)
+{
+	/* Grow/shrink the focused floating window (arg->i: 1 narrower,
+	 * 2 wider, 3 shorter, 4 taller). */
+	Client *c = selmon->sel;
+	int step = 25;
+	if (!c || !c->isfloating)
+		return;
+	switch (arg->i) {
+	case 1: c->w -= step; break;
+	case 2: c->w += step; break;
+	case 3: c->h -= step; break;
+	case 4: c->h += step; break;
+	}
+	if (c->w < 60) c->w = 60;
+	if (c->h < 60) c->h = 60;
+	resize(c, c->x, c->y, c->w, c->h, 1);
+}
+
+/* Fibonacci / dwindle layout: each split halves the remaining area. */
+static void
+fibonacci(Monitor *m, int s)
+{
+	unsigned int i, n;
+	int nx, ny, nw, nh;
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	if (n == 0)
+		return;
+
+	nx = m->wx; ny = m->wy; nw = m->ww; nh = m->wh;
+	for (i = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
+		if (i == 0 && n == 1) {
+			resize(c, nx, ny, nw - 2 * c->bw, nh - 2 * c->bw, 0);
+		} else if ((i % 2 == 0 && s == 0) || (i % 2 == 1 && s == 1)) {
+			resize(c, nx, ny, nw - 2 * c->bw, nh / 2 - 2 * c->bw, 0);
+			ny += nh / 2; nh -= nh / 2;
+		} else {
+			resize(c, nx, ny, nw / 2 - 2 * c->bw, nh - 2 * c->bw, 0);
+			nx += nw / 2; nw -= nw / 2;
+		}
+	}
+}
+
+void
+dwindle(Monitor *m)
+{
+	fibonacci(m, 0);
 }
 
 void
