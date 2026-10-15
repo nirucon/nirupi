@@ -161,7 +161,9 @@ case "$cmd" in
       fi
     fi
     # No audio sinks usually means firmware/UCM is missing (e.g. sof-firmware).
-    if command -v wpctl >/dev/null 2>&1 && ! wpctl status 2>/dev/null | grep -q 'Sinks:'; then
+    # Only when wpctl can actually reach the session (avoid SSH false positives).
+    if command -v wpctl >/dev/null 2>&1 && wpctl status >/dev/null 2>&1 \
+       && ! wpctl status 2>/dev/null | grep -q 'Sinks:'; then
       printf 'HINT no audio output found; on Intel install sof-firmware + alsa-ucm-conf\n'
     fi
     [[ -e /usr/share/xsessions/nirupi-dwm.desktop ]] && echo 'OK   X11 session' || echo 'WARN X11 session missing'
