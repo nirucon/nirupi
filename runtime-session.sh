@@ -19,6 +19,28 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
   dbus-update-activation-environment DISPLAY XAUTHORITY 2>/dev/null || :
 fi
 
+# ── PipeWire (Void starts no audio server by default) ─────────────────────────
+# Arch and Debian socket-activate PipeWire through systemd user units; on Void
+# the daemons must be started explicitly. Only Void is touched, so Debian and
+# Arch keep their native audio behaviour.
+SESSION_DISTRO=
+[ -r /etc/os-release ] && SESSION_DISTRO="$(. /etc/os-release 2>/dev/null; printf '%s' "${ID:-}")"
+PWPIDS=
+if [ "$SESSION_DISTRO" = void ]; then
+  if command -v pipewire >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x pipewire >/dev/null 2>&1; then
+    pipewire >/dev/null 2>&1 & PWPIDS="$PWPIDS $!"
+    # Wait briefly for the socket before starting the PipeWire clients.
+    pw_runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    i=0
+    while [ "$i" -lt 50 ] && [ ! -S "$pw_runtime/pipewire-0" ]; do sleep 0.1; i=$((i + 1)); done
+  fi
+  for daemon in wireplumber pipewire-pulse; do
+    command -v "$daemon" >/dev/null 2>&1 || continue
+    pgrep -u "$(id -u)" -x "$daemon" >/dev/null 2>&1 && continue
+    "$daemon" >/dev/null 2>&1 & PWPIDS="$PWPIDS $!"
+  done
+fi
+
 # ── User session preferences ──────────────────────────────────────────────────
 SESSION_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/session.conf"
 [ -r "$SESSION_CONF" ] && . "$SESSION_CONF"
@@ -171,7 +193,7 @@ if [ "$LOCK_ON_SUSPEND" = 1 ] && command -v xss-lock >/dev/null 2>&1; then
 fi
 
 cleanup() {
-  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID" "$CLIP_PID" "$BAT_PID"; do
+  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID" "$CLIP_PID" "$BAT_PID" $PWPIDS; do
     [ -z "$pid" ] || kill "$pid" 2>/dev/null || :
   done
 }

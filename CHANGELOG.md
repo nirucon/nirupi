@@ -2,6 +2,15 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.7
+- **Void runit provisioning:** on a clean install NIRUPI now enables `dbus`,
+  `elogind` and `polkitd` (alongside NetworkManager/bluetoothd/tailscaled) and
+  activates SDDM through `/etc/sv/sddm`; display-manager conflicts are detected
+  by inspecting `/var/service`. The Arch/Debian systemd paths are unchanged.
+- **Audio on Void:** the session now starts `pipewire`, `wireplumber` and
+  `pipewire-pulse` for **Void only** (Arch/Debian keep systemd socket
+  activation), so a clean Void install has working sound with no manual setup.
+
 ## 0.23.6
 - Fix the updates panel always saying "up to date": `ID_LIKE` is unset on Debian
   and, with `set -u`, aborted the pending-query (and with `pipefail` the pipeline

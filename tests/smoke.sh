@@ -85,6 +85,8 @@ printf 'PASS: build-stage cleanup guard\n'
 
 "$ROOT/tests/beta5-void.sh"
 
+"$ROOT/tests/void-services.sh"
+
 "$ROOT/tests/theme.sh"
 
 "$ROOT/tests/theme-depth.sh"

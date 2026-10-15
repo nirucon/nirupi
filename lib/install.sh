@@ -18,9 +18,18 @@ check_system_session_conflicts(){
 # Fail before package transactions if enabling SDDM would conflict with another DM.
 check_display_manager_conflicts() {
  [[ ${SESSION:-startx} == sddm ]] || return 0
- [[ $DISTRO == void ]] && return 0
- command -v systemctl >/dev/null 2>&1 || return 0
  local dm
+ if [[ $DISTRO == void ]]; then
+  # Void uses runit: an enabled service is a symlink under /var/service (which
+  # itself points at /run/runit/runsvdir/current). No systemctl is involved.
+  for dm in gdm lightdm lxdm; do
+   if [[ -e /var/service/$dm || -e /run/runit/service/$dm ]]; then
+    die "Existing enabled display manager: $dm; select --session startx or disable it explicitly"; return 1
+   fi
+  done
+  return 0
+ fi
+ command -v systemctl >/dev/null 2>&1 || return 0
  for dm in gdm lightdm lxdm; do
   if systemctl is-enabled --quiet "$dm.service" 2>/dev/null; then
    die "Existing enabled display manager: $dm.service; select --session startx or disable it explicitly"; return 1
@@ -359,9 +368,6 @@ configure_sddm(){
    warn 'Another display manager enabled; SDDM setup blocked'
    return 0
   fi
- else
-  # Void's runit service cannot be safely enabled until its service path is verified.
-  warn 'Void: SDDM service activation requires manual verification; theme files will be installed'
  fi
  sudo install -d /usr/share/sddm/themes/niru-noir /etc/sddm.conf.d
  if [[ -e /usr/share/sddm/themes/niru-noir/Main.qml ]]; then
@@ -381,7 +387,11 @@ configure_sddm(){
  else
   printf '[Theme]\nCurrent=niru-noir\n' | sudo tee /etc/sddm.conf.d/10-niru-noir.conf >/dev/null
  fi
- if [[ $DISTRO != void ]]; then
+ if [[ $DISTRO == void ]]; then
+  # Void ships the SDDM service as /etc/sv/sddm; enabling it is a symlink.
+  enable_void_service sddm /var/service \
+    || warn 'Could not enable the sddm runit service; enable it manually: ln -s /etc/sv/sddm /var/service/'
+ else
   sudo systemctl enable sddm.service || warn 'Failed to enable SDDM'
  fi
 }
@@ -571,6 +581,18 @@ ensure_nirupi_session(){
  rm -f -- "$tmp"
 }
 
+# Enable a runit service on Void by symlinking /etc/sv/<svc> into the runsvdir
+# (default /var/service). Idempotent: an already-enabled service is left
+# untouched. Returns non-zero when the unit is missing or the link failed.
+enable_void_service(){
+ local svc="${1:-}" root="${2:-/var/service}"
+ [[ -n $svc ]] || return 1
+ [[ -e /etc/sv/$svc ]] || return 1
+ if [[ -e $root/$svc ]]; then return 0; fi
+ sudo ln -s "/etc/sv/$svc" "$root/" 2>/dev/null || return 1
+ log "Enabled $svc (runit)"
+ return 0
+}
 enable_services(){
  local unit svc
  case "$DISTRO" in
@@ -594,11 +616,13 @@ enable_services(){
     sudo systemctl enable --now "$unit" >/dev/null 2>&1 && log "Enabled $unit"
    done;;
   void)
-   for svc in tailscaled bluetoothd NetworkManager; do
+   # Void has no systemd: a runit service is enabled by symlinking its unit
+   # into /var/service. dbus, elogind and polkitd come first — on a clean
+   # install NetworkManager, bluetoothd and the desktop session depend on them.
+   for svc in dbus elogind polkitd tailscaled bluetoothd NetworkManager; do
     [[ -e /etc/sv/$svc ]] || continue
     [[ -e /var/service/$svc ]] && continue
-    if sudo ln -s "/etc/sv/$svc" /var/service/ 2>/dev/null; then log "Enabled $svc (runit)"
-    else warn "Could not enable $svc"; fi
+    enable_void_service "$svc" /var/service || warn "Could not enable $svc"
    done;;
  esac
 }
