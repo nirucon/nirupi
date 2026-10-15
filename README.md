@@ -55,8 +55,8 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   blurred screen on input), a **power menu with timers** (`Super+Shift+q`), a
   **calendar** and **system-update** pop-up, **caffeine** (stay awake),
   **focus/DND**, **screen recording**, **automatic clipboard history**, a
-  **night-light cycle**, **keyboard-layout and touchpad toggles**, **day/night
-  theme**, and quick launch for `nirunote`/`nplay`. See
+  **night-light cycle**, **keyboard-layout and touchpad toggles**, and quick
+  launch for `nirunote`/`nplay`. Themes are always chosen **manually**. See
   [`docs/FEATURES.md`](docs/FEATURES.md).
 - Installs **opencode** and wires `nirupi agent` + a control center / keybinding
   cheat-sheet (`Super+a`, `Super+/`, ``Super+` ``).

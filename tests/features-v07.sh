@@ -41,7 +41,7 @@ grep -q 'clockfont' "$SLOCK/config.h" || fail 'slock clock fonts missing'
 # ── New helpers exist, are executable and syntactically valid ───────────────
 helpers=(nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh
          nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh
-         nirupi-clipd.sh nirupi-theme-auto.sh)
+         nirupi-clipd.sh)
 for h in "${helpers[@]}"; do
   f="$ROOT/vendor/noir/local/bin/$h"
   [[ -x "$f" ]] || fail "helper missing/not executable: $h"
@@ -56,7 +56,7 @@ grep -q 'nirupi-status-click.sh caffeine", *31' "$CFG" || fail 'caffeine status 
 grep -q 'get_caffeine' "$ROOT/vendor/noir/local/bin/dwm-status.sh" || fail 'caffeine status segment missing'
 grep -q 'caffeine' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'caffeine missing from control center'
 grep -q 'Tailscale: toggle' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'tailscale entry missing'
-grep -q 'nirupi-theme-auto.sh' "$ROOT/lib/install.sh" || fail 'theme-auto not deployed'
+! grep -q 'nirupi-theme-auto.sh' "$ROOT/lib/install.sh" || fail 'theme-auto should be removed (manual theme selection only)'
 
 # ── Both viewers list every tag binding ──────────────────────────────────────
 keys_out="$(NIRUPI_DWM_CONFIG="$CFG" bash "$ROOT/vendor/noir/local/bin/nirupi-keys.sh" --list)"

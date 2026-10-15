@@ -2,6 +2,12 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.10.1
+- Themes are **manual only**. Removed the day/night auto switcher
+  (`nirupi-theme-auto.sh`) and its control-center entry, so nothing changes the
+  theme on a schedule. Pick one with `Super+Ctrl+t`, `nirupi theme set NAME` or
+  `nirupi theme menu`.
+
 ## 0.10.0
 - **dwm polish:** smartgaps + smartborders (no gaps/border on a lone window),
   **in-place restart** on `Super+Ctrl+Shift+r` (releases the WM role before

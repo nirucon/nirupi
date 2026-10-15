@@ -92,7 +92,6 @@ Theme: choose…
 Wallpaper mode: toggle
 Next wallpaper
 Wallpapers per workspace: toggle
-Theme: auto (day/night)
 Tailscale: toggle
 Wi-Fi
 Bluetooth
@@ -138,7 +137,6 @@ case "$action" in
   'Wallpaper mode: toggle') theme_toggle;;
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
   'Wallpapers per workspace: toggle') exec "$HOME/.local/bin/nirupi-wallpaper.sh" per-tag toggle;;
-  'Theme: auto (day/night)') exec "$HOME/.local/bin/nirupi-theme-auto.sh" auto;;
   'Tailscale: toggle') tailscale_toggle;;
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;

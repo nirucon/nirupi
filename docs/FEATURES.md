@@ -88,13 +88,11 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
   one-line description of each.
 - Commands: `nirupi theme list`, `nirupi theme preview NAME`,
   `nirupi theme set NAME`.
-- **Day/night auto** — `nirupi-theme-auto.sh auto` picks `warm` after 20:00 and
-  before 07:00, else `noir` (also in the control center). Schedule with cron,
-  e.g. `0 * * * * ~/.local/bin/nirupi-theme-auto.sh auto`.
+- **Manual only:** the theme is always chosen by hand (picker or `nirupi theme
+  set`); nothing switches automatically on a schedule.
 - **Wallpaper-driven palette:** `nirupi theme wallpaper IMAGE`.
 - Add your own: drop `MyTheme.env` (same schema) in `vendor/noir/theme/`.
-- **Noir day** is a light palette for daylight; the day/night auto still uses
-  `warm`/`noir` (it does not switch to light on its own).
+- **Noir day** is a light palette for daylight.
 
 ## Capture, clipboard & AI
 - **Capture** `Super+Ctrl+Print`: region / window / full screen, saved to
@@ -137,8 +135,8 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - Suspend is undoable (see Lock screen above).
 - **Control center** `Super+Shift+m`: lock, suspend, log out, reboot, shut down,
   caffeine, focus, record, window switcher, gaps, keyboard, touchpad, night light,
-  theme + wallpaper, day/night, Tailscale, Wi-Fi, Bluetooth, weather, mute, the
-  three apps, agent, backup and updates.
+  theme, wallpaper, audio output, capture, emoji, clipboard, Tailscale, Wi-Fi,
+  Bluetooth, weather, the three apps, agent, backup and updates.
 
 ## Operations
 - `nirupi doctor [--fix]`, `nirupi gc`, `nirupi backup [--schedule]`,
