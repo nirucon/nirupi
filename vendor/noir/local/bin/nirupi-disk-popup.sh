@@ -5,7 +5,7 @@ set -Eeuo pipefail
   printf '@title Disk\n'
   printf '@sub %s\n' "$(cat /etc/hostname 2>/dev/null || uname -n 2>/dev/null)"
   printf '@accent blue\n'
-  df -h -x tmpfs -x devtmpfs -x squashfs -x overlay 2>/dev/null | awk 'NR>1 {
+  df -h -x tmpfs -x devtmpfs -x squashfs -x overlay 2>/dev/null | awk 'NR>1 && $6 !~ /^\/(proc|sys|dev|run)(\/|$)/ {
     pct=$5; sub(/%/,"",pct);
     printf "@bar %s\n", pct;
     printf "@row %s|%s / %s\n", $6, $3, $2;

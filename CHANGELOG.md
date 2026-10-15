@@ -2,6 +2,9 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.21.6
+- Disk panel hides pseudo-filesystems (/proc, /sys, /dev, /run).
+
 ## 0.21.5
 - Weather panel: parse the hourly fields tab-separated so multi-word conditions
   no longer shift the columns (temperature showed a stray "3°C").
