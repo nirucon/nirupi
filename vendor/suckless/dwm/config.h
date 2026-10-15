@@ -366,16 +366,16 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_u,                     setlayout,      {.v = &layouts[5]} },    /* Super+u -> centered floating master */
 	{ MODKEY|ControlMask,           XK_e,                     setlayout,      {.v = &layouts[6]} },    /* Super+Ctrl+e -> fibonacci */
 	/* Sticky: keep the focused window on every tag (Super+Ctrl+Shift+s). */
-	{ MODKEY|ControlMask|ShiftMask, XK_s,                     togglesticky,   {0} },
+	{ MODKEY|ControlMask|ShiftMask, XK_s,                     togglesticky,   {0} },  /* Super+Ctrl+Shift+s -> sticky (keep on all tags) */
 	/* Move / resize the focused floating window (no mouse needed). */
-	{ MODKEY|ControlMask,           XK_Left,                  movefloat,      {.i = 1} },  /* move floating */
-	{ MODKEY|ControlMask,           XK_Right,                 movefloat,      {.i = 2} },
-	{ MODKEY|ControlMask,           XK_Up,                    movefloat,      {.i = 3} },
-	{ MODKEY|ControlMask,           XK_Down,                  movefloat,      {.i = 4} },
-	{ MODKEY|ControlMask|ShiftMask, XK_Left,                  resizefloat,    {.i = 1} },  /* resize floating */
-	{ MODKEY|ControlMask|ShiftMask, XK_Right,                 resizefloat,    {.i = 2} },
-	{ MODKEY|ControlMask|ShiftMask, XK_Up,                    resizefloat,    {.i = 3} },
-	{ MODKEY|ControlMask|ShiftMask, XK_Down,                  resizefloat,    {.i = 4} },
+	{ MODKEY|ControlMask,           XK_Left,                  movefloat,      {.i = 1} },  /* Super+Ctrl+Left -> move floating left */
+	{ MODKEY|ControlMask,           XK_Right,                 movefloat,      {.i = 2} },  /* Super+Ctrl+Right -> move floating right */
+	{ MODKEY|ControlMask,           XK_Up,                    movefloat,      {.i = 3} },  /* Super+Ctrl+Up -> move floating up */
+	{ MODKEY|ControlMask,           XK_Down,                  movefloat,      {.i = 4} },  /* Super+Ctrl+Down -> move floating down */
+	{ MODKEY|ControlMask|ShiftMask, XK_Left,                  resizefloat,    {.i = 1} },  /* Super+Ctrl+Shift+Left -> shrink width */
+	{ MODKEY|ControlMask|ShiftMask, XK_Right,                 resizefloat,    {.i = 2} },  /* Super+Ctrl+Shift+Right -> grow width */
+	{ MODKEY|ControlMask|ShiftMask, XK_Up,                    resizefloat,    {.i = 3} },  /* Super+Ctrl+Shift+Up -> shrink height */
+	{ MODKEY|ControlMask|ShiftMask, XK_Down,                  resizefloat,    {.i = 4} },  /* Super+Ctrl+Shift+Down -> grow height */
 	{ MODKEY|ControlMask,           XK_comma,                 cyclelayout,    {.i = -1 } },            /* Super+Ctrl+, -> previous layout */
 	{ MODKEY|ControlMask,           XK_period,                cyclelayout,    {.i = +1 } },            /* Super+Ctrl+. -> next layout */
 

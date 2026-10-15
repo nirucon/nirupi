@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 """NIRU calendar — a clean, keyboard-first month view.
 
-English UI with a Monday-first week (Mon..Sun) and ISO week numbers. It can
-optionally read a Google Calendar "secret iCal" (ICS) URL, set from inside the
-TUI with `s`; that day's events are listed next to the grid and `o` opens the
-selected day in Google Calendar (for editing, since ICS here is read-only).
+English UI, Monday-first week (Mon..Sun), ISO week numbers. It can read one or
+more Google Calendar "secret iCal" (ICS) URLs, added from inside the TUI with
+`s`; the selected day's events are listed and `o` opens that day in Google
+Calendar (for editing, since ICS here is read-only).
 
-The drawing is adaptive: every line is truncated to the window width and the
-event list only uses the rows that fit, so it never wraps or spills in a small
-floating terminal.
+Drawing is adaptive (lines are truncated and only the rows that fit are used),
+so it never wraps in a small floating terminal. The selected day is a highlighted
+box you move around; today stays marked even when you navigate away.
 
 Keys: arrows/hjkl move the day, PgUp/PgDn month, </> year, t today,
-      s settings (ICS URL), o open in Google Calendar, q quit.
+      s add an iCal URL, x clear all iCal URLs, o open in Google, q quit.
 """
 import calendar
 import curses
 import datetime
+import hashlib
 import os
 import subprocess
 import urllib.request
@@ -26,13 +27,13 @@ WD = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
 
 CONF_DIR = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "nirupi")
 CONF = os.path.join(CONF_DIR, "calendar.conf")
-CACHE = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "nirupi", "calendar.ics")
+CACHE_DIR = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "nirupi")
 ICS_TTL = 900  # seconds
 
 
 # ── config ───────────────────────────────────────────────────────────────────
 def read_conf():
-    conf = {"ICS_URL": ""}
+    urls = []
     try:
         with open(CONF) as fh:
             for line in fh:
@@ -40,49 +41,59 @@ def read_conf():
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 k, v = line.split("=", 1)
-                conf[k.strip()] = v.strip().strip('"')
+                if k.strip() == "ICS_URL":
+                    v = v.strip().strip('"')
+                    if v and v not in urls:
+                        urls.append(v)
     except OSError:
         pass
-    return conf
+    return {"ICS_URLS": urls}
 
 
 def write_conf(conf):
     os.makedirs(CONF_DIR, exist_ok=True)
     tmp = CONF + ".tmp"
     with open(tmp, "w") as fh:
-        fh.write("# NIRU calendar settings (user-owned).\n")
-        fh.write("# Google Calendar -> Settings -> your calendar -> "
-                 "\"Secret address in iCal format\".\n")
-        fh.write("ICS_URL=%s\n" % conf.get("ICS_URL", ""))
+        fh.write("# NIRU calendar settings (user-owned; edited in the TUI with `s`).\n")
+        fh.write("# Google Calendar -> Settings -> <calendar> -> \"Secret address in iCal format\".\n")
+        for u in conf.get("ICS_URLS", []):
+            fh.write("ICS_URL=%s\n" % u)
     os.replace(tmp, CONF)
 
 
 # ── ICS fetch + parse ────────────────────────────────────────────────────────
 def fetch_ics(url, force=False):
-    """Return ICS text from the cache, refreshing when stale. '' on failure."""
+    """Return (text, error). Refreshes the per-URL cache when stale."""
     if not url:
-        return ""
+        return "", "no url"
+    url = url.replace("webcal://", "https://", 1)
+    cache = os.path.join(CACHE_DIR, "calendar-%s.ics" % hashlib.sha1(url.encode()).hexdigest()[:12])
     try:
-        age = datetime.datetime.now().timestamp() - os.path.getmtime(CACHE)
+        age = datetime.datetime.now().timestamp() - os.path.getmtime(cache)
         if not force and age < ICS_TTL:
-            with open(CACHE, encoding="utf-8", errors="replace") as fh:
-                return fh.read()
+            with open(cache, encoding="utf-8", errors="replace") as fh:
+                return fh.read(), ""
     except OSError:
         pass
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "nirupi-calendar"})
-        with urllib.request.urlopen(req, timeout=8) as resp:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) nirupi-calendar",
+            "Accept": "text/calendar,*/*",
+        })
+        with urllib.request.urlopen(req, timeout=12) as resp:
             text = resp.read().decode("utf-8", "replace")
-        os.makedirs(os.path.dirname(CACHE), exist_ok=True)
-        with open(CACHE, "w", encoding="utf-8") as fh:
+        if "BEGIN:VCALENDAR" not in text:
+            return "", "not a calendar (check the secret iCal link)"
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(cache, "w", encoding="utf-8") as fh:
             fh.write(text)
-        return text
-    except Exception:
+        return text, ""
+    except Exception as exc:  # noqa: BLE001
         try:
-            with open(CACHE, encoding="utf-8", errors="replace") as fh:
-                return fh.read()
+            with open(cache, encoding="utf-8", errors="replace") as fh:
+                return fh.read(), "offline (cached)"
         except OSError:
-            return ""
+            return "", str(exc)[:60]
 
 
 def unfold(lines):
@@ -119,8 +130,8 @@ def parse_rrule(value):
     return rule
 
 
-def parse_events(text):
-    events = []
+def parse_events(text, into=None):
+    events = [] if into is None else into
     cur = None
     for line in unfold(text.splitlines()):
         up = line.upper()
@@ -133,16 +144,16 @@ def parse_events(text):
         elif cur is not None:
             key, _, val = line.partition(":")
             base = key.split(";", 1)[0].upper()
-            params = {}
-            if ";" in key:
-                for p in key.split(";")[1:]:
-                    if "=" in p:
-                        pk, pv = p.split("=", 1)
-                        params[pk.upper()] = pv
             if base == "DTSTART":
+                params = {}
+                if ";" in key:
+                    for p in key.split(";")[1:]:
+                        if "=" in p:
+                            pk, pv = p.split("=", 1)
+                            params[pk.upper()] = pv
                 cur["start"] = parse_dt(val, params)
             elif base == "DTEND":
-                cur["end"] = parse_dt(val, params)
+                cur["end"] = parse_dt(val, {})
             elif base == "SUMMARY":
                 cur["summary"] = val.replace("\\,", ",").replace("\\n", " ").strip()
             elif base == "RRULE":
@@ -151,7 +162,6 @@ def parse_events(text):
 
 
 def occurrences(ev, start, end):
-    """Yield dates in [start, end] on which ev occurs (basic RRULE support)."""
     ds = ev["start"]
     if isinstance(ds, datetime.datetime):
         base = ds.date()
@@ -172,11 +182,12 @@ def occurrences(ev, start, end):
     count = int(rrule["COUNT"]) if rrule.get("COUNT", "").isdigit() else None
     until = None
     if rrule.get("UNTIL"):
-        u = rrule["UNTIL"].rstrip("Z")
-        until = datetime.datetime.strptime(u[:8], "%Y%m%d").date()
+        try:
+            until = datetime.datetime.strptime(rrule["UNTIL"].rstrip("Z")[:8], "%Y%m%d").date()
+        except ValueError:
+            until = None
     byday = [d[-2:].upper() for d in rrule.get("BYDAY", "").split(",") if d]
     wdmap = {"MO": 0, "TU": 1, "WE": 2, "TH": 3, "FR": 4, "SA": 5, "SU": 6}
-
     produced = 0
     cur = base
     guard = 0
@@ -186,10 +197,7 @@ def occurrences(ev, start, end):
             break
         hit = False
         if freq == "WEEKLY":
-            if byday:
-                hit = cur.weekday() in [wdmap[d] for d in byday if d in wdmap]
-            else:
-                hit = cur.weekday() == base.weekday()
+            hit = cur.weekday() in [wdmap[d] for d in byday if d in wdmap] if byday else cur.weekday() == base.weekday()
         elif freq in ("DAILY", ""):
             hit = True
         elif freq == "MONTHLY":
@@ -213,14 +221,12 @@ def occurrences(ev, start, end):
             cur += datetime.timedelta(days=interval)
         if count is not None and produced >= count:
             break
-    return
 
 
 def add_months(d, n):
     y = d.year + (d.month - 1 + n) // 12
     m = (d.month - 1 + n) % 12 + 1
-    last = calendar.monthrange(y, m)[1]
-    return d.replace(year=y, month=m, day=min(d.day, last))
+    return d.replace(year=y, month=m, day=min(d.day, calendar.monthrange(y, m)[1]))
 
 
 def events_for(events, day):
@@ -228,13 +234,24 @@ def events_for(events, day):
     for ev in events:
         for d, tm in occurrences(ev, day, day):
             if d == day:
-                items.append((tm or "  all-day", ev.get("summary", "(no title)")))
+                items.append((tm or "all-day", ev.get("summary", "(no title)")))
     items.sort()
     return items
 
 
+def load_calendars(conf, force=False):
+    """Return (events, errors) for all configured URLs."""
+    events, errors = [], []
+    for url in conf.get("ICS_URLS", []):
+        text, err = fetch_ics(url, force)
+        if text:
+            parse_events(text, into=events)
+        if err:
+            errors.append(err)
+    return events, errors
+
+
 def next_event(events):
-    """Return a short line for the next upcoming event, or ''."""
     now = datetime.datetime.now()
     for offset in range(0, 14):
         day = now.date() + datetime.timedelta(days=offset)
@@ -251,16 +268,13 @@ def next_event(events):
                 continue
             if offset == 0:
                 mins = int((when - now).total_seconds() // 60)
-                if mins < 600:
-                    return "in %dm %s" % (mins, summary)
-                return "%s %s" % (tm.strip(), summary)
+                return ("in %dm %s" % (mins, summary)) if mins < 600 else ("%s %s" % (tm.strip(), summary))
             return "%s %s %s" % (day.strftime("%a"), "" if tm.strip() == "all-day" else tm.strip(), summary)
     return ""
 
 
 # ── drawing ──────────────────────────────────────────────────────────────────
 def put(stdscr, y, x, text, attr=0):
-    """Draw text, truncated so it never wraps or touches the last cell."""
     h, w = stdscr.getmaxyx()
     if y < 0 or y >= h or x < 0 or x >= w:
         return
@@ -278,7 +292,7 @@ def draw(stdscr, state):
     y, m = sel.year, sel.month
     today = datetime.date.today()
 
-    grid_w = 4 + 7 * 3          # week column + 7 day cells (3 wide each)
+    grid_w = 4 + 7 * 3
     left = max(0, (w - grid_w) // 2)
 
     title = "%s %d" % (MONTHS[m - 1], y)
@@ -286,63 +300,91 @@ def draw(stdscr, state):
     put(stdscr, 1, left + len(title) + 2, "Week %d" % sel.isocalendar()[1], curses.A_DIM)
 
     put(stdscr, 3, left, "    " + "".join("%-3s" % d for d in WD), curses.A_DIM)
-    cal = calendar.Calendar(0)
     row = 4
-    for week in cal.monthdatescalendar(y, m):
+    for week in cal_month(y, m):
         put(stdscr, row, left, "w%02d " % week[0].isocalendar()[1], curses.A_DIM)
         for i, day in enumerate(week):
             attr = curses.A_NORMAL
             if day.month != m or i >= 5:
                 attr |= curses.A_DIM
             if day == today:
-                attr |= curses.A_REVERSE
+                attr |= curses.A_UNDERLINE | curses.A_BOLD
             if day == sel:
-                attr |= curses.A_BOLD
+                attr = curses.A_REVERSE | curses.A_BOLD
             put(stdscr, row, left + 4 + i * 3, "%3d" % day.day, attr)
         row += 1
 
     footer_row = h - 2
     msg_row = h - 3
     ev_top = row + 1
-    avail = footer_row - ev_top - 1     # rows available for the events panel
+    avail = footer_row - ev_top - 1
     if avail > 0:
         conf = state["conf"]
-        if conf.get("ICS_URL"):
+        if not conf.get("ICS_URLS"):
+            put(stdscr, ev_top, left, "No calendar synced — press s to add a Google iCal URL.", curses.A_DIM)
+        else:
             items = events_for(state["events"], sel)
-            put(stdscr, ev_top, left, "Events — %s" % sel.strftime("%a %d %b %Y"), curses.A_BOLD)
-            if items:
+            ncal = len(conf["ICS_URLS"])
+            head = "Events — %s  (%d calendar%s)" % (sel.strftime("%a %d %b %Y"), ncal, "" if ncal == 1 else "s")
+            put(stdscr, ev_top, left, head, curses.A_BOLD)
+            if state.get("errors"):
+                put(stdscr, ev_top + 1, left, "  sync: %s" % state["errors"][0], curses.A_DIM)
+            elif items:
                 for i, (tm, summary) in enumerate(items[:max(0, avail - 1)]):
                     put(stdscr, ev_top + 1 + i, left, "  %-8s %s" % (tm, summary))
             else:
                 put(stdscr, ev_top + 1, left, "  (none today)", curses.A_DIM)
-        elif avail >= 2:
-            put(stdscr, ev_top, left, "No calendar synced — press s to add a Google iCal URL.",
-                curses.A_DIM)
 
     if state.get("msg"):
         put(stdscr, msg_row, left, state["msg"], curses.A_DIM)
-    footer = "</> day  PgUp/Dn month  t today  s sync  o Google  q quit"
+    footer = "</> day  PgUp/Dn month  t today  s add ical  x clear  o Google  q quit"
     put(stdscr, footer_row, max(0, (w - len(footer)) // 2), footer, curses.A_DIM)
     stdscr.refresh()
 
 
-def prompt(stdscr, label, initial=""):
+def cal_month(y, m):
+    return calendar.Calendar(0).monthdatescalendar(y, m)
+
+
+def prompt(stdscr, label):
+    """Read a line of arbitrary length (scrolls horizontally), Enter=accept."""
     h, w = stdscr.getmaxyx()
     y = h - 3
-    put(stdscr, y, 2, " " * (w - 4))
-    put(stdscr, y, 3, label + initial, curses.A_BOLD)
-    stdscr.refresh()
-    curses.echo()
+    buf = ""
+    curses.noecho()
     curses.curs_set(1)
-    try:
-        stdscr.move(y, min(w - 2, 3 + len(label) + len(initial)))
-        raw = stdscr.getstr(y, 3 + len(label), max(1, w - 5 - len(label))).decode("utf-8", "replace")
-    except curses.error:
-        raw = ""
-    finally:
-        curses.noecho()
-        curses.curs_set(0)
-    return raw or initial
+    while True:
+        avail = max(1, w - 4 - len(label))
+        start = max(0, len(buf) - avail + 1)
+        vis = buf[start:]
+        put(stdscr, y, 2, " " * max(0, w - 3))
+        put(stdscr, y, 3, label + vis, curses.A_BOLD)
+        try:
+            stdscr.move(y, min(w - 2, 3 + len(label) + len(vis)))
+        except curses.error:
+            pass
+        stdscr.refresh()
+        try:
+            ch = stdscr.getch()
+        except curses.error:
+            break
+        if ch in (10, 13, curses.KEY_ENTER):
+            break
+        if ch == 27:
+            buf = ""
+            break
+        if ch in (curses.KEY_BACKSPACE, 127, 8):
+            buf = buf[:-1]
+        elif ch == curses.KEY_RESIZE:
+            continue
+        elif 32 <= ch < 127:
+            buf += chr(ch)
+    curses.curs_set(0)
+    return buf
+
+
+def reload(state, force=False):
+    state["events"], state["errors"] = load_calendars(state["conf"], force)
 
 
 def open_google(day):
@@ -357,18 +399,15 @@ def open_google(day):
     return False
 
 
-# ── main ─────────────────────────────────────────────────────────────────────
 def main(stdscr):
     curses.curs_set(0)
     try:
         curses.use_default_colors()
     except curses.error:
         pass
-    conf = read_conf()
     today = datetime.date.today()
-    state = {"sel": today, "conf": conf, "msg": "", "events": []}
-    if conf.get("ICS_URL"):
-        state["events"] = parse_events(fetch_ics(conf["ICS_URL"]))
+    state = {"sel": today, "conf": read_conf(), "msg": "", "events": [], "errors": []}
+    reload(state)
 
     while True:
         draw(stdscr, state)
@@ -401,12 +440,21 @@ def main(stdscr):
             if not open_google(sel):
                 state["msg"] = "Could not open a browser."
         elif ch == ord("s"):
-            url = prompt(stdscr, "Google iCal URL (empty clears): ")
-            conf["ICS_URL"] = url.strip()
-            write_conf(conf)
-            state["conf"] = conf
-            state["events"] = parse_events(fetch_ics(conf["ICS_URL"], force=True)) if conf["ICS_URL"] else []
-            state["msg"] = "Saved." if conf["ICS_URL"] else "Calendar sync disabled."
+            url = prompt(stdscr, "iCal URL: ")
+            if url.strip():
+                if url.strip() not in state["conf"]["ICS_URLS"]:
+                    state["conf"]["ICS_URLS"].append(url.strip())
+                write_conf(state["conf"])
+                reload(state, force=True)
+                n = len(state["events"])
+                state["msg"] = "Saved — %d event%s loaded%s" % (
+                    n, "" if n == 1 else "s",
+                    "" if not state["errors"] else " (" + state["errors"][0] + ")")
+        elif ch == ord("x"):
+            state["conf"]["ICS_URLS"] = []
+            write_conf(state["conf"])
+            state["events"], state["errors"] = [], []
+            state["msg"] = "Calendar sync cleared."
         state["sel"] = sel
 
 
@@ -414,7 +462,7 @@ if __name__ == "__main__":
     import sys
     if "--next" in sys.argv:
         _conf = read_conf()
-        _evs = parse_events(fetch_ics(_conf.get("ICS_URL", ""))) if _conf.get("ICS_URL") else []
+        _evs, _ = load_calendars(_conf)
         _line = next_event(_evs) if _evs else ""
         if _line:
             print(_line)

@@ -2,6 +2,21 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.17.2
+- **Calendar**: the iCal URL prompt now accepts arbitrary-length input (it used
+  to truncate to the window width, so a pasted Google URL was cut and produced no
+  events); several iCal URLs can be added (`s` adds, `x` clears) and merged; the
+  selected day is a clear highlighted box you move around while *today* stays
+  marked; sync status/errors are shown.
+- **Weather pop-up** now uses **Open-Meteo** (the same source as the bar),
+  defaults to Ljungskile, and lets you change the location by name (geocoded).
+- **Battery pop-up** no longer aborts when a driver exposes `charge_full`
+  instead of `energy_full` (Void) or omits `power_now`.
+- **Status bar**: spacing around segment separators is normalised (fixes the
+  uneven gap by the Nextcloud icon).
+- **Keybinding viewer**: friendly function names and fuller descriptions
+  (including the float move/resize keys).
+
 ## 0.17.1
 - Apply the hostname-specific monitor layout (`apply-screenlayout.sh`) at
   session start, so a machine with a known multi-monitor setup is configured

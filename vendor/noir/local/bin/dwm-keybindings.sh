@@ -279,10 +279,19 @@ function append_row(cat, mods, key, fn, arg) {
   # Prefer the human description in the trailing /* ... -> text */ comment.
   simple_arg = simplify_arg(arg)
   if (cur_desc != "") simple_arg = cur_desc
+  # Fallback descriptions for the float move/resize keys (arg carries only .i).
+  if (cur_desc == "" && (fn == "movefloat" || fn == "resizefloat")) {
+    _d = arg; gsub(/[^0-9]/, "", _d)
+    if (fn == "movefloat")
+      simple_arg = (_d=="1"?"move floating left":_d=="2"?"move floating right":_d=="3"?"move floating up":_d=="4"?"move floating down":"move floating")
+    else
+      simple_arg = (_d=="1"?"shrink width":_d=="2"?"grow width":_d=="3"?"shrink height":_d=="4"?"grow height":"resize floating")
+  }
   
   # Store for table display
+  flabel = (fn in FUNCS) ? FUNCS[fn] : fn
   store[cat] = store[cat] sprintf("| %-33s | %-23s | %-27s | %-40s |\n", 
-    mods, key, fn, simple_arg)
+    mods, key, flabel, simple_arg)
   
   # Also store raw data for fzf/filtering (tab-separated)
   if (OUTPUT_FORMAT == "tsv") {
@@ -419,6 +428,28 @@ BEGIN {
   LABELS["media_play"] = "media play/pause"
   LABELS["media_next"] = "media next"
   LABELS["media_prev"] = "media previous"
+
+  # Friendly names for the Function column (raw C identifiers are ugly).
+  FUNCS["setlayout"]    = "set layout"
+  FUNCS["togglefloating"] = "float window"
+  FUNCS["togglescratch"]  = "scratchpad"
+  FUNCS["togglebar"]      = "show/hide bar"
+  FUNCS["barmode"]        = "bar mode (cycle)"
+  FUNCS["togglesticky"]   = "sticky window"
+  FUNCS["movefloat"]      = "move float"
+  FUNCS["resizefloat"]    = "resize float"
+  FUNCS["dwindle"]        = "fibonacci"
+  FUNCS["zoom"]           = "zoom (swap master)"
+  FUNCS["focusstack"]     = "focus window"
+  FUNCS["rotatestack"]    = "rotate stack"
+  FUNCS["focusmon"]       = "focus monitor"
+  FUNCS["tagmon"]         = "move to monitor"
+  FUNCS["incnmaster"]     = "master count"
+  FUNCS["setmfact"]       = "master factor"
+  FUNCS["cyclelayout"]    = "cycle layouts"
+  FUNCS["togglefullscr"]  = "fullscreen"
+  FUNCS["focusurgent"]    = "focus urgent"
+  FUNCS["spawn"]          = "launch"
   
   if (OUTPUT_FORMAT == "tsv") {
     # Skip header for TSV output (used by fzf)

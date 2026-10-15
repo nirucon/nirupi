@@ -55,15 +55,15 @@
 | `Super+C` | centered master |
 | `Super+U` | centered floating master |
 | `Super+Ctrl+E` | fibonacci |
-| `Super+Ctrl+Shift+S` | togglesticky |
-| `Super+Ctrl+Left` | move floating |
-| `Super+Ctrl+Right` | movefloat 2 |
-| `Super+Ctrl+Up` | movefloat 3 |
-| `Super+Ctrl+Down` | movefloat 4 |
-| `Super+Ctrl+Shift+Left` | resize floating |
-| `Super+Ctrl+Shift+Right` | resizefloat 2 |
-| `Super+Ctrl+Shift+Up` | resizefloat 3 |
-| `Super+Ctrl+Shift+Down` | resizefloat 4 |
+| `Super+Ctrl+Shift+S` | sticky (keep on all tags) |
+| `Super+Ctrl+Left` | move floating left |
+| `Super+Ctrl+Right` | move floating right |
+| `Super+Ctrl+Up` | move floating up |
+| `Super+Ctrl+Down` | move floating down |
+| `Super+Ctrl+Shift+Left` | shrink width |
+| `Super+Ctrl+Shift+Right` | grow width |
+| `Super+Ctrl+Shift+Up` | shrink height |
+| `Super+Ctrl+Shift+Down` | grow height |
 | `Super+Ctrl+,` | previous layout |
 | `Super+Ctrl+.` | next layout |
 | `Super+Shift+E` | actual fullscreen |

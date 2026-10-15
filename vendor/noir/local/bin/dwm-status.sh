@@ -1220,7 +1220,7 @@ build_status_line() {
   else
     parts=("$(sect 1 "$(icon_agent)")" "${parts[@]}")
   fi
-  printf '[ %s ]' "$(printf '%s\n' "${parts[@]}" | paste -sd '|' - | sed 's/|/ | /g')"
+  printf '[ %s ]' "$(printf '%s\n' "${parts[@]}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | paste -sd '|' - | sed 's/|/ | /g')"
 }
 
 # Heavy/system probes run at the original interval. Only the cached music
