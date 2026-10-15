@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.21.5
+- Weather panel: parse the hourly fields tab-separated so multi-word conditions
+  no longer shift the columns (temperature showed a stray "3°C").
+
 ## 0.21.4
 - Weather panel: complete WMO code mapping (drizzle, light rain, heavy
   showers, snow grains, …) so codes like 51/53/61 show a description instead of

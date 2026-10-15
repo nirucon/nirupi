@@ -47,9 +47,9 @@ panel(){
     "${ap:+  ·  feels $ap°C}" "${wind:+  ·  ${wind} m/s}"
   printf -- '@note \342\224\200\342\224\200 next hours \342\224\200\342\224\200\n'
   printf '%s' "$j" | jq -r --argjson i "$idx" \
-    '.hourly as $h | range($i; [$i+6, ($h.time|length)]|min) | "\($h.time[.][11:16])\t\($h.temperature_2m[.])°C \($h.weather_code[.])\t\($h.precipitation_probability[.] // 0)%"' \
+    '.hourly as $h | range($i; [$i+6, ($h.time|length)]|min) | "\($h.time[.][11:16])\t\($h.temperature_2m[.])°C\t\($h.weather_code[.])\t\($h.precipitation_probability[.] // 0)%"' \
     | while IFS=$'\t' read -r time temp code pop; do
-        printf '@row %s|%s°C  %s  %s\n' "$time" "$temp" "$(wcode "$code")" "$pop"; done
+        printf '@row %s|%s  %s  %s\n' "$time" "$temp" "$(wcode "$code")" "$pop"; done
   printf -- '@note \342\224\200\342\224\200 days \342\224\200\342\224\200\n'
   printf '%s' "$j" | jq -r '.daily as $d | range(0; ($d.time|length)) | "\($d.time[.])\t\($d.temperature_2m_min[.])–\($d.temperature_2m_max[.])°C\t\($d.weather_code[.])\t\($d.precipitation_probability_max[.] // 0)%\t\($d.wind_speed_10m_max[.] // 0)"' \
     | while IFS=$'\t' read -r day rng code pop windmax; do
