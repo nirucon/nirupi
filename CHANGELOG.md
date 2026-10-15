@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.20.2
+- Pop-up windows are sized with kitty's `--cols/--rows` (kitty 0.48 silently
+  ignores `initial_window_width/height` overrides, which left the window huge and
+  off-centre) and centred once dwm has placed the float.
+
 ## 0.20.1
 - Panel spec is now rendered **in the order given** (notes can sit between rows,
   e.g. weather's per-day sections), and the width is computed from the widest
