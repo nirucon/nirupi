@@ -50,6 +50,14 @@ command -v kvantummanager >/dev/null 2>&1 && export QT_STYLE_OVERRIDE=kvantum
 export XCURSOR_THEME="${XCURSOR_THEME:-Adwaita}"
 export COLORTERM=truecolor
 command -v setxkbmap >/dev/null 2>&1 && setxkbmap se
+
+# Recovery: a caffeine flag left over from a crashed session would keep the
+# screen awake forever. Clear it and restore normal DPMS on a fresh session.
+if [ -f "${XDG_CACHE_HOME:-$HOME/.cache}/nirupi/caffeine" ]; then
+  rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/nirupi/caffeine" \
+        "${XDG_CACHE_HOME:-$HOME/.cache}/nirupi/caffeine.pid" 2>/dev/null || :
+fi
+command -v xset >/dev/null 2>&1 && xset s on +dpms >/dev/null 2>&1 || :
 command -v xsetroot >/dev/null 2>&1 && xsetroot -solid '#0f0f10'
 
 # Per-workspace wallpaper for the initial tag (no-op when disabled).

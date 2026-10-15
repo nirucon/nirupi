@@ -36,7 +36,7 @@ for cmd in capturecmd agentselectioncmd askscreencmd askcommandcmd agentrewritec
 done
 grep -q 'nirupi-launch.sh' "$DWM/config.h" || { echo 'FAIL launcher binding missing' >&2; exit 1; }
 grep -q 'nirupi-agent-rewrite.sh' "$DWM/config.h" || { echo 'FAIL rewrite binding missing' >&2; exit 1; }
-grep -q 'NIRUPI_CONFIG_VERSION 11' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
+grep -q 'NIRUPI_CONFIG_VERSION 12' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
 grep -q 'barmode,' "$DWM/config.h" && grep -q '^barmode(const Arg' "$DWM/dwm.c" \
   || { echo 'FAIL barmode missing' >&2; exit 1; }
 for fn in togglesticky movefloat resizefloat; do
@@ -79,6 +79,11 @@ grep -q 'LOCK_CLEAR_CLIPBOARD' "$ROOT/runtime/session.conf.example" || { echo 'F
 grep -q 'nirupi-updatecheck.sh' "$ROOT/runtime-session.sh" || { echo 'FAIL daily update check not wired' >&2; exit 1; }
 grep -q 'calendar.conf' "$ROOT/lib/install.sh" || { echo 'FAIL calendar.conf not deployed' >&2; exit 1; }
 grep -q 'nirupi-info' "$DWM/config.h" || { echo 'FAIL info popup float rule missing' >&2; exit 1; }
+grep -q 'saved = 15' "$DWM/dwm.c" || { echo 'FAIL gaps reset fix missing' >&2; exit 1; }
+grep -q 'issticky' "$DWM/dwm.c" || { echo 'FAIL sticky marker missing' >&2; exit 1; }
+grep -q 'no clipboard tool' "$DWM/config.h" || { echo 'FAIL screenshot clipboard fallback missing' >&2; exit 1; }
+grep -q 'tool-$_t' "$ROOT/runtime/nirupi" || { echo 'FAIL doctor tool checks missing' >&2; exit 1; }
+grep -q 'caffeine' "$ROOT/runtime-session.sh" || { echo 'FAIL caffeine recovery missing' >&2; exit 1; }
 grep -q 'nirupi-updates-popup.sh' "$bin/nirupi-status-click.sh" || { echo 'FAIL updates popup not wired' >&2; exit 1; }
 grep -q 'nirupi-btop.sh' "$bin/nirupi-status-click.sh" || { echo 'FAIL btop on temp not wired' >&2; exit 1; }
 grep -q 'drow OK session' "$ROOT/runtime/nirupi" && grep -q 'drow HINT locale' "$ROOT/runtime/nirupi" \

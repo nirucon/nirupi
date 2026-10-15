@@ -83,7 +83,7 @@ Keep awake (caffeine): toggle
 Focus / notifications: toggle
 Screen recording: toggle
 Window switcher
-Gaps: toggle
+Gaps: toggle (Super+g)
 Keyboard layout (se/us)
 Touchpad: toggle
 Night light: cycle
@@ -138,7 +138,7 @@ case "$action" in
   'Focus / notifications: toggle') exec "$HOME/.local/bin/nirupi-focus.sh";;
   'Screen recording: toggle') exec "$HOME/.local/bin/nirupi-record.sh";;
   'Window switcher') exec "$HOME/.local/bin/nirupi-window.sh";;
-  'Gaps: toggle') [[ -n "$xdo" ]] && "$xdo" key --clearmodifiers super+g || notify 'xdotool missing';;
+  'Gaps: toggle (Super+g)') [[ -n "$xdo" ]] && "$xdo" key --clearmodifiers super+g && notify 'Gaps toggled (Super+g to undo)' || notify 'xdotool missing';;
   'Keyboard layout (se/us)') exec "$HOME/.local/bin/nirupi-keyboard.sh";;
   'Touchpad: toggle') exec "$HOME/.local/bin/nirupi-touchpad.sh";;
   'Night light: cycle') exec "$HOME/.local/bin/nirupi-nightlight.sh";;

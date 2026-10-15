@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 11
+#define NIRUPI_CONFIG_VERSION 12
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -289,15 +289,19 @@ static const char *ss_full[] = {
   "sh", "-c",
   "dir=\"$HOME/Pictures/Screenshots\"; mkdir -p \"$dir\"; "
   "file=\"$dir/$(date +%F_%H-%M-%S).png\"; "
-  "maim -u \"$file\" && xclip -selection clipboard -t image/png -i \"$file\" && "
-  "notify-send 'Screenshot' \"Saved & copied: $file\"",
+  "if maim -u \"$file\"; then "
+  "  if command -v xclip >/dev/null 2>&1 && xclip -selection clipboard -t image/png -i \"$file\"; then "
+  "    notify-send 'Screenshot' \"Saved & copied: $file\"; "
+  "  else notify-send 'Screenshot' \"Saved: $file (no clipboard tool)\"; fi; "
+  "else notify-send -u critical 'Screenshot' 'maim failed'; fi",
   NULL
 };
 
 static const char *ss_flameshot[] = {
   "sh", "-c",
   "dir=\"$HOME/Pictures/Screenshots\"; mkdir -p \"$dir\"; "
-  "flameshot gui -c -p \"$dir\" && notify-send 'Screenshot' 'Flameshot copied to clipboard'",
+  "if flameshot gui -c -p \"$dir\"; then notify-send 'Screenshot' 'Flameshot copied to clipboard'; "
+  "else notify-send -u normal 'Screenshot' 'Flameshot cancelled or failed'; fi",
   NULL
 };
 

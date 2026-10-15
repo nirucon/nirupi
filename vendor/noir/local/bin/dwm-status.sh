@@ -142,6 +142,21 @@ provider_cached() {
   [[ -r "$stamp_file" ]] && stamp="$(tr -d '[:space:]' < "$stamp_file" 2>/dev/null)"
   [[ "$stamp" =~ ^[0-9]+$ ]] || stamp=0
   age=$((now - stamp))
+  # kernel/host change rarely but must not be shown stale: tie the cache to the
+  # running kernel/hostname so a change invalidates it immediately.
+  if [[ $name == kernel || $name == host ]]; then
+    local src=""
+    case $name in
+      kernel) src="$(uname -r 2>/dev/null || printf '')";;
+      host)   src="$(cat /etc/hostname 2>/dev/null || uname -n 2>/dev/null || printf '')";;
+    esac
+    if [[ -r "$PROVIDER_DIR/$name.src" && "$(cat "$PROVIDER_DIR/$name.src" 2>/dev/null)" == "$src" ]]; then
+      :
+    else
+      printf '%s' "$src" > "$PROVIDER_DIR/$name.src" 2>/dev/null || true
+      stamp=0
+    fi
+  fi
   if [[ -r "$file" && "$age" -ge 0 && "$age" -lt "$ttl" ]]; then
     cat "$file"
     return 0

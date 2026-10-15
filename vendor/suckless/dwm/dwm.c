@@ -95,7 +95,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
 	int bw, oldbw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, issticky;
 	pid_t pid;
 	Client *next;
 	Client *snext;
@@ -331,7 +331,7 @@ static xcb_connection_t *xcon;
 #ifndef NIRUPI_CONFIG_VERSION
 #error "This dwm config.h is out of date. A newer version is written as config.h.nirupi-new. Merge it (or run: nirupi migrate dwm --rebuild)."
 #endif
-#if NIRUPI_CONFIG_VERSION < 11
+#if NIRUPI_CONFIG_VERSION < 12
 #error "This dwm config.h is too old for this dwm. Merge config.h.nirupi-new and rebuild."
 #endif
 
@@ -362,6 +362,7 @@ applyrules(Client *c)
 	/* rule matching */
 	int fs = 0;
 	c->isfloating = 0;
+	c->issticky = 0;
 	c->tags = 0;
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
@@ -1064,6 +1065,9 @@ drawbar(Monitor *m)
 		if (m->sel) {
 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
 			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+			if (m->sel->issticky)
+				drw_text(drw, x + w - (int)drw_fontset_getwidth(drw, "[S]") - lrpad / 2, 0,
+					drw_fontset_getwidth(drw, "[S]"), bh, 0, "[S]", 0);
 			if (m->sel->isfloating)
 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
@@ -2325,12 +2329,15 @@ void
 togglesticky(const Arg *arg)
 {
 	/* Keep the focused window visible on every tag (sticky), or drop it back
-	 * onto the currently viewed tag. */
+	 * onto the currently viewed tag. A [S] marker is shown in the title so a
+	 * sticky window is never a mystery. */
 	Client *c = selmon->sel;
 	if (!c)
 		return;
-	c->tags = (c->tags == TAGMASK) ? c->mon->tagset[c->mon->seltags] : TAGMASK;
+	c->issticky = !c->issticky;
+	c->tags = c->issticky ? TAGMASK : c->mon->tagset[c->mon->seltags];
 	arrange(c->mon);
+	drawbar(c->mon);
 }
 
 void
@@ -2427,10 +2434,13 @@ togglefullscr(const Arg *arg)
 void
 togglegaps(const Arg *arg)
 {
+	/* Restore to a known value, not whatever gappx happened to be when the
+	 * toggle was first used (which could be 0 after a restart with gaps off,
+	 * making it impossible to turn gaps back on). */
 	static unsigned int saved = 0;
 
 	if (saved == 0)
-		saved = gappx;
+		saved = 15;
 	gappx = gappx > 0 ? 0 : saved;
 	arrange(NULL);
 }

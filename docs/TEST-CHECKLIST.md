@@ -95,3 +95,6 @@ a real login on real hardware.
 
 ## Report
 - [ ] Note distribution, kernel, GPU and any segment that misaligns.
+- [ ] `Super+g` restores gaps to 15px (twice to undo); a sticky window shows `[S]`.
+- [ ] A full screenshot still saves + notifies when `xclip` is missing.
+- [ ] `nirupi doctor` hints about missing optional tools.

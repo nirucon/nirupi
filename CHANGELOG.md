@@ -2,6 +2,24 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.18.0
+- **Gaps can be restored again**: `Super+g` now always returns to a known gap
+  size (15) instead of "whatever it was", which could be 0 after a restart with
+  gaps off (only a full dwm restart recovered it before).
+- **Sticky windows are visible**: `Super+Ctrl+Shift+s` marks the window with a
+  `[S]` in the title, so it is never a mystery which window is on all tags.
+- **Screenshots are robust**: the full-screen/Flameshot bindings no longer abort
+  when `xclip` is missing or the copy fails — the file is saved and you are told.
+- **Status bar**: the kernel/hostname segments are no longer stale for up to an
+  hour after a kernel/hostname change (the cache is tied to the value).
+- **Caffeine recovery**: a leftover caffeine flag from a crashed session is
+  cleared (and DPMS restored) at the next login.
+- **Control center**: the gaps entry notes `Super+g` and toggling confirms how
+  to undo it.
+- **`doctor`** also checks the optional tools (xclip, maim, flameshot,
+  gammastep, brightnessctl, ffmpeg, rofi) and hints which are missing.
+- DWM config schema bumped to **v12**.
+
 ## 0.17.6
 - **Removed the next-event segment** from the status bar (the stray
   `Sat 17:00 …` between host and date).

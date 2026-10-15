@@ -192,6 +192,10 @@ nirupi_doctor(){
     *UTF-8*|*utf8*|*UTF8*) drow OK locale;;
     *) drow HINT locale "no UTF-8 locale set (icons/accents may render wrong)";;
   esac
+  # Optional tools used by the pop-ups and toggles (all best-effort).
+  for _t in xclip maim flameshot gammastep brightnessctl ffmpeg rofi; do
+    command -v "$_t" >/dev/null 2>&1 || drow HINT "tool-$_t" "install $_t"
+  done
   if (( json )); then
     printf '{"version":"%s","distro":"%s","checks":[' "$(nirupi_version)" "${ID:-unknown}"
     local first=1
