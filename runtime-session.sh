@@ -47,6 +47,17 @@ export COLORTERM=truecolor
 command -v setxkbmap >/dev/null 2>&1 && setxkbmap se
 command -v xsetroot >/dev/null 2>&1 && xsetroot -solid '#0f0f10'
 
+# Per-workspace wallpaper for the initial tag (no-op when disabled).
+PER_TAG=0
+if [ -x "$HOME/.local/bin/nirupi-wallpaper.sh" ]; then
+  [ "$("$HOME/.local/bin/nirupi-wallpaper.sh" per-tag status 2>/dev/null)" = on ] && PER_TAG=1
+fi
+if [ "$PER_TAG" = 1 ]; then
+  if [ -x "$HOME/.local/bin/nirupi-tag-wallpaper.sh" ]; then
+    NIRUPI_TAGSET=1 "$HOME/.local/bin/nirupi-tag-wallpaper.sh" >/dev/null 2>&1 &
+  fi
+fi
+
 STATUS_PID= WALL_PID= DUNST_PID= PICOM_PID= IDLE_PID= LOCK_PID= CLIP_PID=
 if [ "$START_PICOM" = 1 ] && command -v picom >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x picom >/dev/null 2>&1; then
   picom & PICOM_PID=$!
@@ -61,7 +72,7 @@ if command -v dwm-status.sh >/dev/null 2>&1; then
     dwm-status.sh & STATUS_PID=$!
   fi
 fi
-if command -v wallrotate.sh >/dev/null 2>&1; then
+if [ "$PER_TAG" != 1 ] && command -v wallrotate.sh >/dev/null 2>&1; then
   if [ -d "${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}" ]; then
     wallrotate.sh & WALL_PID=$!
   fi
