@@ -2332,13 +2332,18 @@ barmode(const Arg *arg)
 void
 centerfloat(Client *c)
 {
-	/* Centre a pop-up on its monitor at a comfortable, content-ish size: the
-	 * framed panel looks right at ~52x18 cells, i.e. about 520x440 px, not
-	 * filling the screen. Falls back to a share of the monitor if tiny. */
+	/* Centre a pop-up on its monitor. TUI panels get a fixed comfortable size;
+	 * pickers (rofi) keep their own height but are centred and bounded. */
 	Monitor *m = c->mon;
-	int w = 520, h = 440;
-	if (w > m->ww - 40) w = m->ww - 40;
-	if (h > m->wh - 40) h = m->wh - 40;
+	int w, h;
+	if (c->h < m->wh / 3) {          /* rofi/managed-size picker */
+		w = c->w > m->ww - 80 ? m->ww - 80 : c->w;
+		h = c->h > m->wh - 80 ? m->wh - 80 : c->h;
+	} else {                          /* TUI panel */
+		w = 520; h = 440;
+		if (w > m->ww - 40) w = m->ww - 40;
+		if (h > m->wh - 40) h = m->wh - 40;
+	}
 	c->x = m->wx + (m->ww - w) / 2;
 	c->y = m->wy + (m->wh - h) / 2;
 	resize(c, c->x, c->y, w, h, 0);
