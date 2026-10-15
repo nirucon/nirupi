@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.21.0
+- **dwm centres and sizes the NIRUPI pop-ups** (info panel, calendar, btop) on
+  the monitor: a `centerfloat()` applied when those clients are managed, so the
+  panels are always centred regardless of terminal behaviour. Schema v14.
+
 ## 0.20.2
 - Pop-up windows are sized with kitty's `--cols/--rows` (kitty 0.48 silently
   ignores `initial_window_width/height` overrides, which left the window huge and

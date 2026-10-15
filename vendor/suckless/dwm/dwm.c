@@ -240,6 +240,7 @@ static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void barmode(const Arg *arg);
 static void togglesticky(const Arg *arg);
+static void centerfloat(Client *c);
 static void unsticky(const Arg *arg);
 static void movefloat(const Arg *arg);
 static void resizefloat(const Arg *arg);
@@ -385,6 +386,10 @@ applyrules(Client *c)
 				c->mon = m;
 		}
 	}
+	/* NIRUPI pop-up panels: float, centred, comfortable size. */
+	if ((strstr(class, "nirupi-info") || strstr(class, "nirupi-calendar") ||
+	     strstr(class, "nirupi-btop")) && c->isfloating)
+		centerfloat(c);
 	if (ch.res_class)
 		XFree(ch.res_class);
 	if (ch.res_name)
@@ -733,8 +738,7 @@ configurenotify(XEvent *e)
 
 	/* TODO: updategeom handling sucks, needs to be simplified */
 	if (ev->window == root) {
-		dirty = (sw != ev->width || sh != ev->height);
-		sw = ev->width;
+		dirty = (sw != ev->width || sh != ev->height);		sw = ev->width;
 		sh = ev->height;
 		if (updategeom() || dirty) {
 			drw_resize(drw, sw, bh);
@@ -2324,6 +2328,22 @@ barmode(const Arg *arg)
 	}
 	focus(NULL);
 	arrange(selmon);
+}
+
+void
+centerfloat(Client *c)
+{
+	/* Centre a floating client on its monitor, giving pop-up panels a
+	 * comfortable size when they are smaller than half the screen. */
+	Monitor *m = c->mon;
+	int w = c->w, h = c->h;
+	if (w < m->ww / 2 || h < m->wh / 2) {
+		w = m->ww * 2 / 3;
+		h = m->wh * 2 / 3;
+	}
+	c->x = m->wx + (m->ww - w) / 2;
+	c->y = m->wy + (m->wh - h) / 2;
+	resize(c, c->x, c->y, w, h, 0);
 }
 
 void

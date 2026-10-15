@@ -38,8 +38,7 @@ if [[ "${NIRUPI_POPUP:-menu}" == tui ]] && command -v python3 >/dev/null 2>&1 \
     fi
     if [[ "$(basename "$term")" == kitty ]]; then
       printf '%s\n' "$spec" | setsid kitty --class nirupi-info --title "$title" \
-        --override remember_window_size=no --override font_size=13 \
-        --cols "${cols}" --rows "${rows}" \
+        --override remember_window_size=no \
         -e python3 "$HOME/.local/bin/nirupi-panel.py" >/dev/null 2>&1 &
     else
       printf '%s\n' "$spec" | setsid "$term" --title "$title" \
