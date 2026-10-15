@@ -36,13 +36,14 @@ if [[ "${NIRUPI_POPUP:-menu}" == tui ]] && command -v python3 >/dev/null 2>&1 \
         fi
       ) >/dev/null 2>&1 &
     fi
+    tmp="$(mktemp)"; printf '%s\n' "$spec" > "$tmp"
     if [[ "$(basename "$term")" == kitty ]]; then
-      printf '%s\n' "$spec" | setsid kitty --class nirupi-info --title "$title" \
+      setsid kitty --class nirupi-info --title "$title" \
         --override remember_window_size=no \
-        -e python3 "$HOME/.local/bin/nirupi-panel.py" >/dev/null 2>&1 &
+        -e python3 "$HOME/.local/bin/nirupi-panel.py" --spec "$tmp" >/dev/null 2>&1 &
     else
-      printf '%s\n' "$spec" | setsid "$term" --title "$title" \
-        -e python3 "$HOME/.local/bin/nirupi-panel.py" >/dev/null 2>&1 &
+      setsid "$term" --title "$title" \
+        -e python3 "$HOME/.local/bin/nirupi-panel.py" --spec "$tmp" >/dev/null 2>&1 &
     fi
     exit 0
   fi

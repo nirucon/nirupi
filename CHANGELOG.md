@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.21.2
+- Fix the empty panel windows: the spec is now passed via `--spec FILE` so the
+  panel keeps a real TTY on stdin (curses aborts with "cbreak() returned ERR"
+  when stdin is a pipe, which is why battery/weather drew nothing).
+
 ## 0.21.1
 - **In-place restart now loads the installed build**: dwm re-execs
   `~/.local/bin/dwm` (falling back to `argv[0]`) instead of the running image, so

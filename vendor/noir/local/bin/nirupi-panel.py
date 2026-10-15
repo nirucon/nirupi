@@ -178,7 +178,19 @@ def main(scr):
 
 
 if __name__ == "__main__":
-    parse(sys.stdin)
+    # Read the spec from --spec FILE (keeps stdin a TTY for curses) or stdin.
+    args = sys.argv[1:]
+    if len(args) >= 2 and args[0] == "--spec":
+        try:
+            with open(args[1]) as fh:
+                parse(fh)
+        finally:
+            try:
+                os.unlink(args[1])
+            except OSError:
+                pass
+    else:
+        parse(sys.stdin)
     try:
         curses.wrapper(main)
     except curses.error:
