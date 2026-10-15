@@ -10,9 +10,10 @@ pick(){ if have rofi; then rofi -dmenu -i -p 'Updates'; elif have dmenu; then dm
 
 . /etc/os-release 2>/dev/null || true
 distro="${ID:-unknown}"
+idlike="${ID_LIKE:-}"
 
 pending(){ # prints "name version" lines (or name only) for the native manager
-  case "$distro $ID_LIKE" in
+  case "$distro $idlike" in
     *arch*)
       if have checkupdates; then checkupdates 2>/dev/null; else pacman -Qu 2>/dev/null; fi;;
     *debian*|*ubuntu*)
@@ -22,7 +23,7 @@ pending(){ # prints "name version" lines (or name only) for the native manager
   esac
 }
 aur_pending(){ # Arch only
-  case "$distro $ID_LIKE" in *arch*|*cachyos*) :;; *) return 0;; esac
+  case "$distro $idlike" in *arch*|*cachyos*) :;; *) return 0;; esac
   if have paru; then paru -Qua 2>/dev/null | awk '{print $1}'
   elif have yay; then yay -Qua 2>/dev/null | awk '{print $1}'; fi
 }
@@ -34,8 +35,12 @@ case "$distro" in
   *) mgr="(unknown package manager)";;
 esac
 
-mapfile -t pkgs < <(pending | awk 'NF')
-mapfile -t aur < <(aur_pending | awk 'NF')
+_tmp_native="$(mktemp)"; _tmp_aur="$(mktemp)"
+pending  >"$_tmp_native" 2>/dev/null || true
+aur_pending >"$_tmp_aur" 2>/dev/null || true
+mapfile -t pkgs < <(awk 'NF' "$_tmp_native")
+mapfile -t aur  < <(awk 'NF' "$_tmp_aur")
+rm -f "$_tmp_native" "$_tmp_aur"
 total=$(( ${#pkgs[@]} + ${#aur[@]} ))
 last="$(date -r "${XDG_CACHE_HOME:-$HOME/.cache}/dwm-status/updates.stamp" '+%Y-%m-%d %H:%M' 2>/dev/null || true)"
 

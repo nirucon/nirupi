@@ -2,6 +2,12 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.6
+- Fix the updates panel always saying "up to date": `ID_LIKE` is unset on Debian
+  and, with `set -u`, aborted the pending-query (and with `pipefail` the pipeline
+  produced nothing). The query now writes to a temp file first, so the count is
+  correct on Arch, Debian and Void.
+
 ## 0.23.5
 - Idle without xidlehook: `xss-lock` now also drives a **DPMS timeout** (`xset`)
   so lock + screen-off work where xidlehook/xautolock are unavailable (they are
