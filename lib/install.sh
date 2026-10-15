@@ -237,9 +237,6 @@ install_desktop() (
   put_file "$ROOT/runtime/session.conf.example" "$session_conf" 0644
  fi
  # Update only previously recorded, unchanged NIRUPI configuration assets.
- local rofi_theme_src="$ROOT/vendor/noir/local/share/rofi/themes/Black-Metal.rasi"
- local rofi_theme_dest="$HOME/.local/share/rofi/themes/Black-Metal.rasi"
- managed_config_install 'rofi/Black-Metal.rasi' "$rofi_theme_src" "$rofi_theme_dest"
   mkdir -p "$HOME/.config/suckless/dwm"
   local dwm_cfg="$HOME/.config/suckless/dwm/config.h"
   # Three-way merge: an unmodified managed config is upgraded to the bundled

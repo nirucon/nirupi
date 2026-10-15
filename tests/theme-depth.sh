@@ -29,7 +29,7 @@ grep -q 'BEGIN NIRU-NOIR-COLORS' "$ROOT/vendor/sddm/Main.qml" || fail 'sddm colo
 grep -q 'vendor/sddm' "$ROOT/lib/install.sh" || fail 'sddm not deployed with the bundle'
 
 # Built-in palettes + list/preview/set/menu.
-for p in tokens.env Noir-warm.env Noir-cool.env Satie.env Carl-Larsson.env; do
+for p in tokens.env Noir-warm.env Noir-cool.env Satie.env Carl-Larsson.env Hackerman.env Nord-Dark.env; do
   [[ -f "$ROOT/vendor/noir/theme/$p" ]] || fail "missing palette $p"
 done
 grep -q 'theme_list' "$ROOT/lib/theme.sh" || fail 'theme list missing'

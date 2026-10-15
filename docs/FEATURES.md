@@ -83,7 +83,9 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **Theme picker** `Super+Ctrl+t` (`nirupi theme menu`): rofi with colour
   swatches per theme.
 - Shipped themes: `noir` (default), `Satie` (monochrome graphite, one muted-gold
-  accent), `carl-larsson` (warm umber/watercolour), plus `warm`/`cool`.
+  accent), `carl-larsson` (warm umber/watercolour), `hackerman` (phosphor green)
+  and `nord-dark`, plus `warm`/`cool`. The picker shows the active theme and a
+  one-line description of each.
 - Commands: `nirupi theme list`, `nirupi theme preview NAME`,
   `nirupi theme set NAME`.
 - **Day/night auto** — `nirupi-theme-auto.sh auto` picks `warm` after 20:00 and

@@ -102,7 +102,7 @@ SDDM theme and the status bar — live, without a rebuild.
   `nirupi theme menu`.
 - **List / preview:** `nirupi theme list`, `nirupi theme preview Satie`.
 - **Apply by name:** `nirupi theme set NAME` (e.g. `noir`, `Satie`,
-  `carl-larsson`, `warm`, `cool`).
+  `carl-larsson`, `hackerman`, `nord-dark`, `warm`, `cool`).
 - **Follow the wallpaper (opt-in):** `nirupi theme wallpaper /path/image.jpg`
   (ImageMagick) then reloads terminals and the bar. Back to static:
   `nirupi theme mode noir`.
@@ -113,8 +113,10 @@ Shipped themes:
 | Name | Look |
 |---|---|
 | `noir` | Cold, near-black monochrome (default) |
-| `Satie` | Flat graphite grey, one muted-gold accent |
+| `Satie` | Flat monochrome graphite, one muted-gold accent |
 | `carl-larsson` | Warm umber, cream and earth/watercolour accents |
+| `hackerman` | Phosphor green on black — CRT hacker terminal |
+| `nord-dark` | Polar Night blues with Nord frost/aurora accents |
 | `warm` / `cool` | Noir with a warm or cool cast |
 
 `st`/`dmenu`/dwm read the palette from Xresources at startup (and on `SIGUSR1`);

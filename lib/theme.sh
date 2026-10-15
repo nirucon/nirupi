@@ -573,7 +573,7 @@ theme_names(){
     [[ -e $f ]] || continue
     n="$(basename "$f" .env)"
     [[ $n == tokens ]] && continue
-    [[ $n == Noir-warm || $n == Noir-cool ]] || printf '%s\n' "$n"
+    printf '%s\n' "$n"
   done
 }
 
@@ -594,15 +594,17 @@ palette_swatch(){
 }
 
 theme_list(){
-  local d n f nm; d="$(theme_palette_dir)"
-  printf 'Available themes (active: %s):\n' "$(theme_current)"
-  f="$d/tokens.env"
-  if [[ -f $f ]]; then printf '  %-14s %s\n' noir "$(palette_name "$f"): $(palette_field "$f" NOIR_THEME_DESC)"; fi
+  local d n f nm desc active; d="$(theme_palette_dir)"
+  active="$(theme_current)"
+  printf 'Available themes (active: %s):\n' "$active"
   while IFS= read -r n; do
-    [[ -n $n && $n != noir ]] || continue
+    [[ -n $n ]] || continue
     f="$(theme_palette_file "$n")" || continue
     nm="$(palette_name "$f")"; [[ -n $nm ]] || nm="$n"
-    printf '  %-14s %s\n' "$n" "$nm"
+    desc="$(palette_field "$f" NOIR_THEME_DESC)"
+    [[ $nm == "$active" ]] && nm="$nm (active)"
+    if [[ -n $desc ]]; then printf '  %-14s %s — %s\n' "$n" "$nm" "$desc"
+    else printf '  %-14s %s\n' "$n" "$nm"; fi
   done < <(theme_names)
   printf '\nApply with: nirupi theme set NAME   (or pick: nirupi theme menu)\n'
 }
@@ -617,17 +619,23 @@ theme_preview(){
   grep -E '^NOIR_(BG|FG|MUTED|SELECTION|BORDER|FOCUS|ANSI_[0-9]+)=' "$f"
 }
 
-# Interactive picker: rofi with colour swatches (dmenu/plain fallback).
+# Interactive picker: rofi with colour swatches + description (dmenu/plain fallback).
 theme_menu(){
-  local n f nm rows="" sel name
+  local n f nm desc rows="" sel name active mark
+  active="$(theme_current)"
   while IFS= read -r n; do
     [[ -n $n ]] || continue
     f="$(theme_palette_file "$n")" || continue
     [[ -f $f ]] || continue
     nm="$(palette_name "$f")"; [[ -n $nm ]] || nm="$n"
+    desc="$(palette_field "$f" NOIR_THEME_DESC)"
+    mark=""; [[ $nm == "$active" ]] && mark="  ✓"
     if command -v rofi >/dev/null 2>&1; then
-      rows+="$nm"$'\t'"$(palette_swatch "$f")"$'\n'
+      # The swatch markup comes first, so the selected name is everything
+      # before the first '<' (see the sed below).
+      rows+="$nm"$'\t'"$(palette_swatch "$f")"$'  '"$desc$mark"$'\n'
     else
+      [[ -n $mark ]] && nm="$nm (active)"
       rows+="$nm"$'\n'
     fi
   done < <(theme_names)
@@ -660,6 +668,10 @@ theme_set(){
   printf 'palette\n' > "$(theme_mode_file)"
   log "Theme set to $nm"
   theme_apply
+  # Best-effort feedback so a live switch is obvious.
+  if [[ -n ${DISPLAY:-} ]] && command -v notify-send >/dev/null 2>&1; then
+    notify-send -a NIRUPI "NIRU theme" "$nm" >/dev/null 2>&1 || :
+  fi
 }
 
 # Full theme application. $1 = optional noir directory.
@@ -669,13 +681,6 @@ theme_apply(){
   theme_load_tokens
   log "Applying NIRU Noir theme (bg=#$NOIR_BG, font=$NOIR_FONT)"
   theme_apply_configs "$noir"
-  # Rofi theme payload
-  if [[ -f $noir/local/share/rofi/themes/Black-Metal.rasi ]]; then
-    mkdir -p "$HOME/.local/share/rofi/themes"
-    managed_config_install 'rofi/Black-Metal.rasi' \
-      "$noir/local/share/rofi/themes/Black-Metal.rasi" \
-      "$HOME/.local/share/rofi/themes/Black-Metal.rasi"
-  fi
   theme_apply_browser_flags "$noir"
   theme_apply_environment
   theme_apply_gtk4

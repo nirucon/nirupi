@@ -2,6 +2,22 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.9.0
+- **Two new themes: Hackerman** (phosphor green on black, CRT hacker look) and
+  **Nord dark** (the Nord palette: Polar Night, frost and aurora accents).
+- **Satie redesigned** to be genuinely monochrome — flat graphite with a single
+  muted-gold accent — and noticeably lighter than Noir, so the two are easy to
+  tell apart (they used to be nearly identical).
+- **Carl Larsson** normal ANSI colours lifted for legibility (red/purple/blue
+  were below 4.5:1 on the background).
+- The theme picker and `nirupi theme list` now **include the Noir warm/cool
+  variants** (they were hidden), and show the active theme plus a one-line
+  description for every entry.
+- Switching a theme shows a desktop notification with the new name.
+- Removed the redundant static rofi theme install: it was immediately
+  overwritten by the generated one and doubled the backups on every apply.
+- Docs updated (README / USAGE / FEATURES).
+
 ## 0.8.1
 - **Fix:** `nirupi theme set|apply|menu` (and therefore the `Super+Ctrl+t` picker)
   aborted partway on an installed system with `BACKUP_DIR: unbound variable`:

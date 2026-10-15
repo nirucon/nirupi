@@ -32,8 +32,9 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   TUI tools (`tmux`, `lazygit`, `micro`, `aerc`, `cmus`), GTK/Qt, rofi, dunst,
   browsers and the status bar. Everything is generated from a single palette
   (`vendor/noir/theme/*.env`), so **switching a theme restyles all of it live**.
-  Ship-with themes: **Noir** (default), **Satie** (monochrome graphite) and
-  **Carl Larsson** (warm umber/watercolour), plus `warm`/`cool` variants:
+  Ship-with themes: **Noir** (default), **Satie** (monochrome graphite),
+  **Carl Larsson** (warm umber/watercolour), **Hackerman** (phosphor green) and
+  **Nord dark**, plus `warm`/`cool` variants:
   `nirupi theme list|preview NAME|set NAME` or the **theme picker**
   (`Super+Ctrl+t`). Opt-in **wallpaper-driven theme**
   (`nirupi theme wallpaper IMAGE`).

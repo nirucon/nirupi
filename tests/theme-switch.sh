@@ -18,26 +18,45 @@ fail(){ echo "FAIL: $*" >&2; exit 1; }
 read_bg(){ grep -m1 '^background' "$1" | awk '{print $2}'; }
 
 # Every built-in theme resolves and applies.
-for theme in noir Satie carl-larsson warm cool; do
+for theme in noir Satie carl-larsson hackerman nord-dark warm cool; do
   f="$(theme_palette_file "$theme")" || fail "unknown theme $theme"
   [[ -f $f ]] || fail "missing palette file for $theme"
 done
 
+# The Noir variants must be listed (they used to be hidden from the picker).
+theme_names_out="$(theme_names)"
+grep -qx 'Noir-warm' <<< "$theme_names_out" || fail 'Noir-warm not listed'
+grep -qx 'Noir-cool' <<< "$theme_names_out" || fail 'Noir-cool not listed'
+
+# `nirupi theme list` must show every theme with its display name.
+list_out="$(theme_list)"
+for want in Noir Hackerman "Nord dark" Satie "Carl Larsson" "Noir warm"; do
+  grep -q "$want" <<< "$list_out" || fail "theme list missing $want"
+done
+
 theme_set Satie >/dev/null
-[[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#1a1a1c' ]] || fail 'kitty not Satie'
-grep -q '0x1a1a1c' "$HOME/.config/nirupi/theme/alacritty.toml" || fail 'alacritty not Satie'
-grep -q '#1a1a1c' "$HOME/.config/aerc/stylesets/nirupi" || fail 'aerc not Satie'
-grep -q '1a1a1c' "$HOME/.config/lazygit/config.yml" || fail 'lazygit not Satie'
-grep -q '"#dcdcdc,#1a1a1c"' "$HOME/.config/micro/colorschemes/nirupi.micro" || fail 'micro not Satie'
+[[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#232326' ]] || fail 'kitty not Satie'
+grep -q '0x232326' "$HOME/.config/nirupi/theme/alacritty.toml" || fail 'alacritty not Satie'
+grep -q '#232326' "$HOME/.config/aerc/stylesets/nirupi" || fail 'aerc not Satie'
+grep -q '232326' "$HOME/.config/lazygit/config.yml" || fail 'lazygit not Satie'
+grep -q '"#e6e6e6,#232326"' "$HOME/.config/micro/colorschemes/nirupi.micro" || fail 'micro not Satie'
 grep -q 'colorscheme nirupi' "$HOME/.config/cmus/rc" || fail 'cmus rc missing'
-grep -q 'set -g fish_color_normal dcdcdc' "$HOME/.config/nirupi/theme/fish.fish" || fail 'fish not Satie'
-grep -q 'bg=#1a1a1c' "$HOME/.config/nirupi/theme/tmux.conf" || fail 'tmux not Satie'
-grep -q 'NIRUPI_C_RED=b08a86' "$HOME/.config/nirupi/theme/status.env" || fail 'status accents not Satie'
-grep -q 'background = "#1a1a1c"' "$HOME/.config/dunst/dunstrc.d/90-nirupi.conf" || fail 'dunst drop-in not Satie'
+grep -q 'set -g fish_color_normal e6e6e6' "$HOME/.config/nirupi/theme/fish.fish" || fail 'fish not Satie'
+grep -q 'bg=#232326' "$HOME/.config/nirupi/theme/tmux.conf" || fail 'tmux not Satie'
+grep -q 'NIRUPI_C_RED=a89a97' "$HOME/.config/nirupi/theme/status.env" || fail 'status accents not Satie'
+grep -q 'background = "#232326"' "$HOME/.config/dunst/dunstrc.d/90-nirupi.conf" || fail 'dunst drop-in not Satie'
 
 theme_set carl-larsson >/dev/null
 [[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#241a16' ]] || fail 'kitty not Carl Larsson'
 grep -q '0x241a16' "$HOME/.config/nirupi/theme/alacritty.toml" || fail 'alacritty not Carl Larsson'
+
+theme_set hackerman >/dev/null
+[[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#0a0f0a' ]] || fail 'kitty not Hackerman'
+grep -q 'set -g fish_color_normal b6f2b6' "$HOME/.config/nirupi/theme/fish.fish" || fail 'fish not Hackerman'
+
+theme_set nord-dark >/dev/null
+[[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#2e3440' ]] || fail 'kitty not Nord dark'
+grep -q '0x2e3440' "$HOME/.config/nirupi/theme/alacritty.toml" || fail 'alacritty not Nord dark'
 
 # Back to Noir restores the default background everywhere.
 theme_set noir >/dev/null
@@ -50,7 +69,7 @@ echo 'PASS: switching themes restyles terminals, TUI tools and launchers'
 
 # Display names shown by the picker (and accepted by `nirupi theme set`) resolve,
 # including the default theme whose display name is "Noir".
-for name in Noir Satie "Carl Larsson" "Noir warm" "Noir cool" noir warm cool carl; do
+for name in Noir Satie "Carl Larsson" Hackerman "Nord dark" "Noir warm" "Noir cool" noir warm cool carl hackerman nord-dark; do
   f="$(theme_palette_file "$name")" || fail "display name '$name' did not resolve"
   [[ -f $f ]] || fail "display name '$name' resolved to a missing file"
 done
@@ -76,5 +95,5 @@ printf '# my dunst tweak\n' >> "$HOME/.config/dunst/dunstrc"
 theme_set Satie >/dev/null
 grep -q '# my dunst tweak' "$HOME/.config/dunst/dunstrc" || fail 'dunst base edit was lost'
 [[ -f "$HOME/.config/dunst/dunstrc.nirupi-new" ]] || fail 'dunst proposal missing'
-grep -q 'background = "#1a1a1c"' "$HOME/.config/dunst/dunstrc.d/90-nirupi.conf" || fail 'dunst drop-in not themed'
+grep -q 'background = "#232326"' "$HOME/.config/dunst/dunstrc.d/90-nirupi.conf" || fail 'dunst drop-in not themed'
 echo 'PASS: dunst settings preserved, colours themed via drop-in'
