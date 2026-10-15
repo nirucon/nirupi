@@ -36,7 +36,7 @@ for cmd in capturecmd agentselectioncmd askscreencmd askcommandcmd agentrewritec
 done
 grep -q 'nirupi-launch.sh' "$DWM/config.h" || { echo 'FAIL launcher binding missing' >&2; exit 1; }
 grep -q 'nirupi-agent-rewrite.sh' "$DWM/config.h" || { echo 'FAIL rewrite binding missing' >&2; exit 1; }
-grep -q 'NIRUPI_CONFIG_VERSION 10' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
+grep -q 'NIRUPI_CONFIG_VERSION 11' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
 grep -q 'barmode,' "$DWM/config.h" && grep -q '^barmode(const Arg' "$DWM/dwm.c" \
   || { echo 'FAIL barmode missing' >&2; exit 1; }
 for fn in togglesticky movefloat resizefloat; do
@@ -56,7 +56,7 @@ grep -q 'migrate_binaries_rebuild' "$ROOT/lib/install.sh" || { echo 'FAIL binari
 grep -q 'binaries' "$ROOT/lib/migrate.sh" || { echo 'FAIL binaries subcommand missing' >&2; exit 1; }
 # Icons must be real UTF-8, never \u/\U printf escapes (bash only expands those
 # in a UTF-8 locale, so they render as literal text on bare installs).
-if grep -rnE '\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8}' "$bin"; then
+if grep -rnE '\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8}' "$bin" --include='*.sh'; then
   echo 'FAIL locale-dependent \u escapes in helper scripts' >&2; exit 1
 fi
 
@@ -78,7 +78,7 @@ grep -q 'LOCK_CLEAR_CLIPBOARD' "$ROOT/runtime/session.conf.example" || { echo 'F
 [[ -f "$ROOT/runtime/calendar.conf.example" ]] || { echo 'FAIL calendar example missing' >&2; exit 1; }
 grep -q 'nirupi-updatecheck.sh' "$ROOT/runtime-session.sh" || { echo 'FAIL daily update check not wired' >&2; exit 1; }
 grep -q 'calendar.conf' "$ROOT/lib/install.sh" || { echo 'FAIL calendar.conf not deployed' >&2; exit 1; }
-grep -q 'get_next_event' "$bin/dwm-status.sh" || { echo 'FAIL next-event segment missing' >&2; exit 1; }
+grep -q 'nirupi-info' "$DWM/config.h" || { echo 'FAIL info popup float rule missing' >&2; exit 1; }
 grep -q 'nirupi-updates-popup.sh' "$bin/nirupi-status-click.sh" || { echo 'FAIL updates popup not wired' >&2; exit 1; }
 grep -q 'nirupi-btop.sh' "$bin/nirupi-status-click.sh" || { echo 'FAIL btop on temp not wired' >&2; exit 1; }
 grep -q 'drow OK session' "$ROOT/runtime/nirupi" && grep -q 'drow HINT locale' "$ROOT/runtime/nirupi" \

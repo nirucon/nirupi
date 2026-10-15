@@ -62,8 +62,6 @@ USE_ICONS=1
 SHOW_KERNEL=1
 SHOW_HOST=1
 SHOW_WEATHER=1
-SHOW_NEXTEVENT=1
-NEXTEVENT_CACHE_SECONDS=120
 SHOW_DATE=1
 SHOW_TIME=1
 
@@ -266,11 +264,11 @@ icon_caffeine() {
 }
 
 icon_cloud() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'cloud'
+  [[ "$USE_ICONS" -eq 1 ]] && printf ' ' || printf 'cloud '
 }
 
 icon_cloud_off() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'cloud-off'
+  [[ "$USE_ICONS" -eq 1 ]] && printf ' ' || printf 'cloud-off '
 }
 
 icon_bluetooth() {
@@ -685,15 +683,7 @@ get_uptime() {
   printf '%s %s' "$(icon_uptime)" "$up"
 }
 
-# Next calendar event (from the Google iCal the calendar TUI is synced to).
-get_next_event() {
-  [[ "$SHOW_NEXTEVENT" -eq 1 ]] || return 0
-  command -v python3 >/dev/null 2>&1 || return 0
-  [[ -x "$HOME/.local/bin/nirupi-calendar.py" ]] || return 0
-  local e
-  e="$(python3 "$HOME/.local/bin/nirupi-calendar.py" --next 2>/dev/null || true)"
-  [[ -n $e ]] && printf '\302\273 %s' "$e"   # » next calendar event
-}
+# next-event removed: the calendar event is no longer shown in the status bar.
 
 get_updates() {
   [[ "$SHOW_UPDATES" -eq 1 ]] || return 0
@@ -1124,7 +1114,7 @@ get_now_playing() {
 }
 
 build_status_line() {
-  local kernel host weather network battery temp updates media volume nowplaying memory uptime disk cpu load bluetooth nextcloud dnd mic recording caffeine nextevent datepart timepart
+  local kernel host weather network battery temp updates media volume nowplaying memory uptime disk cpu load bluetooth nextcloud dnd mic recording caffeine datepart timepart
   local -a parts=()
 
   kernel="$(provider_cached kernel 3600 get_kernel)"
@@ -1134,7 +1124,6 @@ build_status_line() {
   battery="$(get_battery || true)"
   temp="$(get_temp_high || true)"
   updates="$(get_updates || true)"
-  nextevent="$(provider_cached nextevent "$NEXTEVENT_CACHE_SECONDS" get_next_event)"
   media="$(get_media_counts || true)"
   volume="$(get_volume || true)"
   mic="$(get_mic || true)"
@@ -1213,7 +1202,6 @@ build_status_line() {
 
   [[ -n "${kernel:-}" ]] && parts+=("$kernel")
   [[ -n "${host:-}" ]] && parts+=("$host")
-  [[ -n "${nextevent:-}" ]] && parts+=("$nextevent")
   [[ -n "${datepart:-}" ]] && parts+=("$datepart")
   [[ -n "${timepart:-}" ]] && parts+=("$timepart")
 

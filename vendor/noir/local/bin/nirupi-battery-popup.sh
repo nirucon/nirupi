@@ -35,4 +35,4 @@ fi
   [[ -n $watts ]] && printf 'Power: %s\n' "$watts"
   [[ -n $est ]] && printf 'Remaining: %s\n' "$est"
   if [[ ${volt:-} =~ ^[0-9]+$ ]]; then printf 'Voltage: %s V\n' "$(awk -v v="$volt" 'BEGIN{printf "%.2f", v/1e6}')"; fi
-} | "$HOME/.local/bin/nirupi-popup.sh" 'Battery' >/dev/null 2>&1 || true
+} | NIRUPI_POPUP=tui "$HOME/.local/bin/nirupi-popup.sh" 'Battery' >/dev/null 2>&1 || true

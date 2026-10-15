@@ -76,9 +76,9 @@ change(){
 
 j="$(forecast)"
 if [[ -z $j ]]; then
-  sel="$(printf 'Could not fetch the forecast (offline?)\n▸ Change location…\n' | "$PO" 'Weather' 2>/dev/null || true)"
+  sel="$(printf 'Could not fetch the forecast (offline?)\n\n▸ Change location…\n' | "$PO" 'Weather' 2>/dev/null || true)"
   [[ $sel == *'Change location'* ]] && change
   exit 0
 fi
-sel="$(show "$j" | "$PO" 'Weather ☀' 2>/dev/null || true)"
+sel="$(show "$j" | NIRUPI_POPUP=tui "$PO" 'Weather ☀' 2>/dev/null || true)"
 if [[ $sel == *'Change location'* ]]; then change; fi

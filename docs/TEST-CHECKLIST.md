@@ -51,6 +51,7 @@ a real login on real hardware.
 - [ ] `nirupi calendar`: English UI, Mon..Sun, ISO weeks; `s` sets the iCal URL
       and `o` opens the selected day in Google Calendar.
 - [ ] The daily update check pops a notification when updates exist.
+- [ ] Battery/weather pop-ups open as centred TUI panels; the calendar looks clean and fits.
 - [ ] `Super+Ctrl+Shift+s` keeps a window on all tags; `Super+Ctrl+e` selects the
       fibonacci layout; `Super+Ctrl+arrows` move a floating window.
 - [ ] The calendar pop-up fits a small floating window without wrapping.

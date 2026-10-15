@@ -295,49 +295,57 @@ def draw(stdscr, state):
     grid_w = 4 + 7 * 3
     left = max(0, (w - grid_w) // 2)
 
+    # ── title ──
     title = "%s %d" % (MONTHS[m - 1], y)
+    wk = "Week %d" % sel.isocalendar()[1]
     put(stdscr, 1, left, title, curses.A_BOLD)
-    put(stdscr, 1, left + len(title) + 2, "Week %d" % sel.isocalendar()[1], curses.A_DIM)
+    put(stdscr, 1, left + len(title) + 2, wk, curses.A_DIM)
+    put(stdscr, 2, left, "\u2500" * min(grid_w, max(0, w - left - 1)), curses.A_DIM)
 
-    put(stdscr, 3, left, "    " + "".join("%-3s" % d for d in WD), curses.A_DIM)
-    row = 4
+    # ── weekday header ──
+    put(stdscr, 4, left, "    " + "".join("%-3s" % d for d in WD), curses.A_BOLD)
+    row = 5
     for week in cal_month(y, m):
+        dim = week[0].isocalendar()[1] % 2 == 0
         put(stdscr, row, left, "w%02d " % week[0].isocalendar()[1], curses.A_DIM)
         for i, day in enumerate(week):
-            attr = curses.A_NORMAL
-            if day.month != m or i >= 5:
+            weekend = i >= 5
+            attr = curses.A_DIM if (day.month != m or (weekend and dim)) else curses.A_NORMAL
+            if weekend and day.month == m:
                 attr |= curses.A_DIM
-            if day == today:
-                attr |= curses.A_UNDERLINE | curses.A_BOLD
+            if day == today and day != sel:
+                attr = curses.A_UNDERLINE | curses.A_BOLD
             if day == sel:
                 attr = curses.A_REVERSE | curses.A_BOLD
             put(stdscr, row, left + 4 + i * 3, "%3d" % day.day, attr)
         row += 1
 
-    footer_row = h - 2
-    msg_row = h - 3
+    # ── divider + events ──
+    put(stdscr, row, left, "\u2500" * min(grid_w, max(0, w - left - 1)), curses.A_DIM)
     ev_top = row + 1
+    footer_row = h - 2
     avail = footer_row - ev_top - 1
     if avail > 0:
         conf = state["conf"]
         if not conf.get("ICS_URLS"):
-            put(stdscr, ev_top, left, "No calendar synced — press s to add a Google iCal URL.", curses.A_DIM)
+            put(stdscr, ev_top, left, "No calendar synced — press s to add an iCal URL.", curses.A_DIM)
         else:
             items = events_for(state["events"], sel)
             ncal = len(conf["ICS_URLS"])
-            head = "Events — %s  (%d calendar%s)" % (sel.strftime("%a %d %b %Y"), ncal, "" if ncal == 1 else "s")
+            head = "%s  ·  %d calendar%s" % (sel.strftime("%a %d %b %Y"), ncal, "" if ncal == 1 else "s")
             put(stdscr, ev_top, left, head, curses.A_BOLD)
             if state.get("errors"):
-                put(stdscr, ev_top + 1, left, "  sync: %s" % state["errors"][0], curses.A_DIM)
+                put(stdscr, ev_top + 1, left, "sync: %s" % state["errors"][0], curses.A_DIM)
             elif items:
                 for i, (tm, summary) in enumerate(items[:max(0, avail - 1)]):
-                    put(stdscr, ev_top + 1 + i, left, "  %-8s %s" % (tm, summary))
+                    bullet = "\u2022" if i < avail - 1 else " "
+                    put(stdscr, ev_top + 1 + i, left, "%s %-7s %s" % (bullet, tm, summary))
             else:
                 put(stdscr, ev_top + 1, left, "  (none today)", curses.A_DIM)
 
     if state.get("msg"):
-        put(stdscr, msg_row, left, state["msg"], curses.A_DIM)
-    footer = "arrows day · PgUp/Dn month · t today · s sync · o Google · q quit"
+        put(stdscr, footer_row - 1, left, state["msg"], curses.A_DIM)
+    footer = "\u2190\u2192 day  PgUp/Dn month  t today  s sync  o Google  q quit"
     put(stdscr, footer_row, max(0, (w - len(footer)) // 2), footer, curses.A_DIM)
     stdscr.refresh()
 

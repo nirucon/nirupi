@@ -165,7 +165,7 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **Sticky windows**, **keyboard move/resize of floats** and a
   **fibonacci/dwindle layout** in dwm.
 - **Status-bar pop-ups** with real info (updates list, btop, battery, disk,
-  weather) and a **next-calendar-event** segment.
+  weather).
 - **`nirupi changes`** and **`nirupi fleet`** (read-only multi-machine status).
 - **Per-host monitor layout** applied at session start (`apply-screenlayout.sh`;
   e.g. othala's stacked/inverted dual screens), also in the control center.

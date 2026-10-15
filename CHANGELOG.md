@@ -2,6 +2,18 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.17.6
+- **Removed the next-event segment** from the status bar (the stray
+  `Sat 17:00 …` between host and date).
+- **Battery and weather pop-ups are now centred TUI panels** (a clean floating
+  kitty window) instead of a rofi list; updates via the control center still use
+  the menu picker.
+- **Nextcloud** segment gets a little more space after the cloud glyph.
+- **Calendar** visual refresh: title rule, bold weekday header, alternating week
+  shading, clearer day/selection/today markers, a divider and bulleted events,
+  plus a larger default window (68×26).
+- DWM config schema bumped to **v11** (float rule for the info pop-up).
+
 ## 0.17.5
 - **Touchpad toggle** (`Super+Shift+t`): look the device up by its id instead of
   its name. A disabled device is listed with a leading marker (e.g. `∼ `), so

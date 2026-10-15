@@ -312,7 +312,6 @@ Click a status segment for information in a floating panel: **Updates** lists
 pending packages (*Update now* runs the updater), **Temperature/CPU** opens
 `btop`, **Battery** shows health/power/remaining, **Disk** shows per-mount
 usage, and **Weather** shows the SMHI forecast (`jq`; set `WEATHER_LAT`/
-`WEATHER_LON` in `status.conf`). A **next-event** segment (`SHOW_NEXTEVENT`)
 shows the upcoming Google Calendar event from the synced iCal.
 
 ## Fleet & changes
