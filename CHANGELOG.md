@@ -2,6 +2,13 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.21.1
+- **In-place restart now loads the installed build**: dwm re-execs
+  `~/.local/bin/dwm` (falling back to `argv[0]`) instead of the running image, so
+  `Super+Ctrl+Shift+r` picks up a freshly rebuilt dwm.
+- `nirupi reload` borrows `DISPLAY`/`XAUTHORITY` from the running dwm, so it can
+  restart dwm even from an SSH/tmux shell that has no display.
+
 ## 0.21.0
 - **dwm centres and sizes the NIRUPI pop-ups** (info panel, calendar, btop) on
   the monitor: a `centerfloat()` applied when those clients are managed, so the

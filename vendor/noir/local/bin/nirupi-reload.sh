@@ -32,6 +32,15 @@ else
 fi
 
 if command -v pgrep >/dev/null 2>&1 && pgrep -x dwm >/dev/null 2>&1; then
+  # An SSH/tmux shell has no DISPLAY; borrow it from the running dwm process so
+  # the restart key actually reaches the WM.
+  if [[ -z ${DISPLAY:-} ]]; then
+    _dpid="$(pgrep -x dwm | head -1)"
+    DISPLAY="$(tr '\0' '\n' < "/proc/$_dpid/environ" 2>/dev/null | sed -n 's/^DISPLAY=//p')"
+    XAUTHORITY="$(tr '\0' '\n' < "/proc/$_dpid/environ" 2>/dev/null | sed -n 's/^XAUTHORITY=//p')"
+    [[ -n $DISPLAY ]] && export DISPLAY
+    [[ -n $XAUTHORITY ]] && export XAUTHORITY
+  fi
   if command -v xdotool >/dev/null 2>&1; then
     if xdotool key --clearmodifiers super+ctrl+shift+r; then
       printf 'Restarted dwm in place.\n'

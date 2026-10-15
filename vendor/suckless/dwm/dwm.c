@@ -1695,8 +1695,7 @@ quit(const Arg *arg)
 		}
 		if (dwm_argv && dwm_argv[0])
 			execvp(dwm_argv[0], dwm_argv);
-		die("dwm: restart failed");
-	}
+		die("dwm: restart failed");	}
 	running = 0;
 }
 
@@ -3175,7 +3174,20 @@ xresreload(const Arg *arg)
 int
 main(int argc, char *argv[])
 {
-	dwm_argv = argv;
+	/* Restart into the *installed* binary (~/.local/bin/dwm) so an in-place
+	 * restart picks up a freshly built dwm instead of re-exec'ing the running
+	 * (older) image. Falls back to argv[0] if that link is missing. */
+	static char *restart_argv[2];
+	static char link[PATH_MAX];
+	const char *home = getenv("HOME");
+	if (home && snprintf(link, sizeof link, "%s/.local/bin/dwm", home) < (int)sizeof link
+	    && access(link, X_OK) == 0) {
+		restart_argv[0] = link;
+		restart_argv[1] = NULL;
+		dwm_argv = restart_argv;
+	} else {
+		dwm_argv = argv;
+	}
 	if (argc == 2 && !strcmp("-v", argv[1]))
 		die("dwm-"VERSION);
 	else if (argc != 1)
