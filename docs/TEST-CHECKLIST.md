@@ -58,6 +58,9 @@ a real login on real hardware.
       show details; weather shows the forecast.
 - [ ] `nirupi changes` prints the changelog; `nirupi fleet` lists the hosts.
 - [ ] `nirupi doctor` reports the session and locale.
+- [ ] On othala, the two monitors are stacked with the top one upright, and the
+      pointer moves up/down between them (also via control center → *Apply
+      screen layout*).
 - [ ] `Super+s` opens the SSH host picker (add a host to `~/.ssh/config` to see
       one). `nirupi reload` rebuilds+restarts dwm only when needed; `nirupi edit`
       opens a config.

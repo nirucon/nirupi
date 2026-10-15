@@ -84,6 +84,11 @@ grep -q 'nirupi-btop.sh' "$bin/nirupi-status-click.sh" || { echo 'FAIL btop on t
 grep -q 'drow OK session' "$ROOT/runtime/nirupi" && grep -q 'drow HINT locale' "$ROOT/runtime/nirupi" \
   || { echo 'FAIL doctor session/locale checks missing' >&2; exit 1; }
 [[ -f "$ROOT/runtime/fleet.conf.example" ]] || { echo 'FAIL fleet example missing' >&2; exit 1; }
+grep -q 'DisplayPort-5' "$bin/apply-screenlayout.sh" && grep -q 'rotate inverted' "$bin/apply-screenlayout.sh" \
+  || { echo 'FAIL othala screen layout missing' >&2; exit 1; }
+grep -q 'xrandr --auto' "$bin/apply-screenlayout.sh" || { echo 'FAIL screen layout guard missing' >&2; exit 1; }
+grep -q 'apply-screenlayout.sh' "$ROOT/runtime-session.sh" || { echo 'FAIL screen layout not applied at session start' >&2; exit 1; }
+grep -qF 'Apply screen layout' "$bin/nirupi-menu.sh" || { echo 'FAIL control center lacks Apply screen layout' >&2; exit 1; }
 
 # Completions, man page, wallpaper example.
 [[ -f "$ROOT/vendor/noir/config/fish/completions/nirupi.fish" ]] || { echo 'FAIL fish completion' >&2; exit 1; }

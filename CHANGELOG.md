@@ -2,6 +2,14 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.17.1
+- Apply the hostname-specific monitor layout (`apply-screenlayout.sh`) at
+  session start, so a machine with a known multi-monitor setup is configured
+  automatically. The `othala` case (top monitor rotated 180°, stacked
+  vertically so the pointer moves up/down) now only applies when both outputs
+  are connected, otherwise it falls back to `xrandr --auto`. Also available in
+  the control center as *Apply screen layout*.
+
 ## 0.17.0
 - **Richer status-bar pop-ups**: clicking a segment shows information in a
   floating rofi/dmenu instead of opening a browser or terminal —

@@ -36,6 +36,11 @@ LOCKER="$HOME/.local/bin/nirupi-lock.sh"
 [ -r "$HOME/.Xresources" ] && command -v xrdb >/dev/null 2>&1 && xrdb -merge "$HOME/.Xresources"
 [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/xresources.noir" ] && command -v xrdb >/dev/null 2>&1 && xrdb -merge "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/xresources.noir"
 
+# Apply the hostname-specific monitor layout (xrandr) once, if one is defined.
+if [ -x "$HOME/.local/bin/apply-screenlayout.sh" ]; then
+  "$HOME/.local/bin/apply-screenlayout.sh" >/dev/null 2>&1 || :
+fi
+
 # NIRU Noir dark session environment (GTK, Qt, cursor, true color).
 export GTK_THEME="Adwaita:dark"
 [ -f "$HOME/.gtkrc-2.0" ] && export GTK2_RC_FILES="$HOME/.gtkrc-2.0"

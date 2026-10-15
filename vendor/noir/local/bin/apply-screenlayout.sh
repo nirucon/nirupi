@@ -39,17 +39,17 @@ command -v xrandr >/dev/null 2>&1 || exit 0
 
 case "$HOSTNAME_NOW" in
   othala)
-    # Othala:
-    # - Two monitors stacked vertically
-    # - Top monitor is upside down
-    # - Bottom monitor is normal
-    #
-    # Based on current outputs:
-    #   DisplayPort-5 = top, inverted
-    #   DisplayPort-4 = bottom, normal
-    xrandr \
-      --output DisplayPort-4 --mode 2560x1440 --pos 0x1440 --rotate normal \
-      --output DisplayPort-5 --mode 2560x1440 --pos 0x0    --rotate inverted
+    # Othala: two monitors stacked vertically; the top one is mounted upside
+    # down, so it is rotated 180°. Apply only when both outputs are connected,
+    # otherwise fall back to a safe auto layout.
+    conn="$(xrandr --query 2>/dev/null | awk '/ connected/{print $1}')"
+    if printf '%s\n' "$conn" | grep -qx 'DisplayPort-4' && printf '%s\n' "$conn" | grep -qx 'DisplayPort-5'; then
+      xrandr \
+        --output DisplayPort-4 --primary --mode 2560x1440 --pos 0x1440 --rotate normal \
+        --output DisplayPort-5 --mode 2560x1440 --pos 0x0    --rotate inverted
+    else
+      xrandr --auto
+    fi
     ;;
 
   # Example for future hosts:

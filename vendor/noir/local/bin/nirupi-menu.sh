@@ -99,6 +99,7 @@ Audio output…
 USB: mount/unmount…
 Lid close…
 Bar mode (padded/full/none)
+Apply screen layout
 Weather
 Calendar
 Mute / unmute
@@ -153,6 +154,7 @@ case "$action" in
   'USB: mount/unmount…') exec "$HOME/.local/bin/nirupi-usb.sh";;
   'Lid close…') if command -v kitty >/dev/null 2>&1; then exec kitty -e "$HOME/.local/bin/nirupi-lid.sh"; else exec "$HOME/.local/bin/nirupi-lid.sh"; fi;;
   'Bar mode (padded/full/none)') exec "$HOME/.local/bin/nirupi-barmode.sh";;
+  'Apply screen layout') exec "$HOME/.local/bin/apply-screenlayout.sh";;
   Weather) exec xdg-open "https://www.smhi.se/vader/prognoser/ortsprognoser/?lat=58.2167&lon=11.9333" 2>/dev/null || true;;
   Calendar) exec "$HOME/.local/bin/nirupi-calendar.sh";;
   'System update') exec "$HOME/.local/bin/nirupi-sysupdate.sh";;
