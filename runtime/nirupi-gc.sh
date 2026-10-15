@@ -61,6 +61,7 @@ for sn in "${snaps[@]}"; do
   fi
   retained_snaps+=("$sn")
   f="$snap_root/$sn/links.tsv"
+  [[ -f $f && ! -L $f ]] || continue
   while IFS=$'\t' read -r app tgt; do
     [[ $tgt == "$LIBROOT/"* ]] || continue
     rest="${tgt#"$LIBROOT"/}"; protected+=("${rest%%/*}")
