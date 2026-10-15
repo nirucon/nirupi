@@ -8,6 +8,10 @@
 # 1 = on, 0 = off
 PER_TAG=1
 
+# Optional crossfade (0 = instant, the default; 1 = attempt an ImageMagick
+# crossfade — heavier, may stutter on some setups).
+FADE=0
+
 # Random pool for tags without an explicit image (one random image per tag,
 # cached so a tag keeps its image until you run: nirupi wallpaper next).
 DEFAULT_DIR="$HOME/Pictures/Wallpapers"

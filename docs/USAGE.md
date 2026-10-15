@@ -188,8 +188,9 @@ nirupi webapp remove "Work Mail"
 
 - **Set / rotate:** `nirupi wallpaper set FILE [--fade]`,
   `nirupi wallpaper next [--fade]`, or `Super+Shift+w`.
-- **Per workspace (tag):** dwm swaps the wallpaper on tag switch with a short
-  crossfade. Edit `~/.config/nirupi/wallpapers.conf` (`PER_TAG=1`,
+- **Per workspace (tag):** dwm swaps the wallpaper **instantly** on tag switch
+  (set `FADE=1` in the config for an optional ImageMagick crossfade). Edit
+  `~/.config/nirupi/wallpapers.conf` (`PER_TAG=1`,
   `DEFAULT_DIR` = random pool, optional `N=/path` per tag) and toggle it from
   the control center (*Wallpapers per workspace: toggle*).
 - **Theme from wallpaper:** `nirupi theme wallpaper IMAGE`.

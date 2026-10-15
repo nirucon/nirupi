@@ -20,7 +20,11 @@ the whole desktop live.
 Opt-in wallpaper-driven palette (needs ImageMagick).
 .TP
 .B wallpaper set FILE [--fade] | next [--fade] | per-tag on|off|toggle|status
-Wallpapers, including per workspace (tag) backgrounds with a short crossfade.
+Wallpapers, including per workspace (tag) backgrounds (instant by default;
+.B --fade
+or
+.B FADE=1
+adds an optional crossfade).
 .TP
 .B agent [profile]
 Launch the AI agent (opencode).

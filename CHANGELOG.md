@@ -2,6 +2,12 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.10.3
+- Per-workspace wallpaper switching is now **instant by default**: the
+  ImageMagick crossfade was heavy and stuttered on X11. The crossfade is still
+  available as an opt-in (`FADE=1` in `~/.config/nirupi/wallpapers.conf`, or
+  `--fade`), reworked to build the frames up-front and play them evenly.
+
 ## 0.10.2
 - The theme-switch notification is now suppressed when `NIRUPI_NO_NOTIFY=1` is
   set, and the test suite sets it — so running the tests (which switch through
