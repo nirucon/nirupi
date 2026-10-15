@@ -1,0 +1,20 @@
+# NIRUPI per-workspace wallpapers.
+# dwm calls nirupi-tag-wallpaper.sh on every tag switch; this file decides what
+# to show. Toggle the feature from the control center ("Wallpapers per
+# workspace") or with: nirupi wallpaper per-tag on|off|toggle|status
+#
+# Values are read literally (no shell expansion beyond $HOME / ~).
+
+# 1 = on, 0 = off
+PER_TAG=1
+
+# Random pool for tags without an explicit image (one random image per tag,
+# cached so a tag keeps its image until you run: nirupi wallpaper next).
+DEFAULT_DIR="$HOME/Pictures/Wallpapers"
+
+# Explicit image per tag (1..9). Uncomment and edit as you like:
+# 1="$HOME/Pictures/Wallpapers/browser.jpg"
+# 2="$HOME/Pictures/Wallpapers/agent.jpg"
+# 5="$HOME/Pictures/Wallpapers/files.png"
+# 6="$HOME/Pictures/Wallpapers/terminal.jpg"
+# 9="$HOME/Pictures/Wallpapers/chat.jpg"

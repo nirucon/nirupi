@@ -1,0 +1,26 @@
+# NIRUPI bash completion.
+_nirupi() {
+  local cur prev words cword
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  local cmds="version status doctor appearance browser updates config theme wallpaper keys menu agent lock webapp backup gc update migrate dots rollback history help"
+
+  if [[ $COMP_CWORD -eq 1 ]]; then
+    COMPREPLY=( $(compgen -W "$cmds" -- "$cur") ); return 0
+  fi
+  case "${COMP_WORDS[1]}" in
+    theme)     COMPREPLY=( $(compgen -W "apply status diff list preview set menu wallpaper mode" -- "$cur") );;
+    wallpaper) COMPREPLY=( $(compgen -W "set next per-tag tag" -- "$cur") );;
+    webapp)    COMPREPLY=( $(compgen -W "add list remove" -- "$cur") );;
+    browser)   COMPREPLY=( $(compgen -W "status set reset" -- "$cur") );;
+    gc)        COMPREPLY=( $(compgen -W "--dry-run --yes --legacy" -- "$cur") );;
+    doctor)    COMPREPLY=( $(compgen -W "--fix" -- "$cur") );;
+    backup)    COMPREPLY=( $(compgen -W "--schedule --unschedule" -- "$cur") );;
+    updates)   COMPREPLY=( $(compgen -W "--refresh" -- "$cur") );;
+  esac
+  if [[ ${COMP_WORDS[1]} == theme && $prev == @(set|preview) ]]; then
+    COMPREPLY=( $(compgen -W "$(nirupi theme list 2>/dev/null | awk '{print $1}' | grep -v '^Available')" -- "$cur") )
+  fi
+  return 0
+}
+complete -F _nirupi nirupi

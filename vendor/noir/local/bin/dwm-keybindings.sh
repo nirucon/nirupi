@@ -409,6 +409,8 @@ BEGIN {
   LABELS["ss_full"] = "screenshot fullscreen"
   LABELS["ss_flameshot"] = "screenshot flameshot"
   LABELS["ss_browser"] = "browse screenshots"
+  LABELS["capturecmd"] = "capture menu (region/window/OCR)"
+  LABELS["agentselectioncmd"] = "ask agent about selection"
   LABELS["wallnext"] = "next wallpaper"
   LABELS["media_play"] = "media play/pause"
   LABELS["media_next"] = "media next"

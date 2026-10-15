@@ -57,6 +57,50 @@ niru_doctor_fix(){
 }
 
 cmd="${1:-help}"; shift || :
+nirupi_help(){
+  local t="${1:-}" text
+  text="$(cat <<'EOF'
+NIRUPI — helper CLI
+
+Themes
+  nirupi theme list                  list themes
+  nirupi theme preview NAME          show a palette's colours
+  nirupi theme set NAME              apply a theme live (Super+Ctrl+t picker)
+  nirupi theme menu                  rofi theme picker
+  nirupi theme wallpaper IMAGE       derive a palette from an image
+  nirupi theme mode noir|wallpaper|palette
+
+Wallpaper
+  nirupi wallpaper set FILE [--fade]        set an image on every output
+  nirupi wallpaper next [--fade]            random image from the pool
+  nirupi wallpaper per-tag on|off|toggle|status   per-workspace backgrounds
+
+Session & apps
+  nirupi menu | nirupi keys | nirupi lock
+  nirupi agent [profile]             AI agent (opencode)
+  nirupi webapp add|list|remove      Chromium app-mode web apps
+  nirupi browser status|set|reset    default browser
+  nirupi updates [--refresh]         system updates
+
+Maintenance
+  nirupi status --once|--json        status-bar output
+  nirupi doctor [--fix]              diagnose fonts/tools/theme
+  nirupi backup [--schedule|--unschedule]
+  nirupi gc --dry-run|--yes|--legacy prune old versions/backups
+  nirupi update                      self-update (git pull + steps)
+  nirupi rollback --all|--configs RUN|--binaries
+  nirupi migrate plan|dwm --rebuild
+
+See docs/USAGE.md and docs/KEYBINDINGS.md in the source tree.
+EOF
+)"
+  if [[ -z $t ]]; then printf '%s\n' "$text"; return 0; fi
+  if printf '%s\n' "$text" | grep -qiE "(^|[[:space:]])${t}([[:space:]]|$)"; then
+    printf '%s\n' "$text" | grep -iE "(^|[[:space:]])${t}([[:space:]]|$)"
+  else
+    printf "No help for '%s'. Run 'nirupi help'.\n" "$t"
+  fi
+}
 case "$cmd" in
   version|--version|-V)
     v=""
@@ -70,6 +114,7 @@ case "$cmd" in
     printf '%s\n' "${v:-unknown}";;
   browser) exec "$HOME/.local/bin/nirupi-browser" "$@";;
   appearance) exec "$HOME/.local/bin/nirupi-appearance" "$@";;
+  wallpaper) exec "$HOME/.local/bin/nirupi-wallpaper.sh" "$@";;
   updates) exec "$HOME/.local/bin/nirupi-updates" "$@";;
   status)
     case "${1:-}" in
@@ -135,6 +180,6 @@ case "$cmd" in
   webapp) exec "$HOME/.local/bin/nirupi-webapp.sh" "$@";;
   gc) exec "$HOME/.local/bin/nirupi-gc.sh" "$@";;
   update) exec "$HOME/.local/bin/nirupi-update.sh" "$@";;
-  help|-h|--help) printf 'nirupi {version|--version|status [--once|--json]|doctor [--fix]|appearance|browser|updates [--refresh]|config|keys|menu|agent [profile]|lock|webapp add|list|remove|backup|gc|update|theme apply|status|diff|list|preview NAME|set NAME|menu|wallpaper IMAGE|dots update|migrate plan|rollback --all|history}\n';;
+  help|-h|--help) nirupi_help "${1:-}";;
   *) printf 'Unknown command: %s\n' "$cmd" >&2; exit 2;;
 esac

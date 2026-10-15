@@ -35,10 +35,10 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   (dunst colours live in a `dunstrc.d` drop-in, so your own notification
   settings are kept). Ship-with themes: **Noir** (default), **Satie**
   (monochrome graphite), **Carl Larsson** (warm umber/watercolour),
-  **Hackerman** (phosphor green) and **Nord dark**, plus `warm`/`cool`
-  variants: `nirupi theme list|preview NAME|set NAME` or the **theme picker**
-  (`Super+Ctrl+t`, which shows the active theme and a description). Opt-in
-  **wallpaper-driven theme** (`nirupi theme wallpaper IMAGE`).
+  **Hackerman** (phosphor green), **Nord dark** and **Noir day** (light
+  paper), plus `warm`/`cool` variants: `nirupi theme list|preview NAME|set NAME`
+  or the **theme picker** (`Super+Ctrl+t`, which shows the active theme and a
+  description). Opt-in **wallpaper-driven theme** (`nirupi theme wallpaper IMAGE`).
 - **Idle ladder**: dim → lock → DPMS off → suspend (each optional), lock on
   suspend, and a Noir lock wrapper (`nirupi lock`).
 - **Logout confirmation** (`Super+Shift+q`) and a **night light** toggle
@@ -60,6 +60,14 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   [`docs/FEATURES.md`](docs/FEATURES.md).
 - Installs **opencode** and wires `nirupi agent` + a control center / keybinding
   cheat-sheet (`Super+a`, `Super+/`, ``Super+` ``).
+- **Quality of life:** capture (`Super+Ctrl+Print`: region/window/full +
+  annotate + OCR-to-clipboard), ask the agent about the current selection
+  (`Super+Ctrl+a`), an emoji picker, clipboard transforms, an audio-output
+  picker, **fish + bash completions**, `nirupi help COMMAND` and a man page.
+  **Per-workspace wallpapers** (`~/.config/nirupi/wallpapers.conf`) crossfade on
+  tag switch and toggle from the control center. dwm gains smart gaps/borders,
+  an **in-place restart** (`Super+Ctrl+Shift+r`) and mouse-drag of the master
+  factor (`Super+Button2`).
 - Migrates an existing system **non-destructively**: configs are merged, foreign
   binaries are archived (never deleted), customized files are preserved.
 - Provides safe, manifest-based rollback of configs and binary links.
@@ -128,6 +136,7 @@ nirupi rollback --binaries            # binary links only
 ./install.sh --theme-only|--update-dots|--migrate|--dry-run
 nirupi theme apply|status|diff|list|preview NAME|set NAME|menu
 nirupi theme wallpaper IMAGE|mode noir|wallpaper|palette
+nirupi wallpaper set FILE [--fade]|next [--fade]|per-tag on|off|toggle|status
 nirupi migrate plan|dwm --rebuild     nirupi agent [profile]
 nirupi menu | nirupi keys | nirupi lock | nirupi webapp add|list|remove
 nirupi backup [--schedule|--unschedule]
@@ -139,8 +148,9 @@ nirupi browser status|set|reset       nirupi updates --refresh
 ```
 
 Keybindings: `Super+Return` terminal, `Super+b` browser, `Super+a` agent,
-`Super+Ctrl+t` theme picker, `Super+Shift+h` keybinding palette,
-`Super+Alt+k` full keybinding table (TUI), `Super+Shift+m` control center,
+`Super+Ctrl+a` ask agent about the selection, `Super+Ctrl+t` theme picker,
+`Super+Shift+h` keybinding palette, `Super+Alt+k` full keybinding table (TUI),
+`Super+Shift+m` control center, `Super+Ctrl+Print` capture menu,
 `Super+Esc` lock,
 `Super+Shift+q` log out, `Super+n` night light, `Super+Shift+e` fullscreen,
 `Super+Ctrl+,`/`Super+Ctrl+.` cycle layouts, `Super+Shift+w` next wallpaper,

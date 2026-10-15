@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 3
+#define NIRUPI_CONFIG_VERSION 4
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -23,6 +23,8 @@
 =========================*/
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static unsigned int gappx           = 15;       /* gaps between windows (Super+g toggles) */
+static const int smartgaps          = 1;        /* 1 = no gaps when a single tiled window */
+static const int smartborders       = 1;        /* 1 = no border on a single tiled window */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int swallowfloating    = 0;        /* 1 = terminal also swallows floating windows */
 static const int showbar            = 1;        /* 0 hides bar */
@@ -80,6 +82,14 @@ static const Rule rules[] = {
 	{ "Alacritty",NULL,     NULL,         0,         0,          1,          0,         0,            -1 },
 	{ "st",       NULL,     NULL,         0,         0,          1,          0,         0,            -1 },
 	{ NULL,       NULL,     "scratchpad", 0,         0,          1,          0,         0,            -1 },
+	/* Float dialogs/tools that are awkward when tiled. */
+	{ "Pavucontrol", NULL,  NULL,         0,         1,          0,          0,         0,            -1 },
+	{ "pavucontrol", NULL,  NULL,         0,         1,          0,          0,         0,            -1 },
+	{ "Steam",    NULL,     NULL,         0,         1,          0,          0,         0,            -1 },
+	{ "steam",    NULL,     NULL,         0,         1,          0,          0,         0,            -1 },
+	{ "Lutris",   NULL,     NULL,         0,         1,          0,          0,         0,            -1 },
+	{ NULL,       NULL,     "Picture-in-Picture", 0,  1,          0,          0,         0,            -1 },
+	{ NULL,       NULL,     "Picture in picture", 0,  1,          0,          0,         0,            -1 },
 };
 
 /* === Custom layout funcs === */
@@ -177,8 +187,9 @@ static const char *scratchpadcmd[] = {
 static const char *stcmd[]        = { "st", NULL };
 static const char *alacrittycmd[] = { "alacritty", NULL };
 static const char *kittycmd[]     = { "kitty", NULL };
-/* Re-spawning DWM from inside DWM creates competing window managers.
- * Use a controlled session restart via logout/login instead. */
+/* Re-spawning DWM from inside DWM is safe: `quit {.i = 1}` releases the WM
+ * role (XCloseDisplay) before exec, so Super+Ctrl+Shift+r restarts in place
+ * with no competing window manager. */
 static const char *browsercmd[] = { "nirupi-browser", NULL };
 static const char *bravecmd[]   = { "brave", NULL };
 static const char *wallnext[]     = { "/bin/sh", "-c", "$HOME/.local/bin/wallrotate.sh next", NULL };
@@ -199,6 +210,10 @@ static const char *keyscmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-keys.
 static const char *menucmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-menu.sh", NULL };
 /* AI agent launcher */
 static const char *agentcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent.sh", NULL };
+/* Ask the agent about the current selection (Super+Ctrl+a). */
+static const char *agentselectioncmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent-selection.sh", NULL };
+/* Capture menu: region/window/full + annotate + OCR (Super+Ctrl+Print). */
+static const char *capturecmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-capture.sh", NULL };
 /* Theme picker (Super+Ctrl+t): rofi with colour swatches, applies live. */
 static const char *thememenu[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi theme menu", NULL };
 
@@ -292,6 +307,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_slash,                 spawn,          {.v = keyscmd } },         /* Super+/ (US layouts) */
 	{ MODKEY,                       XK_grave,                 spawn,          {.v = menucmd } },         /* Super+` (US layouts) */
 	{ MODKEY,                       XK_a,                     spawn,          {.v = agentcmd } },        /* Super+a -> AI agent (opencode) */
+	{ MODKEY|ControlMask,           XK_a,                     spawn,          {.v = agentselectioncmd } }, /* Super+Ctrl+a -> ask agent about selection */
 	{ MODKEY|ControlMask,           XK_t,                     spawn,          {.v = thememenu } },       /* Super+Ctrl+t -> theme picker */
 	{ MODKEY|ShiftMask,             XK_f,                     spawn,          {.v = fmcmd } },          /* Super+Shift+f -> pcmanfm */
 
@@ -356,6 +372,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_q,                     killclient,     {0} },          /* Super+q -> kill focused */
 	{ MODKEY|ShiftMask,             XK_q,                     spawn,          {.v = logoutcmd } },  /* Super+Shift+q -> power menu */
 	{ MODKEY|ControlMask|ShiftMask, XK_q,                     quit,           {0} },          /* Super+Ctrl+Shift+q -> quit immediately */
+	{ MODKEY|ControlMask|ShiftMask, XK_r,                     quit,           {.i = 1} },     /* Super+Ctrl+Shift+r -> restart dwm in place */
 
 	/* Night light */
 	{ MODKEY,                       XK_n,                     spawn,          {.v = nightlightcmd } }, /* Super+n -> night light toggle */
@@ -404,6 +421,7 @@ static const Key keys[] = {
 	/* Screenshots */
 	{ 0,                            XK_Print,                 spawn,          {.v = ss_select } },     /* Print -> screenshot with prompt */
 	{ MODKEY,                       XK_Print,                 spawn,          {.v = ss_full } },       /* Super+Print -> full screen */
+	{ MODKEY|ControlMask,           XK_Print,                 spawn,          {.v = capturecmd } },    /* Super+Ctrl+Print -> capture menu */
 	{ MODKEY|ShiftMask,             XK_Print,                 spawn,          {.v = ss_flameshot } },  /* Super+Shift+Print -> flameshot gui */
 	{ MODKEY|Mod1Mask,              XK_s,                     spawn,          {.v = ss_browser } },    /* Super+Alt+S -> browse screenshots */
 };
@@ -420,7 +438,7 @@ static const Button buttons[] = {
 	{ ClkStatusText,        0,              Button2,        spawn,          {.v = statuscmd } },
 	{ ClkStatusText,        0,              Button3,        spawn,          {.v = statuscmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
-	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
+	{ ClkClientWin,         MODKEY,         Button2,        dragmfact,      {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
 	{ ClkTagBar,            0,              Button1,        view,           {0} },
 	{ ClkTagBar,            0,              Button3,        toggleview,     {0} },

@@ -216,6 +216,7 @@ static Monitor *recttomon(int x, int y, int w, int h);
 static void resize(Client *c, int x, int y, int w, int h, int interact);
 static void resizeclient(Client *c, int x, int y, int w, int h);
 static void resizemouse(const Arg *arg);
+static void dragmfact(const Arg *arg);
 static void restack(Monitor *m);
 static void rotatestack(const Arg *arg);
 static void run(void);
@@ -232,6 +233,7 @@ static void setup(void);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void spawn(const Arg *arg);
+static void runwallhook(void);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
@@ -308,6 +310,7 @@ static void (*handler[LASTEvent]) (XEvent *) = {
 };
 static Atom wmatom[WMLast], netatom[NetLast];
 static int running = 1;
+static char **dwm_argv = NULL; /* original argv, for a clean in-place restart */
 static Cur *cursor[CurLast];
 static Clr **scheme;
 static Display *dpy;
@@ -323,7 +326,7 @@ static xcb_connection_t *xcon;
 #ifndef NIRUPI_CONFIG_VERSION
 #error "This dwm config.h is out of date. A newer version is written as config.h.nirupi-new. Merge it (or run: nirupi migrate dwm --rebuild)."
 #endif
-#if NIRUPI_CONFIG_VERSION < 3
+#if NIRUPI_CONFIG_VERSION < 4
 #error "This dwm config.h is too old for this dwm. Merge config.h.nirupi-new and rebuild."
 #endif
 
@@ -469,9 +472,24 @@ arrange(Monitor *m)
 void
 arrangemon(Monitor *m)
 {
+	Client *c;
+	unsigned int n = 0, savedgappx = gappx;
+	int single;
+
 	strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
+	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
+		n++;
+	single = (n == 1);
+	/* smartgaps: drop the gaps when a single tiled client fills the monitor */
+	if (single && smartgaps)
+		gappx = 0;
+	/* smartborders: no border on a lone tiled client */
+	if (smartborders)
+		for (c = m->clients; c; c = c->next)
+			c->bw = (single && !c->isfloating) ? 0 : borderpx;
 	if (m->lt[m->sellt]->arrange)
 		m->lt[m->sellt]->arrange(m);
+	gappx = savedgappx;
 }
 
 void
@@ -1654,6 +1672,17 @@ propertynotify(XEvent *e)
 void
 quit(const Arg *arg)
 {
+	if (arg->i) {
+		/* Clean in-place restart: release the WM role before re-exec so the
+		 * new dwm can grab SubstructureRedirect (no competing window manager). */
+		if (dpy) {
+			XCloseDisplay(dpy);
+			dpy = NULL;
+		}
+		if (dwm_argv && dwm_argv[0])
+			execvp(dwm_argv[0], dwm_argv);
+		die("dwm: restart failed");
+	}
 	running = 0;
 }
 
@@ -1772,6 +1801,38 @@ resizemouse(const Arg *arg)
 		selmon = m;
 		focus(NULL);
 	}
+}
+
+void
+dragmfact(const Arg *arg)
+{
+	float f;
+	Monitor *m = selmon;
+	XEvent ev;
+
+	if (!m || !m->lt[m->sellt]->arrange)
+		return;
+	if (XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync, GrabModeAsync,
+		None, cursor[CurResize]->cursor, CurrentTime) != GrabSuccess)
+		return;
+	do {
+		XMaskEvent(dpy, MOUSEMASK|ExposureMask|SubstructureRedirectMask, &ev);
+		switch (ev.type) {
+		case ConfigureRequest:
+		case Expose:
+		case MapRequest:
+			handler[ev.type](&ev);
+			break;
+		case MotionNotify:
+			f = (float)(ev.xmotion.x - m->wx) / (float)m->ww;
+			if (f < 0.05) f = 0.05;
+			if (f > 0.95) f = 0.95;
+			m->mfact = f;
+			arrange(m);
+			break;
+		}
+	} while (ev.type != ButtonRelease);
+	XUngrabPointer(dpy, CurrentTime);
 }
 
 void
@@ -2330,6 +2391,7 @@ toggleview(const Arg *arg)
 
 		focus(NULL);
 		arrange(selmon);
+		runwallhook();
 	}
 }
 
@@ -2643,6 +2705,27 @@ updatewmhints(Client *c)
 }
 
 void
+runwallhook(void)
+{
+	char tagn[16];
+
+	/* Per-workspace wallpaper hook: dwm only tells the helper which tagset is
+	 * now visible; the helper decides (and can be disabled) itself. */
+	if (!selmon)
+		return;
+	if (fork() == 0) {
+		if (dpy)
+			close(ConnectionNumber(dpy));
+		setsid();
+		snprintf(tagn, sizeof tagn, "%u", selmon->tagset[selmon->seltags]);
+		setenv("NIRUPI_TAGSET", tagn, 1);
+		execl("/bin/sh", "sh", "-c",
+			"$HOME/.local/bin/nirupi-tag-wallpaper.sh", (char *)NULL);
+		_exit(EXIT_SUCCESS);
+	}
+}
+
+void
 view(const Arg *arg)
 {
 	int i;
@@ -2678,6 +2761,7 @@ view(const Arg *arg)
 
 	focus(NULL);
 	arrange(selmon);
+	runwallhook();
 }
 
 pid_t
@@ -2925,6 +3009,7 @@ xresreload(const Arg *arg)
 int
 main(int argc, char *argv[])
 {
+	dwm_argv = argv;
 	if (argc == 2 && !strcmp("-v", argv[1]))
 		die("dwm-"VERSION);
 	else if (argc != 1)

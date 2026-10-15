@@ -1,0 +1,57 @@
+.TH NIRUPI 1 "2026" "NIRUPI" "NIRU desktop manual"
+.SH NAME
+nirupi \- helper CLI for the NIRU desktop (dwm, themes, session, apps)
+.SH SYNOPSIS
+.B nirupi
+.I command
+.RI [ args ]
+.SH DESCRIPTION
+.B nirupi
+front-ends the NIRU desktop: theme switching, the session, web apps, the agent,
+maintenance and diagnostics. Most commands also have a keybinding (see
+.BR "docs/KEYBINDINGS.md" ).
+.SH COMMANDS
+.TP
+.B theme apply|status|diff|list|preview NAME|set NAME|menu
+Manage the unified palette. All colours come from one file; switching restyles
+the whole desktop live.
+.TP
+.B theme wallpaper IMAGE|mode noir|wallpaper|palette
+Opt-in wallpaper-driven palette (needs ImageMagick).
+.TP
+.B wallpaper set FILE [--fade] | next [--fade] | per-tag on|off|toggle|status
+Wallpapers, including per workspace (tag) backgrounds with a short crossfade.
+.TP
+.B agent [profile]
+Launch the AI agent (opencode).
+.TP
+.B menu | keys | lock
+Control center, keybinding palette, lock screen.
+.TP
+.B webapp add|list|remove
+Manage Chromium app-mode web apps (Helium-first).
+.TP
+.B browser status|set|reset | updates [--refresh] | status --once|--json
+Default browser, system updates and status-bar output.
+.TP
+.B backup [--schedule|--unschedule] | gc --dry-run|--yes|--legacy
+Backups and garbage collection of old versions/snapshots.
+.TP
+.B update | doctor [--fix] | rollback --all|--configs RUN|--binaries
+Self-update, diagnostics and rollback.
+.SH FILES
+.I ~/.config/nirupi/
+\(em user configuration (status.conf, session.conf, apps.conf, tokens.env,
+wallpapers.conf, ...).
+.br
+.I ~/.local/lib/nirupi/
+\(em deployed runtime bundle and versioned binaries.
+.br
+.I ~/.local/state/nirupi/
+\(em backups, legacy archives and installed.env.
+.SH SEE ALSO
+.I docs/USAGE.md
+and
+.I docs/KEYBINDINGS.md
+in the source tree, or
+.BR https://github.com/nirucon/nirupi .

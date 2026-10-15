@@ -93,6 +93,33 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
   e.g. `0 * * * * ~/.local/bin/nirupi-theme-auto.sh auto`.
 - **Wallpaper-driven palette:** `nirupi theme wallpaper IMAGE`.
 - Add your own: drop `MyTheme.env` (same schema) in `vendor/noir/theme/`.
+- **Noir day** is a light palette for daylight; the day/night auto still uses
+  `warm`/`noir` (it does not switch to light on its own).
+
+## Capture, clipboard & AI
+- **Capture** `Super+Ctrl+Print`: region / window / full screen, saved to
+  `~/Pictures/Screenshots` and copied. Optional annotation via `satty` and
+  **OCR to clipboard** via `tesseract` (only offered when installed).
+- **Clipboard transforms** from the keybinding palette (`Super+Shift+h`):
+  case, line sort/unique/reverse, Base64, URL encode/decode, JSON pretty,
+  strip ANSI, counts. Uses `xclip`/`wl-clipboard`; JSON/URL need `python3`.
+- **Emoji picker** from the palette (bundled list, or `rofimoji` if installed).
+- **Ask the agent** `Super+Ctrl+a`: sends the current selection to `opencode`
+  with a prompt menu (explain/summarise/translate/fix/…).
+- **Audio output** picker in the control center (`wpctl`/PipeWire).
+- **`nirupi help COMMAND`** and a man page; **fish + bash completions**.
+
+## Wallpapers
+- **Per workspace (tag):** dwm calls `nirupi-tag-wallpaper.sh` on every tag
+  switch; `~/.config/nirupi/wallpapers.conf` maps tags to images (or a random
+  pool), and the switch crossfades via ImageMagick. Toggle in the control
+  center. Works with one or several outputs.
+
+## dwm polish
+- **smartgaps / smartborders** (no gaps or border on a lone window),
+  **in-place restart** `Super+Ctrl+Shift+r` (releases the WM role before
+  re-exec), **drag the master factor** (`Super+Button2`), and float rules for
+  dialogs/tools (PiP, pavucontrol, Steam, Lutris).
 
 ## Your apps & the web
 - **Default repositories** `nirupresence`, `nirunote`, `nplay` are cloned to

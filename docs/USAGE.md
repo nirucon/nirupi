@@ -20,7 +20,10 @@ startup, run `nirupi theme apply`.
 | `Super+Shift+p` | rofi run |
 | `Super+b` | Browser (resolver) |
 | `Super+a` | **Agent** (opencode) |
-| `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson…) |
+| `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson/…) |
+| `Super+Ctrl+a` | **Ask the agent** about the current selection |
+| `Super+Ctrl+Print` | **Capture** menu (region/window/full + annotate + OCR) |
+| `Super+Ctrl+Shift+r` | **Restart dwm** in place (after a rebuild) |
 | `Super+Shift+h` | **Keybinding palette** (search everything) |
 | `Super+Alt+k` | Full keybinding table (interactive TUI) |
 | `Super+Shift+m` | **Control center** |
@@ -117,6 +120,7 @@ Shipped themes:
 | `carl-larsson` | Warm umber, cream and earth/watercolour accents |
 | `hackerman` | Phosphor green on black — CRT hacker terminal |
 | `nord-dark` | Polar Night blues with Nord frost/aurora accents |
+| `noir-day` | Light warm paper — readable in daylight |
 | `warm` / `cool` | Noir with a warm or cool cast |
 
 `st`/`dmenu`/dwm read the palette from Xresources at startup (and on `SIGUSR1`);
@@ -166,6 +170,30 @@ nirupi webapp list
 nirupi webapp remove "Work Mail"
 ```
 
+## Capture, clipboard & AI
+
+- **Capture** (`Super+Ctrl+Print`, or the control center): region, window or
+  full screen. Saved to `~/Pictures/Screenshots` and copied to the clipboard.
+  With `satty` installed you also get annotation; with `tesseract`,
+  *OCR from region* copies the recognised text.
+- **Clipboard transforms** (keybinding palette `Super+Shift+h` → *Transform*):
+  UPPERCASE/lowercase/Title, sort/unique/reverse lines, Base64 and URL
+  encode/decode, JSON pretty, strip ANSI, count lines/words/chars.
+- **Emoji** (palette → *Emoji*): pick one, copied to the clipboard.
+- **Ask the agent** (`Super+Ctrl+a`): select text anywhere, choose a prompt
+  (explain / summarise / translate to EN or SV / fix / explain error /
+  refactor), and the answer opens in a terminal via `opencode run`.
+
+## Wallpapers
+
+- **Set / rotate:** `nirupi wallpaper set FILE [--fade]`,
+  `nirupi wallpaper next [--fade]`, or `Super+Shift+w`.
+- **Per workspace (tag):** dwm swaps the wallpaper on tag switch with a short
+  crossfade. Edit `~/.config/nirupi/wallpapers.conf` (`PER_TAG=1`,
+  `DEFAULT_DIR` = random pool, optional `N=/path` per tag) and toggle it from
+  the control center (*Wallpapers per workspace: toggle*).
+- **Theme from wallpaper:** `nirupi theme wallpaper IMAGE`.
+
 ## Customize
 
 | File | Purpose |
@@ -178,6 +206,7 @@ nirupi webapp remove "Work Mail"
 | `~/.config/nirupi/tokens.env` | Active palette (from `nirupi theme set`) |
 | `~/.config/nirupi/theme/` | Generated colour fragments (do not edit) |
 | `~/.config/dunst/dunstrc.d/90-nirupi.conf` | Generated dunst colours (do not edit) |
+| `~/.config/nirupi/wallpapers.conf` | Per-workspace wallpapers (`nirupi wallpaper per-tag …`) |
 
 DWM keybindings/colors are compiled in `vendor/suckless/dwm/config.h`; rebuild
 after editing with `nirupi migrate dwm --rebuild`.

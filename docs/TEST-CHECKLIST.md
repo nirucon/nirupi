@@ -27,8 +27,13 @@ a real login on real hardware.
 - [ ] `Super+a` opens the agent (opencode); `Super+Shift+h` cheat-sheet;
       `Super+Shift+m` control center; `Super+Alt+k` full keybinding table.
 - [ ] `Super+Ctrl+t` opens the theme picker (active theme + description shown);
-      choosing **Satie**, **Carl Larsson**, **Hackerman** or **Nord dark**
-      restyles terminals, TUI tools, rofi, dunst and the bar live.
+      choosing **Satie**, **Carl Larsson**, **Hackerman**, **Nord dark** or
+      **Noir day** restyles terminals, TUI tools, rofi, dunst and the bar live.
+- [ ] `Super+Ctrl+Shift+r` restarts dwm in place (windows survive, no logout).
+- [ ] `Super+Ctrl+Print` opens the capture menu; `Super+Ctrl+a` asks the agent
+      about the current selection.
+- [ ] Per-workspace wallpapers: switching tags crossfades the background;
+      toggling *Wallpapers per workspace* in the control center turns it off/on.
 - [ ] `Super+Shift+r` reloads Xresources colors; `nirupi theme wallpaper IMAGE`
       recolors terminals + bar; `nirupi theme mode noir` restores Noir.
 - [ ] Idle for `IDLE_LOCK_MINUTES` (default 10) locks with slock; unlock works.
@@ -40,6 +45,11 @@ a real login on real hardware.
       (`~/.config/dunst/dunstrc.d/90-nirupi.conf`; your `dunstrc` is untouched).
 - [ ] Browser uses `--force-dark-mode` (brave-flags.conf).
 - [ ] Screenshots, clipboard, wallpaper rotation, power menu work.
+- [ ] Capture menu (`Super+Ctrl+Print`) works; annotation/OCR offered only when
+      `satty`/`tesseract` are present.
+- [ ] Palette (`Super+Shift+h`) lists Emoji, Transform, Capture, Audio and
+      Ask agent, and each launches.
+- [ ] `nirupi help theme` and `man nirupi` work; completions load in fish/bash.
 - [ ] GTK and Qt apps are dark (no light flash).
 
 ## Upgrade-specific

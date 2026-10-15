@@ -18,7 +18,7 @@ fail(){ echo "FAIL: $*" >&2; exit 1; }
 read_bg(){ grep -m1 '^background' "$1" | awk '{print $2}'; }
 
 # Every built-in theme resolves and applies.
-for theme in noir Satie carl-larsson hackerman nord-dark warm cool; do
+for theme in noir Satie carl-larsson hackerman nord-dark noir-day warm cool; do
   f="$(theme_palette_file "$theme")" || fail "unknown theme $theme"
   [[ -f $f ]] || fail "missing palette file for $theme"
 done
@@ -30,7 +30,7 @@ grep -qx 'Noir-cool' <<< "$theme_names_out" || fail 'Noir-cool not listed'
 
 # `nirupi theme list` must show every theme with its display name.
 list_out="$(theme_list)"
-for want in Noir Hackerman "Nord dark" Satie "Carl Larsson" "Noir warm"; do
+for want in Noir Hackerman "Nord dark" "Noir day" Satie "Carl Larsson" "Noir warm"; do
   grep -q "$want" <<< "$list_out" || fail "theme list missing $want"
 done
 
@@ -58,6 +58,10 @@ theme_set nord-dark >/dev/null
 [[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#2e3440' ]] || fail 'kitty not Nord dark'
 grep -q '0x2e3440' "$HOME/.config/nirupi/theme/alacritty.toml" || fail 'alacritty not Nord dark'
 
+theme_set noir-day >/dev/null
+[[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#f4f1ea' ]] || fail 'kitty not Noir day'
+grep -q 'set -g fish_color_normal 2f2c27' "$HOME/.config/nirupi/theme/fish.fish" || fail 'fish not Noir day'
+
 # Back to Noir restores the default background everywhere.
 theme_set noir >/dev/null
 [[ "$(read_bg "$HOME/.config/nirupi/theme/kitty.conf")" == '#0f0f10' ]] || fail 'noir not restored'
@@ -69,7 +73,7 @@ echo 'PASS: switching themes restyles terminals, TUI tools and launchers'
 
 # Display names shown by the picker (and accepted by `nirupi theme set`) resolve,
 # including the default theme whose display name is "Noir".
-for name in Noir Satie "Carl Larsson" Hackerman "Nord dark" "Noir warm" "Noir cool" noir warm cool carl hackerman nord-dark; do
+for name in Noir Satie "Carl Larsson" Hackerman "Nord dark" "Noir day" "Noir warm" "Noir cool" noir warm cool carl hackerman nord-dark noir-day; do
   f="$(theme_palette_file "$name")" || fail "display name '$name' did not resolve"
   [[ -f $f ]] || fail "display name '$name' resolved to a missing file"
 done

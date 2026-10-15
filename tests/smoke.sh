@@ -90,6 +90,8 @@ printf 'PASS: build-stage cleanup guard\n'
 
 "$ROOT/tests/theme-switch.sh"
 
+"$ROOT/tests/extras.sh"
+
 "$ROOT/tests/ui-fixes.sh"
 
 "$ROOT/tests/features-v07.sh"

@@ -2,6 +2,26 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.10.0
+- **dwm polish:** smartgaps + smartborders (no gaps/border on a lone window),
+  **in-place restart** on `Super+Ctrl+Shift+r` (releases the WM role before
+  re-exec, so no competing window manager), **drag the master factor** with
+  `Super+Button2`, and float rules for dialogs/tools (PiP, pavucontrol, Steam,
+  Lutris). Config schema bumped to **v4**.
+- **Light theme `Noir day`** (warm paper, dark readable accents) for daylight.
+- **Capture** (`Super+Ctrl+Print`): region/window/full, optional annotation
+  (satty) and **OCR to clipboard** (tesseract).
+- **Ask the agent about the selection** (`Super+Ctrl+a`): pick a prompt
+  (explain/summarise/translate/fix/…) and send the current selection.
+- **Per-workspace wallpapers** with a short ImageMagick crossfade: configure in
+  `~/.config/nirupi/wallpapers.conf` (`default=~/Pictures/Wallpapers` random
+  pool, optional per-tag images) and toggle from the control center.
+- **Emoji picker**, **clipboard transforms** (case/base64/JSON/URL/…) and an
+  **audio-output picker**, available from the keybinding palette and the
+  control center.
+- **`nirupi help [command]`** plus a **man page**, and **fish + bash
+  completions**.
+
 ## 0.9.2
 - `nirupi gc` now also preserves any version directory that an installed
   symlink in `~/.local/bin` still points at, so pruning can never leave `dwm`,

@@ -2,7 +2,7 @@
 
 <!-- Generated from vendor/suckless/dwm/config.h by tools/gen-keybindings.sh. Do not edit by hand. -->
 
-115 bindings. `Super` is the Mod4/Win key.
+118 bindings. `Super` is the Mod4/Win key.
 
 | Keys | Action |
 | --- | --- |
@@ -18,6 +18,7 @@
 | `Super+/` | Super+/ (US layouts) |
 | `Super+Backtick` | Super+` (US layouts) |
 | `Super+A` | AI agent (opencode) |
+| `Super+Ctrl+A` | ask agent about selection |
 | `Super+Ctrl+T` | theme picker |
 | `Super+Shift+F` | pcmanfm |
 | `Super+V` | clipboard menu |
@@ -91,6 +92,7 @@
 | `Super+Q` | kill focused |
 | `Super+Shift+Q` | power menu |
 | `Super+Ctrl+Shift+Q` | quit immediately |
+| `Super+Ctrl+Shift+R` | restart dwm in place |
 | `Super+N` | night light toggle |
 | `Super+W` | window switcher (rofi) |
 | `Super+R` | toggle screen recording |
@@ -119,5 +121,6 @@
 | `Super+Shift+W` | next wallpaper |
 | `(none)+Print` | screenshot with prompt |
 | `Super+Print` | full screen |
+| `Super+Ctrl+Print` | capture menu |
 | `Super+Shift+Print` | flameshot gui |
 | `Super+Alt+S` | browse screenshots |

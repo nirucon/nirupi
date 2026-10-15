@@ -78,5 +78,15 @@ grep -q 'name "scratchpad".*kitty\|scratchpad' "$DWM/config.h" || { echo 'FAIL s
 grep -q 'xcb_res_query_client_ids' "$DWM/dwm.c" || { echo 'FAIL swallow winpid missing' >&2; exit 1; }
 grep -q 'lX11-xcb' "$DWM/config.mk" && grep -q 'lX11-xcb' "$DWM/config.mk" || { echo 'FAIL swallow link libs missing' >&2; exit 1; }
 grep -q 'lxcb-res' "$DWM/config.mk" || { echo 'FAIL xcb-res link missing' >&2; exit 1; }
+# polish patches: smartgaps / smartborders / restartsig / dragmfact
+grep -q 'smartgaps' "$DWM/config.h" || { echo 'FAIL smartgaps config missing' >&2; exit 1; }
+grep -q 'smartborders' "$DWM/config.h" || { echo 'FAIL smartborders config missing' >&2; exit 1; }
+grep -q 'single && smartgaps' "$DWM/dwm.c" || { echo 'FAIL smartgaps logic missing' >&2; exit 1; }
+grep -q 'single && !c->isfloating' "$DWM/dwm.c" || { echo 'FAIL smartborders logic missing' >&2; exit 1; }
+grep -q 'dwm_argv' "$DWM/dwm.c" || { echo 'FAIL restartsig missing' >&2; exit 1; }
+grep -q 'XK_r,.*quit,.*{\.i = 1}' "$DWM/config.h" || { echo 'FAIL restart binding missing' >&2; exit 1; }
+grep -q 'dragmfact(const Arg' "$DWM/dwm.c" && grep -q 'dragmfact,' "$DWM/config.h" || { echo 'FAIL dragmfact missing' >&2; exit 1; }
+# float rules for dialogs/tools
+grep -q '"Pavucontrol"' "$DWM/config.h" && grep -q 'Picture-in-Picture' "$DWM/config.h" || { echo 'FAIL float rules missing' >&2; exit 1; }
 # the new bar commands/ids must stay collision-free (also asserted by keybindings.sh)
 echo 'PASS: dwm 6.8 + status2d/statuscmd/xresources, bar patches (statusallmons/barpadding/tagicons), swallow, actualfullscreen, focusurgent, cyclelayouts, slock 1.7'

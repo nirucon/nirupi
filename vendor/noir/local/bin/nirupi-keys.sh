@@ -85,6 +85,11 @@ APP	Agent (AI)	nirupi-agent
 APP	Control center	nirupi-menu.sh
 APP	Screenshot	screenshot-select.sh
 APP	Clipboard	clip-menu.sh
+APP	Emoji	nirupi-emoji.sh
+APP	Transform	nirupi-clip-transform.sh
+APP	Capture	nirupi-capture.sh
+APP	Audio	nirupi-audio.sh
+APP	Ask agent	nirupi-agent-selection.sh
 EOF
 }
 
@@ -133,6 +138,11 @@ else
     Control) exec nirupi-menu.sh;;
     Screenshot) exec screenshot-select.sh;;
     Clipboard) exec clip-menu.sh;;
+    Emoji) exec nirupi-emoji.sh;;
+    Transform) exec nirupi-clip-transform.sh;;
+    Capture) exec nirupi-capture.sh;;
+    Audio) exec nirupi-audio.sh;;
+    Ask) exec nirupi-agent-selection.sh;;
     *) ;;
   esac
 fi

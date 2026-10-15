@@ -91,13 +91,18 @@ Night light: off
 Theme: choose…
 Wallpaper mode: toggle
 Next wallpaper
+Wallpapers per workspace: toggle
 Theme: auto (day/night)
 Tailscale: toggle
 Wi-Fi
 Bluetooth
+Audio output…
 Weather
 Calendar
 Mute / unmute
+Capture…
+Emoji
+Clipboard: transform
 nirunote
 nplay
 nirupresence
@@ -132,14 +137,19 @@ case "$action" in
   'Theme: choose…') exec nirupi theme menu;;
   'Wallpaper mode: toggle') theme_toggle;;
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
+  'Wallpapers per workspace: toggle') exec "$HOME/.local/bin/nirupi-wallpaper.sh" per-tag toggle;;
   'Theme: auto (day/night)') exec "$HOME/.local/bin/nirupi-theme-auto.sh" auto;;
   'Tailscale: toggle') tailscale_toggle;;
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;
+  'Audio output…') exec "$HOME/.local/bin/nirupi-audio.sh";;
   Weather) exec xdg-open "https://www.smhi.se/vader/prognoser/ortsprognoser/?lat=58.2167&lon=11.9333" 2>/dev/null || true;;
   Calendar) exec "$HOME/.local/bin/nirupi-calendar.sh";;
   'System update') exec "$HOME/.local/bin/nirupi-sysupdate.sh";;
   'Mute / unmute') exec "$HOME/.local/bin/nirupi-osd.sh" volume mute;;
+  'Capture…') exec "$HOME/.local/bin/nirupi-capture.sh";;
+  Emoji) exec "$HOME/.local/bin/nirupi-emoji.sh";;
+  'Clipboard: transform') exec "$HOME/.local/bin/nirupi-clip-transform.sh";;
   nirunote) exec "$HOME/.local/bin/nirupi-app.sh" nirunote;;
   nplay) exec "$HOME/.local/bin/nirupi-app.sh" nplay;;
   nirupresence) exec "$HOME/.local/bin/nirupi-app.sh" nirupresence;;

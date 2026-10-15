@@ -136,7 +136,7 @@ install_helpers(){
   rm -f -- "$HOME/.local/bin/nirupi-status-click"
   log 'Removed legacy nirupi-status-click compatibility symlink'
  fi
- for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-power.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh nirupi-clipd.sh nirupi-theme-auto.sh nirupi-calendar.sh nirupi-calendar.py nirupi-sysupdate.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh; do
+ for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-power.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh nirupi-clipd.sh nirupi-theme-auto.sh nirupi-calendar.sh nirupi-calendar.py nirupi-sysupdate.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh nirupi-emoji.sh nirupi-clip-transform.sh nirupi-audio.sh nirupi-capture.sh nirupi-agent-selection.sh nirupi-wallpaper.sh nirupi-tag-wallpaper.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
    dest="$HOME/.local/bin/$app"
@@ -146,6 +146,22 @@ install_helpers(){
  # sxiv was renamed to nsxiv on Arch; keep the script's `sxiv` name working.
  if ! command -v sxiv >/dev/null 2>&1 && command -v nsxiv >/dev/null 2>&1; then
   ln -sf "$(command -v nsxiv)" "$HOME/.local/bin/sxiv"
+ fi
+ # Bash completion + manual page.
+ if [[ -f $ROOT/vendor/noir/local/share/bash-completion/completions/nirupi ]]; then
+  mkdir -p "$HOME/.local/share/bash-completion/completions"
+  managed_config_install 'bash-completion/nirupi' \
+    "$ROOT/vendor/noir/local/share/bash-completion/completions/nirupi" \
+    "$HOME/.local/share/bash-completion/completions/nirupi"
+ fi
+ if [[ -f $ROOT/runtime/nirupi.1 ]]; then
+  mkdir -p "$HOME/.local/share/man/man1"
+  managed_config_install 'man/nirupi.1' "$ROOT/runtime/nirupi.1" "$HOME/.local/share/man/man1/nirupi.1"
+ fi
+ # Per-workspace wallpaper config example (created once, then yours to edit).
+ if [[ ! -e $HOME/.config/nirupi/wallpapers.conf && -f $ROOT/runtime/wallpapers.conf.example ]]; then
+  mkdir -p "$HOME/.config/nirupi"
+  put_file "$ROOT/runtime/wallpapers.conf.example" "$HOME/.config/nirupi/wallpapers.conf" 0644
  fi
 }
 install_desktop() (
