@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.4
+- Fix the Wi-Fi picker producing "No networks found": the row array was built
+  inside a pipeline subshell (`sort | while`), so it was lost. Use process
+  substitution instead.
+
 ## 0.23.3
 - Wi-Fi picker: the connected network is listed **first** (marked `● connected`)
   and duplicate SSIDs are merged (strongest BSSID kept), sorted by strength.

@@ -32,10 +32,7 @@ for line in "${nets[@]}"; do
   fi
 done
 # emit: connected first, then by descending signal
-for ssid in "${!seen[@]}"; do
-  IFS='|' read -r signal inuse sec <<<"${seen[$ssid]}"
-  printf '%s\t%s\t%s\t%s\n' "$([[ $inuse == "*" ]] && echo 1 || echo 0)" "$signal" "$ssid" "$sec"
-done | sort -t$'\t' -k1,1nr -k2,2nr | while IFS=$'\t' read -r isconn signal ssid sec; do
+while IFS=$'\t' read -r isconn signal ssid sec; do
   lock=""; [[ -n $sec && $sec != -- ]] && lock="🔒"
   if [[ $isconn == 1 ]]; then
     active="$ssid"
@@ -43,11 +40,16 @@ done | sort -t$'\t' -k1,1nr -k2,2nr | while IFS=$'\t' read -r isconn signal ssid
   else
     rows+=("  $ssid  $(bars "$signal") ${signal}%  $lock")
   fi
-done
+done < <(
+  for ssid in "${!seen[@]}"; do
+    IFS='|' read -r signal inuse sec <<<"${seen[$ssid]}"
+    printf '%s\t%s\t%s\t%s\n' "$([[ $inuse == "*" ]] && echo 1 || echo 0)" "$signal" "$ssid" "$sec"
+  done | sort -t$'\t' -k1,1nr -k2,2nr
+)
 
 if (( ${#rows[@]} == 0 )); then
-  scan="$(nmcli -t -f SSID device wifi rescan 2>/dev/null; true)"
-  sleep 1
+  nmcli device wifi rescan >/dev/null 2>&1 || true
+  sleep 2
   while IFS=: read -r inuse ssid signal sec; do
     [[ -n $ssid && $ssid != "$active" ]] || continue
     rows+=("  $ssid  $(bars "$signal") ${signal}%  $([[ -n $sec && $sec != -- ]] && echo 🔒)")
