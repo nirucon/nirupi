@@ -23,6 +23,6 @@ case "$cmd" in
   apps) nirupi_apps "$@";;
   status) printf 'NIRUPI %s (%s) schema %s\n' "$VERSION" "$DISTRO" "$NIRUPI_SCHEMA";;
   help|-h|--help)
-    printf 'nirupi maintenance: {theme apply|status|diff | dots | migrate plan|diff|dwm --rebuild | apps | rollback --all|--configs RUN|--binaries}\n';;
+    printf 'nirupi maintenance: {theme apply|status|diff | dots | migrate plan|diff|dwm --rebuild|binaries --rebuild | apps | rollback --all|--configs RUN|--binaries}\n';;
   *) printf 'Unknown maintenance command: %s\n' "$cmd" >&2; exit 2;;
 esac

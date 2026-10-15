@@ -2,6 +2,13 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.14.4
+- New `nirupi migrate binaries --rebuild`: rebuilds **dwm, dmenu and st** into
+  the current version directory and relinks them. Upgrades done with
+  `--update-dots` only rebuilt dwm, so dmenu/st could linger on ancient version
+  directories; this brings them onto the current version and lets `nirupi gc`
+  prune the old directories.
+
 ## 0.14.3
 - `nirupi lid` prints the desktop (no-lid) message to stdout so it is visible in
   a terminal, not just as a notification.

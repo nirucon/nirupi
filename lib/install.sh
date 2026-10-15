@@ -442,6 +442,56 @@ migrate_dwm_rebuild(){
  rm -rf -- "$stage"
  log 'DWM rebuilt and relinked'
 }
+# Rebuild every suckless binary NIRUPI links (dwm, dmenu, st + the dmenu
+# helpers) into the current version directory and relink them. Upgrades done via
+# --update-dots only rebuild dwm, so dmenu/st can otherwise linger on ancient
+# versions; this brings them onto $VERSION and lets `nirupi gc` prune the old
+# version directories.
+migrate_binaries_rebuild(){
+ local src_root="${NIRUPI_SUCKLESS_DIR:-}"
+ [[ -n $src_root ]] || src_root="$HOME/.local/lib/nirupi/src/suckless"
+ if [[ ! -d $src_root/dmenu && -n ${ROOT:-} && -d $ROOT/vendor/suckless/dmenu ]]; then
+  src_root="$ROOT/vendor/suckless"
+ fi
+ [[ -d $src_root/dwm && -d $src_root/dmenu && -d $src_root/st ]] \
+  || die "Missing suckless sources for rebuild: $src_root"
+ local bin_dir="$HOME/.local/lib/nirupi/$VERSION/bin"
+ mkdir -p "$bin_dir" "$HOME/.local/bin"
+ local stage_root; stage_root="$(mktemp -d)"
+ local app stage src
+ declare -A stages=()
+ for app in dwm dmenu st; do
+  stage="$(mktemp -d "$stage_root/build.XXXXXXXX")"
+  cp -a -- "$src_root/$app/." "$stage/"
+  if [[ $app == dwm ]]; then
+   local user_cfg="$HOME/.config/suckless/dwm/config.h"
+   if [[ -f $user_cfg && ! -L $user_cfg ]] && dwm_config_current "$user_cfg" "$src_root/dwm/config.h"; then
+    cp -- "$user_cfg" "$stage/config.h"
+   fi
+  fi
+  log "Building $app"
+  if ! make -C "$stage" -j "$(nproc)" >/dev/null 2>&1 || [[ ! -x $stage/$app ]]; then
+   warn "$app build failed; existing binaries left untouched"
+   rm -rf -- "$stage_root"; return 1
+  fi
+  stages[$app]="$stage"
+ done
+ for app in dwm dmenu st; do
+  put_file "${stages[$app]}/$app" "$bin_dir/$app" 0755
+  link_binary "$bin_dir/$app" "$HOME/.local/bin/$app"
+ done
+ for app in dmenu_run dmenu_path stest; do
+  src="${stages[dmenu]}/$app"
+  if [[ -f $src ]]; then
+   put_file "$src" "$bin_dir/$app" 0755
+   link_binary "$bin_dir/$app" "$HOME/.local/bin/$app"
+  else
+   warn "helper not found after build: $app"
+  fi
+ done
+ rm -rf -- "$stage_root"
+ log "Rebuilt dwm, dmenu, st for $VERSION and relinked"
+}
 # Best-effort Helium browser provisioning. Helium is the preferred browser and
 # has no distro package on Void/Arch. Debian uses the official apt repository,
 # Arch uses an AUR helper when present, and any distro can use the official

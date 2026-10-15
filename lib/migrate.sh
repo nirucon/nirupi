@@ -166,6 +166,11 @@ nirupi_migrate(){
         --rebuild) migrate_dwm_rebuild;;
         *) die 'Usage: nirupi migrate dwm --rebuild';;
       esac;;
-    *) die 'Usage: nirupi migrate {plan|diff|dwm --rebuild}';;
+    binaries|bins)
+      case "${1:-}" in
+        --rebuild) migrate_binaries_rebuild;;
+        *) die 'Usage: nirupi migrate binaries --rebuild';;
+      esac;;
+    *) die 'Usage: nirupi migrate {plan|diff|dwm --rebuild|binaries --rebuild}';;
   esac
 }

@@ -97,7 +97,7 @@ Maintenance
   nirupi gc --dry-run|--yes|--legacy prune old versions/backups
   nirupi update                      self-update (git pull + steps)
   nirupi rollback --all|--configs RUN|--binaries
-  nirupi migrate plan|dwm --rebuild
+  nirupi migrate plan|dwm --rebuild|binaries --rebuild
 
 See docs/USAGE.md and docs/KEYBINDINGS.md in the source tree.
 EOF

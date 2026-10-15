@@ -36,6 +36,8 @@ grep -q 'nirupi-agent-rewrite.sh' "$DWM/config.h" || { echo 'FAIL rewrite bindin
 grep -q 'NIRUPI_CONFIG_VERSION 7' "$DWM/config.h" || { echo 'FAIL schema not bumped' >&2; exit 1; }
 grep -q 'XK_Left' "$DWM/config.h" || { echo 'FAIL arrow-key bindings missing' >&2; exit 1; }
 grep -q 'nirupi-rofi-files.sh' "$bin/nirupi-launch.sh" || { echo 'FAIL launcher lacks file search' >&2; exit 1; }
+grep -q 'migrate_binaries_rebuild' "$ROOT/lib/install.sh" || { echo 'FAIL binaries rebuild missing' >&2; exit 1; }
+grep -q 'binaries' "$ROOT/lib/migrate.sh" || { echo 'FAIL binaries subcommand missing' >&2; exit 1; }
 
 # Control center + keybinding palette entries.
 for e in 'Wallpapers per workspace: toggle' 'Audio output' 'USB: mount/unmount…' 'Lid close…' 'SSH / host…' 'Reload desktop…' 'Edit config…' 'Ask agent about screen…' 'AI command…' 'Notifications: history…'; do
