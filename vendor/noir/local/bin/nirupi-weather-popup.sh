@@ -13,9 +13,11 @@ have jq || { printf '@title Weather\n@note jq is required for the forecast.\n' |
 wcode(){ case "${1:-}" in
   0) echo clear;; 1) echo "mostly clear";; 2) echo "partly cloudy";; 3) echo overcast;;
   45|48) echo fog;; 51|53|55) echo drizzle;; 56|57) echo "freezing drizzle";;
-  61|63|65) echo rain;; 66|67) echo "freezing rain";; 71|73|75|77) echo snow;;
-  80|81|82) echo showers;; 85|86) echo "snow showers";; 95) echo thunderstorm;;
-  96|99) echo "thunderstorm, hail";; *) echo "code ${1:-?}";; esac; }
+  61) echo "light rain";; 63) echo rain;; 65) echo "heavy rain";; 66|67) echo "freezing rain";;
+  71) echo "light snow";; 73) echo snow;; 75) echo "heavy snow";; 77) echo "snow grains";;
+  80) echo "light showers";; 81) echo showers;; 82) echo "heavy showers";;
+  85|86) echo "snow showers";; 95) echo thunderstorm;; 96|99) echo "thunderstorm, hail";;
+  *) echo "";; esac; }
 
 set_conf(){
   mkdir -p "$(dirname "$conf")"; touch "$conf"

@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.21.4
+- Weather panel: complete WMO code mapping (drizzle, light rain, heavy
+  showers, snow grains, …) so codes like 51/53/61 show a description instead of
+  "code 51".
+
 ## 0.21.3
 - Pop-ups open at a comfortable, fixed size (~520x440) centred on the monitor
   instead of filling it. Schema v15.
