@@ -524,7 +524,11 @@ get_kernel() {
 
 get_hostname() {
   [[ "$SHOW_HOST" -eq 1 ]] || return 0
-  "$HOSTNAMEBIN" 2>/dev/null || printf 'host?'
+  # `hostname` is not in a vanilla Arch base; fall back to /etc/hostname/uname.
+  { [[ -n "$HOSTNAMEBIN" ]] && "$HOSTNAMEBIN" 2>/dev/null; } \
+    || cat /etc/hostname 2>/dev/null \
+    || uname -n 2>/dev/null \
+    || printf 'host?'
 }
 
 get_network() {

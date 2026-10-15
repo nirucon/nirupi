@@ -56,7 +56,7 @@ case "$action" in
   cpu)    ns "CPU" "$(ps -eo pcpu,comm --sort=-pcpu 2>/dev/null | sed -n '2,4p')";;
   load)   ns "Load" "$(cat /proc/loadavg 2>/dev/null) ($(nproc 2>/dev/null) cores)";;
   kernel) ns "Kernel" "$(uname -sr)";;
-  host)   ns "Host" "$(hostname) $(hostname -I 2>/dev/null)";;
+  host)   ns "Host" "$(cat /etc/hostname 2>/dev/null || uname -n 2>/dev/null) $(hostname -I 2>/dev/null)";;
   date)   exec "$HOME/.local/bin/nirupi-calendar.sh";;
   time)   ns "$(date '+%H:%M')" "$(date '+%A %Y-%m-%d')";;
 

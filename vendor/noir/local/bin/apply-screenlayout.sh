@@ -28,7 +28,7 @@
 
 set -u
 
-HOSTNAME_NOW="$(hostname)"
+HOSTNAME_NOW="$(cat /etc/hostname 2>/dev/null || uname -n 2>/dev/null)"
 
 # Exit quietly if xrandr is not installed or not available.
 command -v xrandr >/dev/null 2>&1 || exit 0

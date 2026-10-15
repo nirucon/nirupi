@@ -15,6 +15,10 @@ for s in nirupi-capture.sh nirupi-agent-selection.sh nirupi-agent-ask.sh \
   grep -q "$s" "$ROOT/lib/install.sh" || { echo "FAIL $s not deployed" >&2; exit 1; }
 done
 
+# Hostname must work without the `hostname` binary (not in a vanilla Arch base).
+for s in dwm-status.sh nirupi-status-click.sh apply-screenlayout.sh nirupi-ssh.sh; do
+  grep -q 'uname -n' "$bin/$s" || { echo "FAIL $s lacks a hostname fallback" >&2; exit 1; }
+done
 # dwm wiring: per-workspace wallpaper hook + new bindings + schema bump.
 DWM="$ROOT/vendor/suckless/dwm"
 grep -q 'runwallhook' "$DWM/dwm.c" || { echo 'FAIL dwm tag hook missing' >&2; exit 1; }
