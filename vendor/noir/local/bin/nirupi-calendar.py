@@ -337,7 +337,7 @@ def draw(stdscr, state):
 
     if state.get("msg"):
         put(stdscr, msg_row, left, state["msg"], curses.A_DIM)
-    footer = "</> day  PgUp/Dn month  t today  s add ical  x clear  o Google  q quit"
+    footer = "arrows day · PgUp/Dn month · t today · s sync · o Google · q quit"
     put(stdscr, footer_row, max(0, (w - len(footer)) // 2), footer, curses.A_DIM)
     stdscr.refresh()
 

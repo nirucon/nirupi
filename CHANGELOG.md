@@ -2,6 +2,15 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.17.4
+- **btop pop-up**: set `remember_window_size=no` so kitty stops restoring the
+  old (too small) size — it now opens large enough for btop's 80×24 minimum and
+  centred.
+- **Calendar**: `remember_window_size=no` and a larger default window (72×24) so
+  the footer fits; shorter footer.
+- **Next calendar event** in the bar is prefixed with `»` so it reads as an
+  event rather than random text.
+
 ## 0.17.3
 - The **btop pop-up** (temperature/CPU click) now requests a comfortable size
   (110×34, ≥ btop's 80×24 minimum) and centres its floating window.

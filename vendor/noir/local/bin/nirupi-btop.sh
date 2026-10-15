@@ -9,6 +9,7 @@ term="$(command -v kitty || command -v alacritty || command -v st || true)"
 case "$(basename "$term")" in
   kitty)
     setsid kitty --class nirupi-btop --title btop \
+      --override remember_window_size=no \
       --override initial_window_width=110c --override initial_window_height=34c \
       -e btop >/dev/null 2>&1 &
     ;;

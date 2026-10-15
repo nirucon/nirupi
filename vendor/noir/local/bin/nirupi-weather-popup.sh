@@ -35,7 +35,7 @@ set_conf(){
 }
 
 forecast(){
-  local url="https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=${tz//\//%2F}&forecast_days=4"
+  local url="https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=${tz//\//%2F}&forecast_days=4"
   curl -fsS --max-time 8 "$url" 2>/dev/null
 }
 
@@ -44,17 +44,20 @@ show(){
   nowh="$(date +%Y-%m-%dT%H:00)"
   idx="$(printf '%s' "$j" | jq --arg n "$nowh" '[.hourly.time[] | . == $n] | index(true) // 0')"
   printf '▸ Change location…          (%s)\n' "$NAME"
-  local t w
+  local t w ap wind
   t="$(printf '%s' "$j" | jq -r '.current.temperature_2m')"
   w="$(printf '%s' "$j" | jq -r '.current.weather_code')"
-  printf 'Now: %s°C  %s\n' "$t" "$(wcode "$w")"
+  ap="$(printf '%s' "$j" | jq -r '.current.apparent_temperature // empty')"
+  wind="$(printf '%s' "$j" | jq -r '.current.wind_speed_10m // empty')"
+  printf 'Now: %s°C  %s%s%s\n' "$t" "$(wcode "$w")" \
+    "${ap:+  (feels $ap°C)}" "${wind:+  ${wind} m/s}"
   printf -- '──────── hours ────────\n'
   printf '%s' "$j" | jq -r --argjson i "$idx" \
-    '.hourly as $h | range($i; [$i+8, ($h.time|length)]|min) | "\($h.time[.][5:16]|sub("T";" "))   \($h.temperature_2m[.])°C   \($h.weather_code[.])"' \
-    | while IFS=$'\t' read -r time temp code; do printf '%s   %s   %s\n' "$time" "$temp" "$(wcode "$code")"; done
+    '.hourly as $h | range($i; [$i+8, ($h.time|length)]|min) | "\($h.time[.][5:16]|sub("T";" "))\t\($h.temperature_2m[.])°C\t\($h.weather_code[.])\t\($h.precipitation_probability[.] // 0)%"' \
+    | while IFS=$'\t' read -r time temp code pop; do printf '%s   %s   %-14s %s\n' "$time" "$temp" "$(wcode "$code")" "$pop"; done
   printf -- '──────── days ────────\n'
-  printf '%s' "$j" | jq -r '.daily as $d | range(0; ($d.time|length)) | "\($d.time[.])   \($d.temperature_2m_min[.])–\($d.temperature_2m_max[.])°C   \($d.weather_code[.])"' \
-    | while IFS=$'\t' read -r day rng code; do printf '%s   %s   %s\n' "$day" "$rng" "$(wcode "$code")"; done
+  printf '%s' "$j" | jq -r '.daily as $d | range(0; ($d.time|length)) | "\($d.time[.])\t\($d.temperature_2m_min[.])–\($d.temperature_2m_max[.])°C\t\($d.weather_code[.])\t\($d.precipitation_probability_max[.] // 0)%\t\($d.wind_speed_10m_max[.] // 0) m/s"' \
+    | while IFS=$'\t' read -r day rng code pop windmax; do printf '%s   %s   %-14s %s   %s\n' "$day" "$rng" "$(wcode "$code")" "$pop" "$windmax"; done
 }
 
 change(){

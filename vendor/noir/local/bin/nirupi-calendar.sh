@@ -7,7 +7,8 @@ term="$(command -v kitty || command -v alacritty || command -v st || true)"
 case "$(basename "$term")" in
   kitty)
     exec kitty --class nirupi-calendar --title nirupi-calendar \
-      --override initial_window_width=56c --override initial_window_height=22c \
+      --override remember_window_size=no \
+      --override initial_window_width=72c --override initial_window_height=24c \
       -e python3 "$app" ;;
   *)
     exec "$term" --title nirupi-calendar -e python3 "$app" ;;

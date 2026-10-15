@@ -690,7 +690,9 @@ get_next_event() {
   [[ "$SHOW_NEXTEVENT" -eq 1 ]] || return 0
   command -v python3 >/dev/null 2>&1 || return 0
   [[ -x "$HOME/.local/bin/nirupi-calendar.py" ]] || return 0
-  python3 "$HOME/.local/bin/nirupi-calendar.py" --next 2>/dev/null || true
+  local e
+  e="$(python3 "$HOME/.local/bin/nirupi-calendar.py" --next 2>/dev/null || true)"
+  [[ -n $e ]] && printf '\302\273 %s' "$e"   # » next calendar event
 }
 
 get_updates() {
