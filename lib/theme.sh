@@ -578,6 +578,12 @@ theme_palette_file(){
     warm)  printf '%s/Noir-warm.env' "$d"; return 0;;
     cool)  printf '%s/Noir-cool.env' "$d"; return 0;;
     carl|larsson) [[ -f $d/Carl-Larsson.env ]] && { printf '%s' "$d/Carl-Larsson.env"; return 0; };;
+    c64|commodore|commodore64) [[ -f $d/Commodore-64.env ]] && { printf '%s' "$d/Commodore-64.env"; return 0; };;
+    camo|commando) [[ -f $d/Commando.env ]] && { printf '%s' "$d/Commando.env"; return 0; };;
+    gruvbox|gruvbox-dark) [[ -f $d/Gruvbox-Dark.env ]] && { printf '%s' "$d/Gruvbox-Dark.env"; return 0; };;
+    tokyo|tokyo-night) [[ -f $d/Tokyo-Night.env ]] && { printf '%s' "$d/Tokyo-Night.env"; return 0; };;
+    amber|amber-crt|crt) [[ -f $d/Amber-CRT.env ]] && { printf '%s' "$d/Amber-CRT.env"; return 0; };;
+    ink|niru-ink) [[ -f $d/NIRU-Ink.env ]] && { printf '%s' "$d/NIRU-Ink.env"; return 0; };;
   esac
   [[ -f "$d/$n.env" ]] && { printf '%s/%s.env' "$d" "$n"; return 0; }
   key="${n,,}"; key="${key// /-}"

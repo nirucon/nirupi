@@ -2,6 +2,14 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.22.0
+- **Six new themes**: `commodore-64` (VIC-II blue/light-blue PETSCII),
+  `commando` (field camo at dusk), `gruvbox-dark`, `tokyo-night`, `amber-crt`
+  (amber phosphor) and `ink` (NIRU Ink, a copper-accented signature). All are
+  manual picks in the theme list/picker — no automatic switching.
+- Short aliases (`c64`, `camo`, `gruvbox`, `tokyo`, `amber`, `ink`) resolve in
+  `nirupi theme set`.
+
 ## 0.21.6
 - Disk panel hides pseudo-filesystems (/proc, /sys, /dev, /run).
 

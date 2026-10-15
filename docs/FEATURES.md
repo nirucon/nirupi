@@ -94,9 +94,11 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **Theme picker** `Super+Ctrl+t` (`nirupi theme menu`): rofi with colour
   swatches per theme.
 - Shipped themes: `noir` (default), `Satie` (monochrome graphite, one muted-gold
-  accent), `carl-larsson` (warm umber/watercolour), `hackerman` (phosphor green)
-  and `nord-dark`, plus `warm`/`cool`. The picker shows the active theme and a
-  one-line description of each.
+  accent), `carl-larsson` (warm umber/watercolour), `hackerman` (phosphor green),
+  `nord-dark`, `commodore-64` (VIC-II blue), `commando` (field camo),
+  `gruvbox-dark`, `tokyo-night`, `amber-crt` (amber phosphor) and `ink`
+  (NIRU Ink, copper accent) — plus `warm`/`cool`. The picker shows the active
+  theme and a one-line description of each.
 - Commands: `nirupi theme list`, `nirupi theme preview NAME`,
   `nirupi theme set NAME`.
 - **Manual only:** the theme is always chosen by hand (picker or `nirupi theme

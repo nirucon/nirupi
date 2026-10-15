@@ -138,6 +138,12 @@ Shipped themes:
 | `nord-dark` | Polar Night blues with Nord frost/aurora accents |
 | `noir-day` | Light warm paper — readable in daylight |
 | `warm` / `cool` | Noir with a warm or cool cast |
+| `commodore-64` | VIC-II blue screen, light-blue PETSCII text |
+| `commando` | Field camo at dusk — olive, khaki, clay, hi-vis amber |
+| `gruvbox-dark` | Warm retro groove — soft brown base, yellow/orange accents |
+| `tokyo-night` | Cool indigo night with blue/magenta/cyan accents |
+| `amber-crt` | Monochrome amber phosphor terminal |
+| `ink` (NIRU Ink) | Near-black ink wash with a patinated-copper accent |
 
 `st`/`dmenu`/dwm read the palette from Xresources at startup (and on `SIGUSR1`);
 **kitty, alacritty, fish, tmux, lazygit, micro, aerc, cmus, rofi and SDDM are
