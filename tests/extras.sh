@@ -47,6 +47,7 @@ out="$(bash "$ROOT/runtime/nirupi" help 2>/dev/null)"
 grep -q 'nirupi ssh' <<< "$out" || { echo 'FAIL help ssh' >&2; exit 1; }
 grep -q 'nirupi edit' <<< "$out" || { echo 'FAIL help edit' >&2; exit 1; }
 grep -q 'nirupi reload' <<< "$out" || { echo 'FAIL help reload' >&2; exit 1; }
-bash "$bin/nirupi-edit.sh" --list | grep -q '^  status' || { echo 'FAIL edit --list' >&2; exit 1; }
+bash "$bin/nirupi-edit.sh" --list | grep -q '^  status ' || { echo 'FAIL edit --list' >&2; exit 1; }
+[[ "$(bash "$bin/nirupi-edit.sh" --path dwm)" == */suckless/dwm/config.h ]] || { echo 'FAIL edit --path' >&2; exit 1; }
 
 echo 'PASS: extras (capture, AI selection/screen/command, emoji, clipboard, audio, wallpapers, ssh, reload/edit, completions, help)'

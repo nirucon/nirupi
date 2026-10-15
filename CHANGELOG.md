@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.11.1
+- Fix `nirupi edit` topic resolution (a stray `:` in the resolved path) and add
+  `nirupi edit --path TOPIC` to print the file path.
+
 ## 0.11.0
 - **`nirupi reload`** — rebuild dwm only when its sources changed, then restart
   it in place (safe: a failed build keeps the running dwm). Also in the control

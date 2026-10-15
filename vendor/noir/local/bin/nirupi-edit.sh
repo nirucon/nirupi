@@ -1,42 +1,45 @@
 #!/usr/bin/env bash
 # NIRU: open a NIRUPI config file in your editor.
-#   nirupi edit            pick a topic (rofi/dmenu)
-#   nirupi edit TOPIC      status|session|apps|agents|browser|wallpapers|theme|dwm
-#   nirupi edit --list     list topics
+#   nirupi edit              pick a topic (rofi/dmenu)
+#   nirupi edit TOPIC        open it
+#   nirupi edit --list       list topics
+#   nirupi edit --path TOPIC print the resolved path (no editor)
 set -Eeuo pipefail
 
 have(){ command -v "$1" >/dev/null 2>&1; }
-cfg="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi"
+c="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-topics="status:$cfg/status.conf
-session:$cfg/session.conf
-apps:$cfg/apps.conf
-agents:$cfg/agents.conf
-browser:$cfg/browser.conf
-wallpapers:$cfg/wallpapers.conf
-theme:$cfg/tokens.env
-dwm:${XDG_CONFIG_HOME:-$HOME/.config}/suckless/dwm/config.h"
+topics=$(cat <<EOF
+status|$c/nirupi/status.conf
+session|$c/nirupi/session.conf
+apps|$c/nirupi/apps.conf
+agents|$c/nirupi/agents.conf
+browser|$c/nirupi/browser.conf
+wallpapers|$c/nirupi/wallpapers.conf
+theme|$c/nirupi/tokens.env
+dwm|$c/suckless/dwm/config.h
+EOF
+)
 
-resolve(){
-  local t="$1" line
-  line="$(printf '%s\n' "$topics" | awk -F: -v t="$t" '$1==t{print $2":"$3; exit}')"
-  [[ -n $line ]] || return 1
-  printf '%s' "${line#*:}"
-}
+resolve(){ printf '%s\n' "$topics" | awk -F'|' -v t="$1" '$1==t{print $2; exit}'; }
 
-if [[ ${1:-} == --list ]]; then
-  printf '%s\n' "$topics" | awk -F: '{printf "  %-11s %s\n", $1, $2":"$3}'
-  exit 0
-fi
+case "${1:-}" in
+  --list) printf '%s\n' "$topics" | awk -F'|' '{printf "  %-11s %s\n", $1, $2}'; exit 0;;
+  --path)
+    p="$(resolve "${2:-}")"
+    [[ -n $p ]] || { printf 'Unknown topic: %s (try: nirupi edit --list)\n' "${2:-}" >&2; exit 2; }
+    printf '%s\n' "$p"; exit 0;;
+esac
 
 topic="${1:-}"
 if [[ -z $topic ]]; then
-  topic="$(printf '%s\n' "$topics" | awk -F: '{print $1}' | \
+  topic="$(printf '%s\n' "$topics" | awk -F'|' '{print $1}' | \
     { if have rofi; then rofi -dmenu -i -p 'Edit config'; elif have dmenu; then dmenu -i -p 'Edit config'; else cat; fi; })" || true
   [[ -n $topic ]] || exit 0
 fi
 
-file="$(resolve "$topic")" || { printf 'Unknown topic: %s (try: nirupi edit --list)\n' "$topic" >&2; exit 2; }
+file="$(resolve "$topic")"
+[[ -n $file ]] || { printf 'Unknown topic: %s (try: nirupi edit --list)\n' "$topic" >&2; exit 2; }
 
 if [[ ! -e $file ]]; then
   if [[ $topic == theme ]]; then
