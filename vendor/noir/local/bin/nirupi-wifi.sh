@@ -14,15 +14,36 @@ bars(){ local s="${1:-0}"; if (( s>=75 )); then printf '▂▄▆█'; elif (( s
 active="$(nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY device wifi list 2>/dev/null | awk -F: '$1=="*"{print $2; exit}')"
 
 rows=()
-while IFS=: read -r inuse ssid signal sec; do
+declare -A seen=()
+# Parse once, keep the strongest BSSID per SSID, connected first, then signal.
+mapfile -t nets < <(nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY device wifi list 2>/dev/null)
+for line in "${nets[@]}"; do
+  IFS=: read -r inuse ssid signal sec <<<"$line"
   [[ -n $ssid ]] || continue
+  key="$ssid"
+  if [[ -n ${seen[$key]:-} ]]; then
+    # keep the stronger signal (and prefer the in-use entry)
+    prev_sig="${seen[$key]%%|*}"; prev_in="${seen[$key]#*|}"
+    if [[ $inuse == "*" && $prev_in != "*" ]] || { [[ $inuse == "$prev_in" ]] && (( ${signal:-0} > ${prev_sig:-0} )); }; then
+      seen[$key]="$signal|$inuse|$sec"
+    fi
+  else
+    seen[$key]="$signal|$inuse|$sec"
+  fi
+done
+# emit: connected first, then by descending signal
+for ssid in "${!seen[@]}"; do
+  IFS='|' read -r signal inuse sec <<<"${seen[$ssid]}"
+  printf '%s\t%s\t%s\t%s\n' "$([[ $inuse == "*" ]] && echo 1 || echo 0)" "$signal" "$ssid" "$sec"
+done | sort -t$'\t' -k1,1nr -k2,2nr | while IFS=$'\t' read -r isconn signal ssid sec; do
   lock=""; [[ -n $sec && $sec != -- ]] && lock="🔒"
-  if [[ $ssid == "$active" ]]; then
+  if [[ $isconn == 1 ]]; then
+    active="$ssid"
     rows+=("● $ssid  $(bars "$signal") ${signal}%  connected  $lock")
   else
     rows+=("  $ssid  $(bars "$signal") ${signal}%  $lock")
   fi
-done < <(nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY device wifi list 2>/dev/null | sort -t: -k3 -rn)
+done
 
 if (( ${#rows[@]} == 0 )); then
   scan="$(nmcli -t -f SSID device wifi rescan 2>/dev/null; true)"

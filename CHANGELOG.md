@@ -2,6 +2,10 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.3
+- Wi-Fi picker: the connected network is listed **first** (marked `● connected`)
+  and duplicate SSIDs are merged (strongest BSSID kept), sorted by strength.
+
 ## 0.23.2
 - Rofi pickers (Wi-Fi, Bluetooth, theme, …) float and are centred by dwm like
   the TUI panels, so a picker no longer opens in the corner. Schema v16.
