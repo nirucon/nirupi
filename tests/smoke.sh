@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+export NIRUPI_NO_NOTIFY=1   # the suite must never pop desktop notifications
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 for f in "$ROOT/install.sh" "$ROOT/runtime-session.sh" "$ROOT"/lib/*.sh; do bash -n "$f"; done
 for app in dwm dmenu st slock; do test -f "$ROOT/vendor/suckless/$app/Makefile"; done

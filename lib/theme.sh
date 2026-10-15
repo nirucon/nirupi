@@ -682,8 +682,9 @@ theme_set(){
   printf 'palette\n' > "$(theme_mode_file)"
   log "Theme set to $nm"
   theme_apply
-  # Best-effort feedback so a live switch is obvious.
-  if [[ -n ${DISPLAY:-} ]] && command -v notify-send >/dev/null 2>&1; then
+  # Best-effort feedback so a live switch is obvious. Suppressed in tests and
+  # other non-interactive use via NIRUPI_NO_NOTIFY=1.
+  if [[ -z ${NIRUPI_NO_NOTIFY:-} && -n ${DISPLAY:-} ]] && command -v notify-send >/dev/null 2>&1; then
     notify-send -a NIRUPI "NIRU theme" "$nm" >/dev/null 2>&1 || :
   fi
 }

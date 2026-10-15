@@ -3,6 +3,7 @@
 # rofi/dunst/SDDM), so kitty/alacritty/fish/tmux/lazygit/micro/aerc/cmus follow.
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export NIRUPI_NO_NOTIFY=1   # tests must never pop desktop notifications
 TMP="$(mktemp -d)"
 trap 'rm -rf -- "$TMP"' EXIT
 export HOME="$TMP/home" XDG_STATE_HOME="$TMP/home/.local/state" XDG_CONFIG_HOME="$TMP/home/.config"

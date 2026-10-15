@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.10.2
+- The theme-switch notification is now suppressed when `NIRUPI_NO_NOTIFY=1` is
+  set, and the test suite sets it — so running the tests (which switch through
+  every theme) can never pop desktop notifications, even in a graphical session.
+
 ## 0.10.1
 - Themes are **manual only**. Removed the day/night auto switcher
   (`nirupi-theme-auto.sh`) and its control-center entry, so nothing changes the
