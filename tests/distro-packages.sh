@@ -13,6 +13,7 @@ done
 
 grep -q 'detect_hardware_packages' "$PKG" || { echo 'FAIL hardware detection missing' >&2; exit 1; }
 grep -q 'archlinux-keyring' "$PKG" || { echo 'FAIL keyring pre-step missing' >&2; exit 1; }
+grep -q 'void-repo-nonfree' "$PKG" || { echo 'FAIL void nonfree repo missing' >&2; exit 1; }
 
 grep -q 'ensure_aur_helper' "$INS" || { echo 'FAIL ensure_aur_helper missing' >&2; exit 1; }
 grep -q 'paru-bin' "$INS" || { echo 'FAIL paru-bin missing' >&2; exit 1; }

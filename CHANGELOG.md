@@ -2,6 +2,12 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.12.2
+- Void: enable the nonfree repository (`void-repo-nonfree`) and use the correct
+  vendor package names (`mesa-vulkan-intel`/`mesa-vulkan-radeon`,
+  `intel-media-driver`/`mesa-vaapi`) so microcode and VA-API/Vulkan drivers
+  resolve on a clean install.
+
 ## 0.12.1
 - AUR bootstrap is now robust: prefer `paru-bin`, but **verify it actually
   runs** and fall back to `yay-bin` when the prebuilt paru is incompatible

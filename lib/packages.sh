@@ -49,6 +49,7 @@ packages(){
    picom xss-lock gammastep ImageMagick unzip zip xdotool xdg-utils
    xf86-input-libinput mesa mesa-dri alsa-ucm-conf alsa-pipewire man-db
    bash-completion xdg-desktop-portal xdg-desktop-portal-gtk noto-fonts-ttf sof-firmware
+   void-repo-nonfree
    NetworkManager bluez papirus-icon-theme noto-fonts-emoji sxiv
    python3 python3-pip mpv yt-dlp curl jq gawk fzf util-linux)
   OPTIONAL_PKGS=(xautolock xidlehook redshift hunspell-sv
@@ -106,8 +107,8 @@ detect_hardware_packages(){
    [[ $cpu == intel ]] && OPTIONAL_PKGS+=(intel-ucode)
    [[ $cpu == amd ]] && OPTIONAL_PKGS+=(amd-ucode)
    case "$gpu" in
-    intel) OPTIONAL_PKGS+=(vulkan-intel intel-media-driver);;
-    amd)   OPTIONAL_PKGS+=(vulkan-radeon mesa-va-driver);;
+    intel) OPTIONAL_PKGS+=(mesa-vulkan-intel intel-media-driver);;
+    amd)   OPTIONAL_PKGS+=(mesa-vulkan-radeon mesa-vaapi);;
    esac;;
  esac
  [[ $gpu == nvidia ]] && { declare -F warn >/dev/null 2>&1 && warn 'NVIDIA GPU detected: install the driver yourself (nvidia/nvidia-open) and rebuild the initramfs; see the Arch/Debian/Void wiki'; }
