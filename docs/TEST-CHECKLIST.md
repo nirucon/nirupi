@@ -41,6 +41,11 @@ a real login on real hardware.
 - [ ] Low-battery warning appears when discharging below `BATTERY_WARN`.
 - [ ] `nirupi notifications` lists history; the clipboard is cleared on lock.
 - [ ] picom runs with a palette-tinted shadow and no rounded corners.
+- [ ] `Super+Left/Right` (and `Up/Down`) change window focus; with `Shift` they
+      move the window in the stack.
+- [ ] The launcher's *files* mode finds and opens a file (`Ctrl+Tab` to switch).
+- [ ] Control center → *USB: mount/unmount…* mounts a removable drive.
+- [ ] `nirupi lid` reports the lid-close behaviour (systemd systems).
 - [ ] `Super+s` opens the SSH host picker (add a host to `~/.ssh/config` to see
       one). `nirupi reload` rebuilds+restarts dwm only when needed; `nirupi edit`
       opens a config.

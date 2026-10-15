@@ -2,7 +2,7 @@
 
 <!-- Generated from vendor/suckless/dwm/config.h by tools/gen-keybindings.sh. Do not edit by hand. -->
 
-122 bindings. `Super` is the Mod4/Win key.
+130 bindings. `Super` is the Mod4/Win key.
 
 | Keys | Action |
 | --- | --- |
@@ -10,7 +10,7 @@
 | `Super+Shift+Enter` | alacritty |
 | `Super+B` | Default browser |
 | `Super+Shift+B` | spawn bravecmd |
-| `Super+Shift+P` | rofi -show run |
+| `Super+Shift+P` | unified launcher |
 | `Super+P` | dmenu (MatteBlack) |
 | `Super+Alt+K` | keybindings viewer |
 | `Super+Shift+H` | keybinding palette |
@@ -40,6 +40,14 @@
 | `Super+Shift+Space` | togglefloating |
 | `Super+Shift+J` | rotatestack |
 | `Super+Shift+K` | rotatestack |
+| `Super+Left` | focus previous |
+| `Super+Up` | focus previous |
+| `Super+Right` | focus next |
+| `Super+Down` | focus next |
+| `Super+Shift+Left` | move previous |
+| `Super+Shift+Up` | move previous |
+| `Super+Shift+Right` | move next |
+| `Super+Shift+Down` | move next |
 | `Super+T` | right stack |
 | `Super+Y` | left stack |
 | `Super+F` | floating |

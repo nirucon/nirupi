@@ -2,6 +2,19 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.14.0
+- **Arrow keys**: `Super+Left/Up` focus the previous window, `Super+Right/Down`
+  the next; with `Shift` they move the focused window within the stack.
+- **File search in the unified launcher** (`Super+Shift+p`): a `files` mode that
+  searches your home with fd/find and opens the selection.
+- **USB mount/unmount** from the control center (and `nirupi usb`) via udisks2 —
+  no daemon of its own.
+- **Laptop lid behaviour** (`nirupi lid`, control center): sets logind's
+  `HandleLidSwitch` (lock/suspend/ignore/…) through a drop-in. systemd only.
+- **CI also smokes Void** (voidlinux container) alongside Arch and Debian.
+- Fix: `docs/KEYBINDINGS.md` no longer labels `Super+Shift+p` "rofi -show run".
+- DWM config schema bumped to **v7**.
+
 ## 0.13.1
 - **Signal Desktop** is installed by default: Arch/CachyOS via `signal-desktop`
   (extra), Debian via Signal's official apt repository (`ensure_signal`). Void

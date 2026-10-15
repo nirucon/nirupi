@@ -150,6 +150,13 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **picom is generated from the palette** (tinted shadow, fading); no rounded
   corners.
 - **`nirupi doctor --json`** for a machine-readable readiness check.
+- **Arrow keys** focus/move windows (`Super+Left/Up` = previous,
+  `Super+Right/Down` = next; add `Shift` to move the window in the stack).
+- **File search** in the launcher (`files` mode) — find and open any file from
+  `Super+Shift+p`.
+- **USB mount/unmount** (`nirupi usb`) and **laptop lid control** (`nirupi lid`)
+  in the control center.
+- **CI smokes Void** as well as Arch and Debian.
 
 ## Your apps & the web
 - **Default repositories** `nirupresence`, `nirunote`, `nplay` are cloned to

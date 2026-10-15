@@ -17,8 +17,12 @@ startup, run `nirupi theme apply`.
 | `Super+Enter` | Terminal (kitty) |
 | `Super+Shift+Enter` | Alacritty |
 | `Super+p` | dmenu launcher |
-| `Super+Shift+p` | **Unified launcher** (apps, windows, clipboard, run) |
+| `Super+Shift+p` | **Unified launcher** (apps, windows, clipboard, files, run) |
 | `Super+Ctrl+r` | Rewrite the selection in place (AI) |
+| `Super+Left` / `Super+Up` | Focus the previous window |
+| `Super+Right` / `Super+Down` | Focus the next window |
+| `Super+Shift+Left` / `Super+Shift+Up` | Move the focused window back |
+| `Super+Shift+Right` / `Super+Shift+Down` | Move the focused window forward |
 | `Super+b` | Browser (resolver) |
 | `Super+a` | **Agent** (opencode) |
 | `Super+Ctrl+t` | **Theme picker** (Noir/Satie/Carl Larsson/…) |
@@ -216,8 +220,9 @@ nirupi webapp remove "Work Mail"
 ## Launcher — `Super+Shift+p`
 
 One rofi for everything: **type to run a command**, or pick an installed app
-(including your web apps), an open window (*window* mode) or a clipboard entry
-(*clip* mode). Switch modes with `Ctrl+Tab`. `nirupi launch` opens the same.
+(including your web apps), an open window (*window* mode), a clipboard entry
+(*clip* mode) or **a file** (*files* mode, searched with fd/find and opened with
+xdg-open). Switch modes with `Ctrl+Tab`. `nirupi launch` opens the same.
 
 ## Autostart — `~/.config/nirupi/autostart/*.sh`
 
@@ -249,6 +254,14 @@ exec kitty -e opencode   # desktop app: the command line goes here
   `LOCK_CLEAR_CLIPBOARD=0` in `session.conf` to keep it).
 - **Battery (laptops):** warn at `BATTERY_WARN` %, critical at `BATTERY_CRIT` %,
   optional suspend with `BATTERY_SUSPEND=1` — all in `~/.config/nirupi/session.conf`.
+
+## Disks & lid
+
+- **USB drives:** control center → *USB: mount/unmount…* (or `nirupi usb`) lists
+  removable partitions and mounts/unmounts the one you pick via udisks2.
+- **Laptop lid:** `nirupi lid` shows the current behaviour and, from a terminal,
+  sets `HandleLidSwitch` (lock, suspend, ignore, …) in a logind drop-in. systemd
+  systems only; the control center entry opens it in a terminal.
 
 ## Customize
 

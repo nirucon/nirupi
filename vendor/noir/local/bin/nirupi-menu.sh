@@ -96,6 +96,8 @@ Tailscale: toggle
 Wi-Fi
 Bluetooth
 Audio output…
+USB: mount/unmount…
+Lid close…
 Weather
 Calendar
 Mute / unmute
@@ -147,6 +149,8 @@ case "$action" in
   'Wi-Fi') wifi;;
   Bluetooth) bluetooth;;
   'Audio output…') exec "$HOME/.local/bin/nirupi-audio.sh";;
+  'USB: mount/unmount…') exec "$HOME/.local/bin/nirupi-usb.sh";;
+  'Lid close…') if command -v kitty >/dev/null 2>&1; then exec kitty -e "$HOME/.local/bin/nirupi-lid.sh"; else exec "$HOME/.local/bin/nirupi-lid.sh"; fi;;
   Weather) exec xdg-open "https://www.smhi.se/vader/prognoser/ortsprognoser/?lat=58.2167&lon=11.9333" 2>/dev/null || true;;
   Calendar) exec "$HOME/.local/bin/nirupi-calendar.sh";;
   'System update') exec "$HOME/.local/bin/nirupi-sysupdate.sh";;

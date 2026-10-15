@@ -40,3 +40,22 @@ jobs:
           useradd -m -s /bin/bash ci
           chown -R ci:ci "$GITHUB_WORKSPACE"
           su ci -c "cd '$GITHUB_WORKSPACE' && bash tests/smoke.sh"
+
+  smoke-void:
+    name: smoke (voidlinux container)
+    runs-on: ubuntu-latest
+    container: voidlinux/voidlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Point xbps at the default mirror
+        run: |
+          for d in /etc/xbps.d /usr/share/xbps.d; do
+            [ -d "$d" ] && sed -i 's#alpha.de.repo.voidlinux.org#repo-default.voidlinux.org#g' "$d"/*.conf || true
+          done
+      - name: Install tools
+        run: xbps-install -Suy xbps bash python3 diffutils shadow findutils sudo
+      - name: Smoke tests (non-root, as on a real install)
+        run: |
+          useradd -m -s /bin/bash ci
+          chown -R ci:ci "$GITHUB_WORKSPACE"
+          su ci -c "cd '$GITHUB_WORKSPACE' && bash tests/smoke.sh"

@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 6
+#define NIRUPI_CONFIG_VERSION 7
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -307,7 +307,7 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_Return,                spawn,          {.v = alacrittycmd } },   /* Super+Shift+Enter -> alacritty */
 	{ MODKEY,                       XK_b,                     spawn,          {.v = browsercmd } },       /* Super+b -> Default browser */
 	{ MODKEY|ShiftMask,   		XK_b, 			  spawn, 	  {.v = bravecmd } },
-	{ MODKEY|ShiftMask,             XK_p,                     spawn,          {.v = rofiruncmd } },     /* Super+Shift+p -> rofi -show run */
+	{ MODKEY|ShiftMask,             XK_p,                     spawn,          {.v = rofiruncmd } },     /* Super+Shift+p -> unified launcher */
 	{ MODKEY,                       XK_p,                     spawn,          {.v = dmenucmd } },       /* Super+p -> dmenu (MatteBlack) */
 	{ MODKEY|Mod1Mask,              XK_k,                     spawn,          {.v = keybindingscmd } }, /* Super+Alt+k -> keybindings viewer */
 	{ MODKEY|ShiftMask,             XK_h,                     spawn,          {.v = keyscmd } },         /* Super+Shift+h -> keybinding palette */
@@ -343,6 +343,15 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_space,                 togglefloating, {0} },
 	{ MODKEY|ShiftMask,             XK_j,                     rotatestack,    {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_k,                     rotatestack,    {.i = -1 } },
+	/* Arrow keys: focus the stack; with Shift, move the focused window. */
+	{ MODKEY,                       XK_Left,                  focusstack,     {.i = -1 } },  /* Super+Left -> focus previous */
+	{ MODKEY,                       XK_Up,                    focusstack,     {.i = -1 } },  /* Super+Up -> focus previous */
+	{ MODKEY,                       XK_Right,                 focusstack,     {.i = +1 } },  /* Super+Right -> focus next */
+	{ MODKEY,                       XK_Down,                  focusstack,     {.i = +1 } },  /* Super+Down -> focus next */
+	{ MODKEY|ShiftMask,             XK_Left,                  rotatestack,    {.i = -1 } },  /* Super+Shift+Left -> move previous */
+	{ MODKEY|ShiftMask,             XK_Up,                    rotatestack,    {.i = -1 } },  /* Super+Shift+Up -> move previous */
+	{ MODKEY|ShiftMask,             XK_Right,                 rotatestack,    {.i = +1 } },  /* Super+Shift+Right -> move next */
+	{ MODKEY|ShiftMask,             XK_Down,                  rotatestack,    {.i = +1 } },  /* Super+Shift+Down -> move next */
 
 	/* Layout selection */
 	{ MODKEY,                       XK_t,                     setlayout,      {.v = &layouts[0]} },    /* Super+t -> right stack */

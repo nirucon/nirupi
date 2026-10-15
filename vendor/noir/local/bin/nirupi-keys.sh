@@ -97,6 +97,8 @@ APP	Reload	nirupi-reload.sh
 APP	Edit	nirupi-edit.sh
 APP	Launcher	nirupi-launch.sh
 APP	Notifications	nirupi-notifications.sh
+APP	USB	nirupi-usb.sh
+APP	Lock	nirupi-lid.sh
 EOF
 }
 
@@ -157,6 +159,8 @@ else
     Edit) exec nirupi-edit.sh;;
     Launcher) exec nirupi-launch.sh;;
     Notifications) exec nirupi-notifications.sh;;
+    USB) exec nirupi-usb.sh;;
+    Lock) exec nirupi-lid.sh;;
     *) ;;
   esac
 fi
