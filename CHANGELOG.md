@@ -2,6 +2,11 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.10.4
+- **Removed the wallpaper crossfade entirely.** Per-workspace wallpaper
+  switching is instant (`feh`/`xwallpaper`/`hsetroot`): no ImageMagick, no
+  stutter, fewer moving parts.
+
 ## 0.10.3
 - Per-workspace wallpaper switching is now **instant by default**: the
   ImageMagick crossfade was heavy and stuttered on X11. The crossfade is still

@@ -32,7 +32,7 @@ a real login on real hardware.
 - [ ] `Super+Ctrl+Shift+r` restarts dwm in place (windows survive, no logout).
 - [ ] `Super+Ctrl+Print` opens the capture menu; `Super+Ctrl+a` asks the agent
       about the current selection.
-- [ ] Per-workspace wallpapers: switching tags crossfades the background;
+- [ ] Per-workspace wallpapers: switching tags changes the background instantly;
       toggling *Wallpapers per workspace* in the control center turns it off/on.
 - [ ] `Super+Shift+r` reloads Xresources colors; `nirupi theme wallpaper IMAGE`
       recolors terminals + bar; `nirupi theme mode noir` restores Noir.

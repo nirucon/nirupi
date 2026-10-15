@@ -65,8 +65,8 @@ Physical validation steps are in [`docs/TEST-CHECKLIST.md`](docs/TEST-CHECKLIST.
   (`Super+Ctrl+a`), an emoji picker, clipboard transforms, an audio-output
   picker, **fish + bash completions**, `nirupi help COMMAND` and a man page.
   **Per-workspace wallpapers** (`~/.config/nirupi/wallpapers.conf`) switch
-  instantly on tag switch (opt-in `FADE=1` crossfade) and toggle from the
-  control center. dwm gains smart gaps/borders,
+  instantly on tag switch and toggle from the control center. dwm gains smart
+  gaps/borders,
   an **in-place restart** (`Super+Ctrl+Shift+r`) and mouse-drag of the master
   factor (`Super+Button2`).
 - Migrates an existing system **non-destructively**: configs are merged, foreign
@@ -137,7 +137,7 @@ nirupi rollback --binaries            # binary links only
 ./install.sh --theme-only|--update-dots|--migrate|--dry-run
 nirupi theme apply|status|diff|list|preview NAME|set NAME|menu
 nirupi theme wallpaper IMAGE|mode noir|wallpaper|palette
-nirupi wallpaper set FILE [--fade]|next [--fade]|per-tag on|off|toggle|status
+nirupi wallpaper set FILE|next|per-tag on|off|toggle|status
 nirupi migrate plan|dwm --rebuild     nirupi agent [profile]
 nirupi menu | nirupi keys | nirupi lock | nirupi webapp add|list|remove
 nirupi backup [--schedule|--unschedule]

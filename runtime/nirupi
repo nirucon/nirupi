@@ -71,8 +71,8 @@ Themes
   nirupi theme mode noir|wallpaper|palette
 
 Wallpaper
-  nirupi wallpaper set FILE [--fade]        set an image on every output
-  nirupi wallpaper next [--fade]            random image from the pool
+  nirupi wallpaper set FILE                 set an image on every output
+  nirupi wallpaper next                     random image from the pool
   nirupi wallpaper per-tag on|off|toggle|status   per-workspace backgrounds
 
 Session & apps

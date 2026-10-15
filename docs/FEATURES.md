@@ -110,8 +110,8 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 ## Wallpapers
 - **Per workspace (tag):** dwm calls `nirupi-tag-wallpaper.sh` on every tag
   switch; `~/.config/nirupi/wallpapers.conf` maps tags to images (or a random
-  pool), and the switch is instant (opt-in `FADE=1` crossfade via ImageMagick).
-  Toggle in the control center. Works with one or several outputs.
+  pool), and the switch is instant. Toggle in the control center. Works with
+  one or several outputs.
 
 ## dwm polish
 - **smartgaps / smartborders** (no gaps or border on a lone window),
