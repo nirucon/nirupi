@@ -480,7 +480,8 @@ migrate_binaries_rebuild(){
  local stage_root; stage_root="$(mktemp -d)"
  local app stage src
  declare -A stages=()
- for app in dwm dmenu st; do
+ for app in dwm dmenu st slock; do
+  [[ -d $src_root/$app ]] || { warn "$app sources missing; skipping"; continue; }
   stage="$(mktemp -d "$stage_root/build.XXXXXXXX")"
   cp -a -- "$src_root/$app/." "$stage/"
   if [[ $app == dwm ]]; then
@@ -500,6 +501,11 @@ migrate_binaries_rebuild(){
   put_file "${stages[$app]}/$app" "$bin_dir/$app" 0755
   link_binary "$bin_dir/$app" "$HOME/.local/bin/$app"
  done
+ # slock needs a setuid-root copy (/usr/local/bin/slock) to read the password db.
+ if [[ -x ${stages[slock]}/slock ]]; then
+  put_file "${stages[slock]}/slock" "$bin_dir/slock" 0755
+  ensure_slock "$bin_dir/slock" 2>/dev/null || true
+ fi
  for app in dmenu_run dmenu_path stest; do
   src="${stages[dmenu]}/$app"
   if [[ -f $src ]]; then
@@ -510,7 +516,7 @@ migrate_binaries_rebuild(){
   fi
  done
  rm -rf -- "$stage_root"
- log "Rebuilt dwm, dmenu, st for $VERSION and relinked"
+ log "Rebuilt dwm, dmenu, st, slock for $VERSION and relinked"
 }
 # Best-effort Helium browser provisioning. Helium is the preferred browser and
 # has no distro package on Void/Arch. Debian uses the official apt repository,

@@ -53,6 +53,7 @@ grep -q 'sect 22 ' "$bin/dwm-status.sh" && grep -q 'sect 30 ' "$bin/dwm-status.s
 grep -q 'XK_Left' "$DWM/config.h" || { echo 'FAIL arrow-key bindings missing' >&2; exit 1; }
 grep -q 'nirupi-rofi-files.sh' "$bin/nirupi-launch.sh" || { echo 'FAIL launcher lacks file search' >&2; exit 1; }
 grep -q 'migrate_binaries_rebuild' "$ROOT/lib/install.sh" || { echo 'FAIL binaries rebuild missing' >&2; exit 1; }
+grep -q 'for app in dwm dmenu st slock' "$ROOT/lib/install.sh" || { echo 'FAIL slock not in the binary rebuild' >&2; exit 1; }
 grep -q 'binaries' "$ROOT/lib/migrate.sh" || { echo 'FAIL binaries subcommand missing' >&2; exit 1; }
 # Icons must be real UTF-8, never \u/\U printf escapes (bash only expands those
 # in a UTF-8 locale, so they render as literal text on bare installs).

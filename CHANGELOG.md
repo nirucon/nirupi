@@ -2,6 +2,13 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.12
+- `nirupi migrate binaries --rebuild` now also builds **slock** and installs it
+  setuid to `/usr/local/bin/slock` (with a backup). It only covered
+  dwm/dmenu/st before, so a slock change never reached a system without a full
+  `--apply`.
+
+
 ## 0.23.11
 - **Lock screen on multi-monitor**: the clock/date/hostname/AFK block (and the
   screensaver face) is now centred on **every physical monitor** instead of the
