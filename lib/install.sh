@@ -177,6 +177,9 @@ install_helpers(){
   mkdir -p "$HOME/.config/nirupi"
   put_file "$ROOT/runtime/wallpapers.conf.example" "$HOME/.config/nirupi/wallpapers.conf" 0644
  fi
+ # Prefer the Nextcloud wallpaper pool when it exists; otherwise the value from
+ # the example (~/Pictures/Wallpapers) stands as the fallback.
+ wallpaper_pool_default
  # Autostart: the directory (entries run at login) + a documentation example.
  mkdir -p "$HOME/.config/nirupi/autostart"
  if [[ -f $ROOT/runtime/autostart.example ]]; then
@@ -722,6 +725,34 @@ ensure_helium(){
 # Install a working, setuid-root slock at /usr/local/bin/slock. Our slock build
 # tolerates the "nobody" group being absent (Void uses "nogroup"). We replace an
 # existing regular file (backup kept) so upgrades actually take effect.
+# Point the wallpaper pool at ~/Nextcloud/Wallpapers/NOIR when Nextcloud is
+# present, so a fresh install (or one predating pools) rotates the synced set
+# automatically. Without Nextcloud the existing value is left alone, which keeps
+# ~/Pictures/Wallpapers as the fallback.
+wallpaper_pool_default(){
+ local conf="$HOME/.config/nirupi/wallpapers.conf"
+ local nc="$HOME/Nextcloud/Wallpapers"
+ [[ -d $nc ]] || return 0
+ local want="$nc/NOIR"
+ [[ -d $want ]] || want="$(find "$nc" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | head -n1)"
+ [[ -n $want && -d $want ]] || return 0
+ [[ -e $conf ]] || { mkdir -p "$(dirname "$conf")"; : > "$conf"; }
+ # Only rewrite a placeholder value (the example's Pictures path or an empty
+ # DEFAULT_DIR); a pool the user picked elsewhere is respected.
+ local cur; cur="$(sed -n 's/^[[:space:]]*DEFAULT_DIR[[:space:]]*=[[:space:]]*//p' "$conf" 2>/dev/null | tail -n1 | sed -e 's/^"//' -e 's/"[[:space:]]*$//' -e "s#^~#$HOME#" -e "s#\\\$HOME#$HOME#g")"
+ case "$cur" in
+  ''|"$HOME/Pictures/Wallpapers"|"$HOME/Pictures/Wallpapers/")
+   local tmp; tmp="$(mktemp "$(dirname "$conf")/.wallconf.XXXXXXXX")"
+   awk -v v="\$HOME/Nextcloud/Wallpapers/NOIR" '
+     BEGIN{done=0}
+     $0 ~ "^[[:space:]]*DEFAULT_DIR[[:space:]]*=" { print "DEFAULT_DIR=\""v"\""; done=1; next }
+     { print }
+     END { if(!done) print "DEFAULT_DIR=\""v"\"" }' "$conf" > "$tmp"
+   mv -f -- "$tmp" "$conf"
+   log "Wallpaper pool: $want";;
+ esac
+}
+
 ensure_slock(){
   local built="${1:-}"
   [[ -n $built && -x $built ]] || built="$HOME/.local/lib/nirupi/$VERSION/bin/slock"

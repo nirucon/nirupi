@@ -58,11 +58,17 @@ pool_names(){
 # Nextcloud is absent (algiz) or not mounted, so nothing regresses.
 default_dir(){
   local d; d="$(conf_get DEFAULT_DIR)"
+  # Explicit pool that exists wins.
   if [[ -n $d && -d $d ]]; then printf '%s' "$d"; return 0; fi
-  if [[ -n $d && $d == "$NC_ROOT"/* && -d "$HOME/Pictures/Wallpapers" ]]; then
-    printf '%s' "$HOME/Pictures/Wallpapers"; return 0
+  # Nextcloud present -> use it (NOIR by default), even if the config predates
+  # pools or pointed at the stale Pictures/Wallpapers symlink.
+  if [[ -d $NC_ROOT ]]; then
+    if [[ -n $d && $d == "$NC_ROOT"/* && -d "$d" ]]; then printf '%s' "$d"; return 0; fi
+    if [[ -d "$NC_ROOT/NOIR" ]]; then printf '%s' "$NC_ROOT/NOIR"; return 0; fi
   fi
-  printf '%s' "${d:-$HOME/Pictures/Wallpapers}"
+  # Fallbacks: the configured value, then ~/Pictures/Wallpapers.
+  [[ -n $d ]] && printf '%s' "$d" && return 0
+  printf '%s' "$HOME/Pictures/Wallpapers"
 }
 
 images_in(){

@@ -2,6 +2,15 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.15
+- The wallpaper pool is now selected **automatically**: when
+  `~/Nextcloud/Wallpapers/` exists the installer points `DEFAULT_DIR` at it
+  (NOIR), for fresh installs and for configs that still hold the example path.
+  A pool the user picked themselves is left untouched, and without Nextcloud
+  `~/Pictures/Wallpapers` stays the fallback. `default_dir()` applies the same
+  preference at runtime.
+
+
 ## 0.23.14
 - **Wallpaper pools**: the rotating wallpaper set is a **subdirectory** of
   `~/Nextcloud/Wallpapers/` (default `NOIR`). Switch with
