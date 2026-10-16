@@ -87,9 +87,9 @@ MEDIA_VIDEOS_DIR="${NIRUPI_VIDEOS_DIR:-}"
 NOW_PLAYING_MAXLEN=20
 NOW_PLAYING_SCROLL=1
 NOW_PLAYING_SCROLL_DELAY=3
-NOW_PLAYING_SCROLL_STEP=1
+NOW_PLAYING_SCROLL_STEP=2      # characters advanced per frame
 NOW_PLAYING_FRAME_INTERVAL=0.3  # seconds; music animation only
-NOW_PLAYING_SCROLL_PASSES=0  # 0 = continuous
+NOW_PLAYING_SCROLL_PASSES=2    # full scrolls, then stay on the start; 0 = continuous
 NOW_PLAYING_LABEL_SEPARATOR=": "
 NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox"
 
@@ -200,7 +200,9 @@ fi
 # Now playing state is persisted in cache files so it survives subshells.
 
 icon_music() {
-  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'm'
+  # A note, not a play triangle: this shows what is playing rather than
+  # offering a control. Matches the Font Awesome icons beside it (volume, mic).
+  [[ "$USE_ICONS" -eq 1 ]] && printf '' || printf 'music'
 }
 
 icon_photos() {
@@ -1058,9 +1060,9 @@ get_now_playing() {
 
       visible="$(render_now_playing_text "$raw_text")"
       if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
-        printf '%s %s%s%s' "$(icon_play)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
+        printf '%s %s%s%s' "$(icon_music)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
       else
-        printf '%s %s' "$(icon_play)" "$visible"
+        printf '%s %s' "$(icon_music)" "$visible"
       fi
       return 0
     done
@@ -1090,9 +1092,9 @@ get_now_playing() {
 
       visible="$(render_now_playing_text "$raw_text")"
       if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
-        printf '%s %s%s%s' "$(icon_play)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
+        printf '%s %s%s%s' "$(icon_music)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
       else
-        printf '%s %s' "$(icon_play)" "$visible"
+        printf '%s %s' "$(icon_music)" "$visible"
       fi
       return 0
     done < <(playerctl -l 2>/dev/null)
@@ -1122,9 +1124,9 @@ get_now_playing() {
 
       visible="$(render_now_playing_text "$raw_text")"
       if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
-        printf '%s %s%s%s' "$(icon_play)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
+        printf '%s %s%s%s' "$(icon_music)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
       else
-        printf '%s %s' "$(icon_play)" "$visible"
+        printf '%s %s' "$(icon_music)" "$visible"
       fi
       return 0
     fi
@@ -1252,9 +1254,9 @@ render_cached_now_playing() {
   [[ -n "$raw" ]] || return 0
   visible="$(render_now_playing_text "$raw")"
   if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
-    printf '%s %s%s%s' "$(icon_play)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
+    printf '%s %s%s%s' "$(icon_music)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
   else
-    printf '%s %s' "$(icon_play)" "$visible"
+    printf '%s %s' "$(icon_music)" "$visible"
   fi
 }
 
