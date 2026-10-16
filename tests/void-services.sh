@@ -20,16 +20,25 @@ grep -q 'DISTRO == void' "$INS" || fail 'Void branch missing'
 # --- Void: display-manager conflict detection without systemctl --------------
 grep -q '/var/service/\$dm' "$INS" || fail 'Void DM conflict check missing'
 
-# --- Void: the session starts PipeWire ---------------------------------------
+# --- Void: the session starts PipeWire (Void ships no runit service for it) ---
 grep -q 'pipewire' "$SESSION" || fail 'PipeWire start missing from the session'
-grep -q '"$SESSION_DISTRO" = void' "$SESSION" || fail 'PipeWire start is not Void-gated'
+grep -q 'SESSION_DISTRO" = void' "$SESSION" || fail 'PipeWire start is not Void-gated'
+# PipeWire must be started from the session, never through systemd on Void.
+grep -q 'systemctl --user start pipewire' "$SESSION" && fail 'session must not start systemd PipeWire'
+# It must set XDG_RUNTIME_DIR and wait for the native socket instead of racing.
+grep -q 'XDG_RUNTIME_DIR' "$SESSION" || fail 'XDG_RUNTIME_DIR not handled'
+grep -q 'pipewire-0' "$SESSION" || fail 'no wait for the PipeWire socket'
+# WirePlumber / pipewire-pulse are enabled via the handbook's config drop-ins.
+grep -q '10-wireplumber.conf' "$SESSION" || fail 'wireplumber drop-in missing'
+grep -q '20-pipewire-pulse.conf' "$SESSION" || fail 'pipewire-pulse drop-in missing'
+# PipeWire must NOT be killed with the session (avoids a restart race/gap).
+grep -q 'PWPIDS' "$SESSION" && fail 'PipeWire is still torn down with the session'
 
 # --- Guard: Debian/Arch (systemd) behaviour unchanged ------------------------
 grep -q 'sudo systemctl enable sddm.service' "$INS" || fail 'systemd SDDM enable removed'
 grep -q 'systemctl is-enabled --quiet "\$dm.service"' "$INS" || fail 'systemd DM conflict check removed'
 grep -q 'systemctl enable --now "\$unit.service"' "$INS" || fail 'systemd service enabling removed'
 grep -q 'systemctl suspend' "$SESSION" || fail 'systemd suspend path removed'
-grep -q 'systemctl --user start pipewire' "$SESSION" && fail 'session must not start systemd PipeWire'
 
 # --- Behavioural: enable_void_service is idempotent and safe -----------------
 # Run the isolated helper against a user-writable fake runsvdir. Skipped off

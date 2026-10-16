@@ -2,6 +2,15 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.8
+- Void audio hardened to match the Void handbook: the session now documents the
+  D-Bus/XDG_RUNTIME_DIR prerequisites, enables WirePlumber and the PulseAudio
+  interface through the official PipeWire config drop-ins, waits for the
+  `pipewire-0` socket (with a warning if it never appears) and no longer kills
+  PipeWire when the session exits (that caused a restart race and a silent gap).
+- `VERSION` newline restored.
+
+
 ## 0.23.7
 - **Void runit provisioning:** on a clean install NIRUPI now enables `dbus`,
   `elogind` and `polkitd` (alongside NetworkManager/bluetoothd/tailscaled) and

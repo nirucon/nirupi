@@ -20,25 +20,47 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
 fi
 
 # ── PipeWire (Void starts no audio server by default) ─────────────────────────
-# Arch and Debian socket-activate PipeWire through systemd user units; on Void
-# the daemons must be started explicitly. Only Void is touched, so Debian and
-# Arch keep their native audio behaviour.
+# Per the Void handbook, PipeWire is launched from the session script (Void ships
+# no runit service for it) and WirePlumber/PipeWire-Pulse are started by PipeWire
+# itself through config drop-ins. Arch and Debian socket-activate PipeWire through
+# systemd user units, so only Void is touched here.
 SESSION_DISTRO=
 [ -r /etc/os-release ] && SESSION_DISTRO="$(. /etc/os-release 2>/dev/null; printf '%s' "${ID:-}")"
-PWPIDS=
-if [ "$SESSION_DISTRO" = void ]; then
-  if command -v pipewire >/dev/null 2>&1 && ! pgrep -u "$(id -u)" -x pipewire >/dev/null 2>&1; then
-    pipewire >/dev/null 2>&1 & PWPIDS="$PWPIDS $!"
-    # Wait briefly for the socket before starting the PipeWire clients.
-    pw_runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-    i=0
-    while [ "$i" -lt 50 ] && [ ! -S "$pw_runtime/pipewire-0" ]; do sleep 0.1; i=$((i + 1)); done
+if [ "$SESSION_DISTRO" = void ] && command -v pipewire >/dev/null 2>&1; then
+  # PipeWire needs an active D-Bus user session bus and XDG_RUNTIME_DIR.
+  if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && command -v dbus-run-session >/dev/null 2>&1; then
+    printf '%s\n' '[NIRUPI] No D-Bus session bus; PipeWire may not work (SDDM normally provides one)' >&2
   fi
-  for daemon in wireplumber pipewire-pulse; do
-    command -v "$daemon" >/dev/null 2>&1 || continue
-    pgrep -u "$(id -u)" -x "$daemon" >/dev/null 2>&1 && continue
-    "$daemon" >/dev/null 2>&1 & PWPIDS="$PWPIDS $!"
-  done
+  : "${XDG_RUNTIME_DIR:=/run/user/$(id -u)}"; export XDG_RUNTIME_DIR
+  # 10-wireplumber.conf / 20-pipewire-pulse.conf: let PipeWire start its session
+  # manager and the PulseAudio interface in the correct order (Void handbook).
+  if [ -d /usr/share/examples ]; then
+    for frag in wireplumber:10-wireplumber.conf pipewire:20-pipewire-pulse.conf; do
+      src="/usr/share/examples/${frag%%:*}/${frag##*:}"
+      dst="${XDG_CONFIG_HOME:-$HOME/.config}/pipewire/pipewire.conf.d/${frag##*:}"
+      [ -r "$src" ] || continue
+      [ -e "$dst" ] && continue
+      mkdir -p "$(dirname "$dst")" && ln -sf "$src" "$dst" 2>/dev/null || :
+    done
+  fi
+  if ! pgrep -u "$(id -u)" -x pipewire >/dev/null 2>&1; then
+    pipewire >/dev/null 2>&1 &
+    # Wait for the native socket before anything tries to talk to PipeWire.
+    i=0
+    while [ "$i" -lt 100 ] && [ ! -S "$XDG_RUNTIME_DIR/pipewire-0" ]; do sleep 0.1; i=$((i + 1)); done
+    if [ ! -S "$XDG_RUNTIME_DIR/pipewire-0" ]; then
+      printf '%s\n' '[NIRUPI] PipeWire socket did not appear; audio may be unavailable' >&2
+    fi
+  fi
+  # Belt and braces: if the config drop-ins are absent (older tree), start the
+  # session manager / pulse interface directly once the socket exists.
+  if [ -S "$XDG_RUNTIME_DIR/pipewire-0" ]; then
+    for daemon in wireplumber pipewire-pulse; do
+      command -v "$daemon" >/dev/null 2>&1 || continue
+      pgrep -u "$(id -u)" -x "$daemon" >/dev/null 2>&1 && continue
+      "$daemon" >/dev/null 2>&1 &
+    done
+  fi
 fi
 
 # ── User session preferences ──────────────────────────────────────────────────
@@ -193,7 +215,9 @@ if [ "$LOCK_ON_SUSPEND" = 1 ] && command -v xss-lock >/dev/null 2>&1; then
 fi
 
 cleanup() {
-  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID" "$CLIP_PID" "$BAT_PID" $PWPIDS; do
+  # PipeWire deliberately not killed here: it is session-scoped audio, and
+  # tearing it down on a WM restart causes a silent gap and a restart race.
+  for pid in "$STATUS_PID" "$WALL_PID" "$DUNST_PID" "$PICOM_PID" "$IDLE_PID" "$LOCK_PID" "$CLIP_PID" "$BAT_PID"; do
     [ -z "$pid" ] || kill "$pid" 2>/dev/null || :
   done
 }
