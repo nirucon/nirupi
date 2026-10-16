@@ -1,4 +1,4 @@
-# NIRUPI — a NIRU desktop
+# NIRUPI - a NIRU desktop
 
 A personal, minimal **Suckless** X11 desktop for **Arch/CachyOS**,
 **Void Linux (glibc)** and **Debian**. It bundles patched `dwm`, `dmenu`, `st`
