@@ -45,11 +45,14 @@ WEATHER_TIMEZONE="Europe/Stockholm"
 # WEATHER_LON=""
 
 # Now playing: NPLAY is preferred when multiple MPRIS players are active.
-# Long artist/title strings scroll, then rest at the beginning (0 = unlimited passes).
+# Long artist/title strings scroll, then rest at the beginning so the artist
+# stays visible (0 = unlimited passes). The icon alone says what is playing;
+# set SHOW_PLAYER_NAME to 1 to print the player name before the track.
+SHOW_PLAYER_NAME=0
 NOW_PLAYING_MAXLEN=20
 NOW_PLAYING_SCROLL=1
 NOW_PLAYING_SCROLL_DELAY=3
-NOW_PLAYING_SCROLL_STEP=1
-NOW_PLAYING_FRAME_INTERVAL=0.2
-NOW_PLAYING_SCROLL_PASSES=3
+NOW_PLAYING_SCROLL_STEP=2
+NOW_PLAYING_FRAME_INTERVAL=0.3
+NOW_PLAYING_SCROLL_PASSES=2
 # NOW_PLAYING_PREFERRED_PLAYERS="nplay spotify mpv kew cmus brave chromium firefox"
