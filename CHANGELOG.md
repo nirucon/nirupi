@@ -2,6 +2,13 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.15
+- Fix the slideshow not appearing: the composite lived in `lock->bgmap`, which
+  the following `XClearWindow`/`applyblur` replaced, so only the blurred desktop
+  showed. It now uses its own pixmap (`slidepm`), re-applied on every redraw and
+  painted on `-s` start. Screensaver-only; the lock face keeps the blur.
+
+
 ## 0.23.14
 - **Lock-screen slideshow**: while the screensaver face is up (`slock -s`),
   pictures from `~/Pictures/Screensaver` (jpg/jpeg/png) are shown **one per
