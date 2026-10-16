@@ -2,6 +2,14 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.13
+- Fix `--apply` failing with "Existing /usr/local/bin/nirupi-session is
+  unmanaged" when the launcher runs the session but is formatted differently
+  (different quoting, a trailing `"$@"`, comments). The check is now semantic
+  (does it run `~/.local/bin/nirupi-session`?) and a genuinely foreign launcher
+  is replaced with a backup instead of aborting the whole installation.
+
+
 ## 0.23.12
 - `nirupi migrate binaries --rebuild` now also builds **slock** and installs it
   setuid to `/usr/local/bin/slock` (with a backup). It only covered

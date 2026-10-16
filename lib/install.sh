@@ -5,14 +5,17 @@ check_system_session_conflicts(){
  if [[ -e $launcher || -L $launcher ]]; then
    [[ -f $launcher && ! -L $launcher ]] ||
      die "Existing system session launcher is not a regular file: $launcher"
-   grep -Fxq 'exec "${HOME}/.local/bin/nirupi-session"' "$launcher" ||
-     die "Existing $launcher is unmanaged; refusing installation"
+   # Accept any launcher that runs the user's session script: quoting style,
+   # a trailing "$@" or comments must not break the check. Only a launcher that
+   # does something else entirely is refused.
+   grep -Fq '.local/bin/nirupi-session' "$launcher" ||
+     die "Existing $launcher does not run ~/.local/bin/nirupi-session; move it aside and retry"
  fi
  if [[ -e $desktop || -L $desktop ]]; then
    [[ -f $desktop && ! -L $desktop ]] ||
      die "Existing desktop session entry is not a regular file: $desktop"
-   grep -Fxq 'Exec=/usr/local/bin/nirupi-session' "$desktop" ||
-     die "Existing $desktop is unmanaged; refusing installation"
+   grep -Fq 'nirupi-session' "$desktop" ||
+     die "Existing $desktop does not start nirupi-session; move it aside and retry"
  fi
 }
 # Fail before package transactions if enabling SDDM would conflict with another DM.
@@ -333,10 +336,19 @@ install_desktop() (
  managed_config_install 'session/xinitrc' "$ROOT/runtime-xinitrc" "$HOME/.xinitrc" 0755
  check_system_session_conflicts
  check_display_manager_conflicts
- # Do not create an Xsession entry that points to a foreign global launcher.
+ # If a global launcher exists but does not run the user session (e.g. an older
+ # NIRUPI write, or a hand-written wrapper), replace it with a backup instead of
+ # failing the whole install.
  if [[ -e /usr/local/bin/nirupi-session || -L /usr/local/bin/nirupi-session ]]; then
-  if ! grep -Fq '${HOME}/.local/bin/nirupi-session' /usr/local/bin/nirupi-session 2>/dev/null; then
-   die 'Existing /usr/local/bin/nirupi-session is unmanaged; refusing session registration'
+  if ! grep -Fq '.local/bin/nirupi-session' /usr/local/bin/nirupi-session 2>/dev/null; then
+   if [[ -L /usr/local/bin/nirupi-session ]]; then
+    die 'Existing /usr/local/bin/nirupi-session is a symlink; move it aside and retry'
+   fi
+   warn 'Replacing a foreign /usr/local/bin/nirupi-session (backup kept)'
+   sudo cp -a /usr/local/bin/nirupi-session "/usr/local/bin/nirupi-session.bak-$(date +%Y%m%d-%H%M%S)" \
+     || warn 'Could not back up the existing launcher'
+   printf '#!/bin/sh\nexec "${HOME}/.local/bin/nirupi-session"\n' | sudo tee /usr/local/bin/nirupi-session >/dev/null
+   sudo chmod 0755 /usr/local/bin/nirupi-session
   fi
  fi
  if [[ -e /usr/share/xsessions/nirupi-dwm.desktop || -L /usr/share/xsessions/nirupi-dwm.desktop ]]; then

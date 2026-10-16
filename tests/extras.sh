@@ -112,3 +112,10 @@ bash "$bin/nirupi-edit.sh" --list | grep -q '^  status ' || { echo 'FAIL edit --
 bash "$bin/nirupi-autostart.sh" list >/dev/null || { echo 'FAIL autostart list' >&2; exit 1; }
 
 echo 'PASS: extras (capture, AI, emoji, clipboard, audio, wallpapers, ssh, launcher, autostart, notifications, battery, picom, reload/edit, help)'
+
+# The session-launcher guard must accept any launcher that runs the user session
+# (quoting/"$@"/comments) and not be a rigid exact-string match.
+grep -q "grep -Fq '.local/bin/nirupi-session'" "$ROOT/lib/install.sh" \
+  || { echo 'FAIL session launcher check is not semantic' >&2; exit 1; }
+grep -q 'nirupi-session.bak-' "$ROOT/lib/install.sh" \
+  || { echo 'FAIL foreign session launcher is not replaced with a backup' >&2; exit 1; }
