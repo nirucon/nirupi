@@ -22,10 +22,12 @@ TITLE = "NIRUPI"
 SUB = ""
 ACCENT = "cyan"
 ITEMS = []     # ordered: ("sub"|"row"|"note", label, value, pct)
+CHOICES = []   # list of (key, label); key is what gets printed on selection
+CANCEL = ("q", "Cancel")
 
 
 def parse(stdin):
-    global TITLE, SUB, ACCENT
+    global TITLE, SUB, ACCENT, CANCEL
     pending_bar = None
     for raw in stdin:
         line = raw.rstrip("\n")
@@ -48,6 +50,18 @@ def parse(stdin):
             pending_bar = None
         elif line.startswith("@note "):
             ITEMS.append(("note", line[6:].strip(), "", None))
+        elif line.startswith("@choice "):
+            # @choice key|Label   (key = the value printed when chosen)
+            body = line[8:]
+            key, _, label = body.partition("|")
+            key = key.strip()
+            if key:
+                CHOICES.append((key, (label.strip() or key)))
+        elif line.startswith("@cancel "):
+            body = line[8:]
+            key, _, label = body.partition("|")
+            key = key.strip() or "q"
+            CANCEL = (key, (label.strip() or "Cancel"))
         else:
             ITEMS.append(("note", line.strip(), "", None))
 
@@ -92,7 +106,7 @@ def put(scr, y, x, text, attr=0):
         pass
 
 
-def render(scr, colors):
+def render(scr, colors, sel=0):
     scr.erase()
     h, w = scr.getmaxyx()
     c_accent = curses.color_pair(1)
@@ -109,13 +123,15 @@ def render(scr, colors):
     bar_w = 12 if any(r[3] is not None for r in rows) else 0
     row_w = label_w + 2 + value_w + (bar_w + 2 if bar_w else 0)
     notes_w = max([len(n[1]) + 2 for n in notes] or [0])
-    inner = max(row_w, len(TITLE) + 6, len(SUB) + 4, notes_w)
+    choice_w = max([3 + len(k) + 2 + len(l) for k, l in CHOICES] + [0])
+    inner = max(row_w, len(TITLE) + 6, len(SUB) + 4, notes_w, choice_w)
     box_w = min(w - 2, max(inner + 4, 30))
     left = max(0, (w - box_w) // 2)
     cw = box_w - 2                    # inner cell count
 
     n_sub = 1 if SUB else 0
-    total = 2 + n_sub + len(ITEMS) + 1
+    n_choice = 1 if CHOICES else 0
+    total = 2 + n_sub + len(ITEMS) + n_choice + 1
     top = max(0, (h - total) // 2)
 
     label = " %s " % TITLE
@@ -149,8 +165,29 @@ def render(scr, colors):
             put(scr, y, left + box_w - 1, "\u2502", c_accent)
         y += 1
 
+    if CHOICES:
+        # blank spacer, then the choices with the selected one highlighted
+        put(scr, y, left, "\u2502", c_accent)
+        put(scr, y, left + box_w - 1, "\u2502", c_accent)
+        y += 1
+        chips = []
+        for i, (key, label) in enumerate(CHOICES):
+            chips.append((i, " %s %s " % (key, label)))
+        line = "  ".join(c[1] for c in chips)
+        put(scr, y, left, "\u2502", c_accent)
+        if len(line) <= cw:
+            x = left + 2
+            for i, text in chips:
+                attr = (c_ok | curses.A_REVERSE | curses.A_BOLD) if i == sel else c_value
+                put(scr, y, x, text, attr)
+                x += len(text) + 2
+        else:
+            put(scr, y, left + 2, line[:cw].ljust(cw), c_value)
+        put(scr, y, left + box_w - 1, "\u2502", c_accent)
+        y += 1
+
     put(scr, y, left, "\u2570" + "\u2500" * cw + "\u256f", c_accent | curses.A_BOLD)
-    hint = "press any key to close"
+    hint = "enter = select   \u2191\u2193 = move   q = cancel" if CHOICES else "press any key to close"
     put(scr, y + 2, max(0, (w - len(hint)) // 2), hint, c_muted)
     scr.refresh()
 
@@ -172,9 +209,40 @@ def main(scr):
                 curses.init_pair(i, pal.get(key, 250), -1)
         except curses.error:
             pass
-    render(scr, pal)
-    scr.timeout(-1)
-    scr.getch()
+
+    if not CHOICES:
+        render(scr, pal)
+        scr.timeout(-1)
+        scr.getch()
+        print("", end="")
+        return
+
+    # Interactive: a highlighted choice at the bottom. Enter runs the first
+    # (default) choice, a number/letter key runs that choice, q/Esc cancels.
+    sel = 0
+    while True:
+        render(scr, pal, sel)
+        scr.timeout(-1)
+        ch = scr.getch()
+        if ch in (curses.KEY_UP, ord("k")):
+            sel = (sel - 1) % len(CHOICES)
+        elif ch in (curses.KEY_DOWN, ord("j"), 9):
+            sel = (sel + 1) % len(CHOICES)
+        elif ch in (10, 13, curses.KEY_ENTER):
+            sys.stdout.write(CHOICES[sel][0] + "\n")
+            return
+        elif ch in (ord("q"), 27):
+            sys.stdout.write(CANCEL[0] + "\n")
+            return
+        elif 32 <= ch < 127:
+            key = chr(ch).lower()
+            for i, c in enumerate(CHOICES):
+                if c[0] == key:
+                    sys.stdout.write(c[0] + "\n")
+                    return
+            if key in CANCEL:
+                sys.stdout.write(CANCEL[0] + "\n")
+                return
 
 
 if __name__ == "__main__":

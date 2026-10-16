@@ -45,7 +45,7 @@ total=$(( ${#pkgs[@]} + ${#aur[@]} ))
 last="$(date -r "${XDG_CACHE_HOME:-$HOME/.cache}/dwm-status/updates.stamp" '+%Y-%m-%d %H:%M' 2>/dev/null || true)"
 
 accent=cyan; (( total > 0 )) && accent=yellow
-{
+spec="$(
   printf '@title Updates\n'
   printf '@sub %s — %s\n' "$(cat /etc/hostname 2>/dev/null || uname -n)" "${distro}"
   printf '@accent %s\n' "$accent"
@@ -59,14 +59,19 @@ accent=cyan; (( total > 0 )) && accent=yellow
     for p in "${pkgs[@]:0:12}"; do printf '@row %s|\n' "${p%% *}"; done
     (( ${#pkgs[@]} > 12 )) && printf '@note … and %s more\n' "$(( ${#pkgs[@]} - 12 ))"
     for p in "${aur[@]:0:8}"; do printf '@row %s|AUR\n' "${p%% *}"; done
+    # One window: the choice lives in the panel. Enter runs the default.
+    printf '@choice y|Upgrade now  (sudo %s)\n' "$mgr"
+    printf '@cancel q|Cancel\n'
   fi
-} | NIRUPI_POPUP=tui "$HOME/.local/bin/nirupi-popup.sh" Updates >/dev/null 2>&1 || true
+)"
 
-if (( total == 0 )); then exit 0; fi
-# Confirmation: nothing is upgraded without an explicit "yes".
-ans="$(printf 'no\nyes — run: sudo %s\n' "$mgr" \
-  | { if have rofi; then rofi -dmenu -i -p 'Run the upgrade?'; else pick; fi; } || true)"
+if (( total == 0 )); then
+  printf '%s\n' "$spec" | NIRUPI_POPUP=tui "$HOME/.local/bin/nirupi-popup.sh" Updates >/dev/null 2>&1 || true
+  exit 0
+fi
+
+ans="$(printf '%s\n' "$spec" | NIRUPI_POPUP=tui "$HOME/.local/bin/nirupi-popup.sh" Updates 2>/dev/null || true)"
 case "$ans" in
-  yes*) exec "$HOME/.local/bin/nirupi-sysupdate.sh";;
+  y*) exec "$HOME/.local/bin/nirupi-sysupdate.sh";;
   *) notify 'Upgrade cancelled';;
 esac

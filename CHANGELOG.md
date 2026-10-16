@@ -2,6 +2,15 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.9
+- The updates pop-up is now a **single window**: the pending list and the
+  choice ("Upgrade now" / "Cancel") live in the same panel — Enter upgrades,
+  `q`/Esc cancels. Previously the panel and a rofi confirmation opened at the
+  same time, so the prompt covered the information it was asking about.
+- The panel gained interactive choices (`@choice`/`@cancel`) with a highlighted
+  selection, arrow keys and single-key shortcuts.
+
+
 ## 0.23.8
 - Void audio hardened to match the Void handbook: the session now documents the
   D-Bus/XDG_RUNTIME_DIR prerequisites, enables WirePlumber and the PulseAudio
