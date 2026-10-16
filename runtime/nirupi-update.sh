@@ -24,6 +24,15 @@ if [[ -x "$repo/install.sh" ]]; then
   bash "$repo/install.sh" --update-dots || printf 'WARN update-dots failed; run it manually\n' >&2
 fi
 
+# Ensure the binaries for the current version exist and are linked. --update-dots
+# refreshes scripts but does not build, so a version bump can otherwise leave the
+# links pointing at an older build.
+ver="$(cat "$repo/VERSION" 2>/dev/null || true)"
+if [[ -n $ver && ! -x "$HOME/.local/lib/nirupi/$ver/bin/dwm" ]]; then
+  printf '\nBuilding the binaries for %s ...\n' "$ver"
+  "$HOME/.local/bin/nirupi" migrate binaries --rebuild || printf 'WARN binary rebuild failed\n' >&2
+fi
+
 # Rebuild dwm only if its sources changed, then restart it in place.
 if [[ -x "$HOME/.local/bin/nirupi-reload.sh" ]]; then
   printf '\nRebuilding dwm if needed ...\n'

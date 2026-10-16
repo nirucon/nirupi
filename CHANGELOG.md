@@ -2,6 +2,15 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.10
+- `nirupi update` now **builds the binaries** for the current version when they
+  are missing. `--update-dots` only refreshes scripts, so a version bump could
+  leave `dwm`/`dmenu`/`st` linked to an older build.
+- `nirupi reload` no longer claims a restart succeeded when the running dwm is
+  too old to re-exec the installed binary; it reports which build is live and
+  asks you to log out and back in.
+
+
 ## 0.23.9
 - The updates pop-up is now a **single window**: the pending list and the
   choice ("Upgrade now" / "Cancel") live in the same panel — Enter upgrades,

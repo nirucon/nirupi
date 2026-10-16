@@ -42,8 +42,20 @@ if command -v pgrep >/dev/null 2>&1 && pgrep -x dwm >/dev/null 2>&1; then
     [[ -n $XAUTHORITY ]] && export XAUTHORITY
   fi
   if command -v xdotool >/dev/null 2>&1; then
+    _dpid="$(pgrep -x dwm | head -1)"
+    _running="$(readlink -f "/proc/$_dpid/exe" 2>/dev/null || true)"
+    _linked="$(readlink -f "$HOME/.local/bin/dwm" 2>/dev/null || true)"
     if xdotool key --clearmodifiers super+ctrl+shift+r; then
-      printf 'Restarted dwm in place.\n'
+      sleep 1
+      _dpid2="$(pgrep -x dwm | head -1)"
+      _now="$(readlink -f "/proc/$_dpid2/exe" 2>/dev/null || true)"
+      if [[ -n $_linked && $_now != "$_linked" ]]; then
+        # An older dwm cannot re-exec the new binary: it restarts its own image.
+        printf 'NOTE: the running dwm still uses %s\n' "${_now##*/nirupi/}"
+        printf '      It cannot switch binary in place; log out and back in to load %s.\n' "$_linked"
+      else
+        printf 'Restarted dwm in place.\n'
+      fi
     else
       printf 'Could not trigger the restart; log out and back in.\n' >&2
     fi
