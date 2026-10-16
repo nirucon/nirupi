@@ -5,7 +5,8 @@
 # - random   -> alias for next
 set -euo pipefail
 
-W="${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}" # default dir
+W="${WALLPAPER_DIR:-$(sed -n 's/^[[:space:]]*DEFAULT_DIR[[:space:]]*=[[:space:]]*//p' "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/wallpapers.conf" 2>/dev/null | tail -n1 | sed -e 's/^"//' -e 's/"[[:space:]]*$//' -e "s#\\\$HOME#$HOME#g" -e "s#^~#$HOME#")}"
+[[ -n $W && -d $W ]] || W="$HOME/Pictures/Wallpapers" # fallback (no pool / no Nextcloud)
 LOG="$HOME/.cache/wallrotate.log"
 LOCK="$HOME/.cache/wallrotate.lock"
 mkdir -p "$(dirname "$LOG")"

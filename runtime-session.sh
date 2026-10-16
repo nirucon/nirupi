@@ -130,9 +130,15 @@ if command -v dwm-status.sh >/dev/null 2>&1; then
   fi
 fi
 if [ "$PER_TAG" != 1 ] && command -v wallrotate.sh >/dev/null 2>&1; then
-  if [ -d "${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}" ]; then
+  # Rotation follows the configured pool (wallpapers.conf DEFAULT_DIR), with the
+  # Pictures/Wallpapers fallback applied by wallrotate.sh itself.
+  _wdir="$(sed -n 's/^[[:space:]]*DEFAULT_DIR[[:space:]]*=[[:space:]]*//p' \
+          "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/wallpapers.conf" 2>/dev/null | tail -n1 \
+          | sed -e 's/^"//' -e 's/"[[:space:]]*$//' -e "s#\$HOME#$HOME#g" -e "s#^~#$HOME#")"
+  if [ -n "${WALLPAPER_DIR:-$_wdir}" ] && [ -d "${WALLPAPER_DIR:-${_wdir:-$HOME/Pictures/Wallpapers}}" ]; then
     wallrotate.sh & WALL_PID=$!
   fi
+  unset _wdir
 fi
 
 # ── Automatic clipboard history (text) for the Super+v clipboard menu ─────────

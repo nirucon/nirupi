@@ -2,6 +2,17 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.14
+- **Wallpaper pools**: the rotating wallpaper set is a **subdirectory** of
+  `~/Nextcloud/Wallpapers/` (default `NOIR`). Switch with
+  `nirupi wallpaper pool [NAME|default]` or **control center → Wallpaper pool…**;
+  every other subdirectory is offered. Files directly in the parent are never
+  used, and pools are never mixed. `DEFAULT_DIR` in `wallpapers.conf` records the
+  choice; `wallrotate.sh`, `wallpaperchange.sh`, the session and the theme
+  engine all follow it. When Nextcloud is absent (or not mounted) it falls back
+  to `~/Pictures/Wallpapers`, so nothing regresses.
+
+
 ## 0.23.13
 - Fix `--apply` failing with "Existing /usr/local/bin/nirupi-session is
   unmanaged" when the launcher runs the session but is formatted differently

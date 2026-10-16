@@ -3,7 +3,8 @@
 # Simpler alternative that lists wallpapers in dmenu
 set -eu
 
-W="${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}"
+W="${WALLPAPER_DIR:-$(sed -n 's/^[[:space:]]*DEFAULT_DIR[[:space:]]*=[[:space:]]*//p' "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/wallpapers.conf" 2>/dev/null | tail -n1 | sed -e 's/^"//' -e 's/"[[:space:]]*$//' -e "s#\\\$HOME#$HOME#g" -e "s#^~#$HOME#")}"
+[[ -n $W && -d $W ]] || W="$HOME/Pictures/Wallpapers"
 
 # Main menu
 choice="$(printf '%s\n' 'Random (different per monitor)' 'Select from list (dmenu)' 'Browse with images (sxiv)' | dmenu -p 'Wallpaper:' -i)"

@@ -47,6 +47,27 @@ choose(){
   else return 0; fi
 }
 
+pool_menu(){
+  # List the wallpaper pools (subdirectories of the Nextcloud folder) and switch.
+  local root="$HOME/Nextcloud/Wallpapers" active sel d mark
+  active="$(nirupi wallpaper pool 2>/dev/null | sed -n '1s/^Wallpaper pool: //p')"
+  if [[ ! -d $root ]]; then
+    notify "No Nextcloud wallpaper folder ($root)"
+    return 0
+  fi
+  local rows=""
+  for d in "$root"/*/; do
+    [[ -d $d ]] || continue
+    d="${d%/}"
+    mark=""
+    [[ "$active" == "$d" ]] && mark="  (active)"
+    rows+="$(basename "$d")$mark"$'\n'
+  done
+  sel="$(printf '%s' "$rows" | choose)" || return 0
+  [[ -n $sel ]] || return 0
+  exec "$HOME/.local/bin/nirupi-wallpaper.sh" pool "${sel%% *}"
+}
+
 wifi(){
   command -v nmcli >/dev/null 2>&1 || { notify 'nmcli not available'; return 0; }
   local ssid
@@ -92,6 +113,7 @@ Theme: choose…
 Wallpaper mode: toggle
 Next wallpaper
 Wallpapers per workspace: toggle
+Wallpaper pool…
 Tailscale: toggle
 Wi-Fi
 Bluetooth
@@ -148,6 +170,7 @@ case "$action" in
   'Wallpaper mode: toggle') theme_toggle;;
   'Next wallpaper') exec "$HOME/.local/bin/wallrotate.sh" next;;
   'Wallpapers per workspace: toggle') exec "$HOME/.local/bin/nirupi-wallpaper.sh" per-tag toggle;;
+  'Wallpaper pool…') pool_menu;;
   'Tailscale: toggle') tailscale_toggle;;
   'Wi-Fi') exec "$HOME/.local/bin/nirupi-wifi.sh";;
   Bluetooth) exec "$HOME/.local/bin/nirupi-bluetooth.sh";;

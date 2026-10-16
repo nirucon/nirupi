@@ -244,6 +244,18 @@ theme_render_rofi(){
 # which outrank the base dunstrc, so the theme only generates the colours and
 # the user's own notification settings (padding, stacking, icon prefs, ...) are
 # left untouched. The base config is deployed by theme_apply_configs.
+# Resolve the wallpaper pool: nirupi's wallpapers.conf DEFAULT_DIR when set and
+# present, else WALLPAPER_DIR, else ~/Pictures/Wallpapers. Keeps theme-derived
+# wallpaper in step with `nirupi wallpaper pool`.
+_nirupi_wall_dir(){
+  local d
+  d="$(sed -n 's/^[[:space:]]*DEFAULT_DIR[[:space:]]*=[[:space:]]*//p' \
+       "$(cfgdir)/nirupi/wallpapers.conf" 2>/dev/null | tail -n1 \
+       | sed -e 's/^"//' -e 's/"[[:space:]]*$//' -e "s#\\\$HOME#$HOME#g" -e "s#^~#$HOME#")"
+  if [[ -n $d && -d $d ]]; then printf '%s' "$d"; return 0; fi
+  printf '%s' "${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}"
+}
+
 theme_render_dunst(){
   local dest="$(cfgdir)/dunst/dunstrc.d/90-nirupi.conf"
   [[ -L $(cfgdir)/dunst ]] && { warn 'Preserving symlinked dunst dir'; return 0; }
@@ -880,7 +892,7 @@ theme_from_image(){
   if [[ -z $img ]]; then
     local wf="$HOME/.cache/dwm-status/current-wallpaper"
     [[ -r $wf ]] && img="$(cat "$wf" 2>/dev/null || true)"
-    [[ -n $img && -f $img ]] || img="$(find "${WALLPAPER_DIR:-$HOME/Pictures/Wallpapers}" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) 2>/dev/null | head -n1)"
+    [[ -n $img && -f $img ]] || img="$(find "$(_nirupi_wall_dir)" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) 2>/dev/null | head -n1)"
   fi
   [[ -f $img && ! -L $img ]] || die 'Usage: nirupi theme wallpaper IMAGE'
   local conv; conv="$(command -v magick || command -v convert || true)"

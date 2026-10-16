@@ -38,7 +38,32 @@ conf_set(){
   mv -f -- "$tmp" "$CONF"
 }
 per_tag_on(){ [[ "$(conf_get PER_TAG)" == 0 ]] && return 1; return 0; }
-default_dir(){ local d; d="$(conf_get DEFAULT_DIR)"; printf '%s' "${d:-$HOME/Pictures/Wallpapers}"; }
+
+# Wallpaper pools live as subdirectories of the Nextcloud wallpaper folder.
+# NOIR is the default; every other subdirectory is offered too. Files directly
+# in the parent are never used.
+NC_ROOT="$HOME/Nextcloud/Wallpapers"
+POOL_DIR(){ # NAME -> path, or empty
+  local n="$1"
+  [[ -n $n ]] || return 1
+  [[ -d "$NC_ROOT/$n" ]] && { printf '%s' "$NC_ROOT/$n"; return 0; }
+  [[ -d $n ]] && { printf '%s' "$n"; return 0; }   # absolute/loose path
+  return 1
+}
+pool_names(){
+  [[ -d $NC_ROOT ]] || return 0
+  find "$NC_ROOT" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort
+}
+# default_dir: the configured pool, falling back to ~/Pictures/Wallpapers when
+# Nextcloud is absent (algiz) or not mounted, so nothing regresses.
+default_dir(){
+  local d; d="$(conf_get DEFAULT_DIR)"
+  if [[ -n $d && -d $d ]]; then printf '%s' "$d"; return 0; fi
+  if [[ -n $d && $d == "$NC_ROOT"/* && -d "$HOME/Pictures/Wallpapers" ]]; then
+    printf '%s' "$HOME/Pictures/Wallpapers"; return 0
+  fi
+  printf '%s' "${d:-$HOME/Pictures/Wallpapers}"
+}
 
 images_in(){
   find -L "$1" -maxdepth 2 -type f \
@@ -109,9 +134,37 @@ cmd_next(){
   apply "$img"
 }
 
+cmd_pool(){
+  local want="${1:-}" name dir
+  case "$want" in
+    ''|-h|--help|help)
+      printf 'Wallpaper pool: %s\n' "$(default_dir)"
+      printf 'Available pools (subdirectories of %s):\n' "$NC_ROOT"
+      local n
+      while IFS= read -r n; do
+        [[ -n $n ]] || continue
+        [[ "$(default_dir)" == "$NC_ROOT/$n" ]] && printf '  %-18s %s (active)\n' "$n" "$NC_ROOT/$n" \
+          || printf '  %-18s %s\n' "$n" "$NC_ROOT/$n"
+      done < <(pool_names)
+      [[ -n "$(pool_names)" ]] || printf '  (no Nextcloud wallpaper folders found)\n'
+      printf '\nUse: nirupi wallpaper pool NAME   (or a full path; "default" = NOIR)\n'
+      return 0;;
+    default|noir|NOIR) name=NOIR;;
+    *) name="$want";;
+  esac
+  dir="$(POOL_DIR "$name")" || { log "no such pool: $name"; return 1; }
+  conf_set DEFAULT_DIR "$dir"
+  rm -f -- "$CACHE"/tag-wallpaper.* 2>/dev/null || true
+  note "Wallpaper pool: ${dir##*/}"
+  printf '%s\n' "$dir"
+  # Repaint the current tag right away.
+  [[ -n ${DISPLAY:-} ]] && cmd_tag || true
+}
+
 usage(){ cat <<EOF
 Usage: nirupi wallpaper set FILE
        nirupi wallpaper next
+       nirupi wallpaper pool [NAME]     show or switch the wallpaper folder
        nirupi wallpaper per-tag on|off|toggle|status
        nirupi wallpaper tag         (internal: dwm tag hook)
 Config: $CONF
@@ -122,6 +175,7 @@ sub="${1:-}"; shift || :
 case "$sub" in
   set)      [[ $# -ge 1 ]] || { usage; exit 2; }; apply "$1";;
   next|random) cmd_next;;
+  pool|dir) cmd_pool "${1:-}";;
   tag)      cmd_tag;;
   per-tag)
     case "${1:-status}" in

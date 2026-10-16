@@ -119,3 +119,9 @@ grep -q "grep -Fq '.local/bin/nirupi-session'" "$ROOT/lib/install.sh" \
   || { echo 'FAIL session launcher check is not semantic' >&2; exit 1; }
 grep -q 'nirupi-session.bak-' "$ROOT/lib/install.sh" \
   || { echo 'FAIL foreign session launcher is not replaced with a backup' >&2; exit 1; }
+
+# Wallpaper pool switching must exist and be documented.
+grep -q 'pool|dir) cmd_pool' "$bin/nirupi-wallpaper.sh" || { echo 'FAIL wallpaper pool subcommand missing' >&2; exit 1; }
+grep -q 'NC_ROOT=' "$bin/nirupi-wallpaper.sh" || { echo 'FAIL Nextcloud wallpaper root missing' >&2; exit 1; }
+grep -q 'Wallpaper pool' "$bin/nirupi-menu.sh" || { echo 'FAIL control center lacks the pool entry' >&2; exit 1; }
+grep -q '_nirupi_wall_dir' "$ROOT/lib/theme.sh" || { echo 'FAIL theme wallpaper dir helper missing' >&2; exit 1; }
