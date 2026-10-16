@@ -2,6 +2,15 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.11
+- **Lock screen on multi-monitor**: the clock/date/hostname/AFK block (and the
+  screensaver face) is now centred on **every physical monitor** instead of the
+  middle of the whole X screen, where it landed on the seam between screens.
+  Uses RandR monitors (already linked), is cached, refreshes on
+  RRScreenChangeNotify, skips mirrored/cloned outputs and falls back to the full
+  screen if RandR reports nothing.
+
+
 ## 0.23.10
 - `nirupi update` now **builds the binaries** for the current version when they
   are missing. `--update-dots` only refreshes scripts, so a version bump could

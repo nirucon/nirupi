@@ -214,18 +214,80 @@ runify(const char *in, char *out, size_t outsz)
 	out[o] = '\0';
 }
 
-/* Centre one line of text horizontally at baseline y. */
+/* Monitor list (RandR) so the clock can be centred on each physical screen
+ * instead of the middle of the whole X screen. Cached; refreshed on RandR
+ * change. Falls back to the X screen when RandR reports no monitors. */
+struct moninfo { int x, y, w, h; };
+
+static struct moninfo *mons = NULL;
+static int nmons = 0;
+
 static void
-centerline(Display *dpy, struct lock *lock, XftFont *f, XftColor *c, int y, const char *s)
+refreshmonitors(Display *dpy, struct lock *lock)
 {
-	XGlyphInfo ext;
-	if (!f || !s || !*s)
-		return;
-	XftTextExtentsUtf8(dpy, f, (FcChar8 *)s, strlen(s), &ext);
-	drawtext(lock, f, c, (DisplayWidth(dpy, lock->screen) - ext.xOff) / 2, y, s);
+	XRRMonitorInfo *rm;
+	int i, n = 0;
+
+	if (mons) {
+		free(mons);
+		mons = NULL;
+		nmons = 0;
+	}
+	rm = XRRGetMonitors(dpy, lock->root, True, &n);
+	if (rm && n > 0) {
+		mons = calloc(n, sizeof(struct moninfo));
+		if (mons) {
+			for (i = 0; i < n; i++) {
+				mons[i].x = rm[i].x;
+				mons[i].y = rm[i].y;
+				mons[i].w = rm[i].width;
+				mons[i].h = rm[i].height;
+			}
+			nmons = n;
+		}
+		XRRFreeMonitors(rm);
+	}
+	/* Fall back to the full X screen. */
+	if (!mons) {
+		mons = calloc(1, sizeof(struct moninfo));
+		if (mons) {
+			mons[0].x = 0;
+			mons[0].y = 0;
+			mons[0].w = DisplayWidth(dpy, lock->screen);
+			mons[0].h = DisplayHeight(dpy, lock->screen);
+			nmons = 1;
+		}
+	}
 }
 
-/* Lock face: time, ISO date, hostname and an AFK timer. */
+/* True when two monitors occupy the same area (mirrored/cloned output); we draw
+ * such a pair only once so the clock is not double-printed. */
+static int
+duplicatemon(int i)
+{
+	int j;
+	for (j = 0; j < i; j++)
+		if (mons[j].x == mons[i].x && mons[j].y == mons[i].y &&
+		    mons[j].w == mons[i].w && mons[j].h == mons[i].h)
+			return 1;
+	return 0;
+}
+
+/* Centre one line of text horizontally at baseline y, inside monitor `mon`. */
+static void
+centerline_mon(Display *dpy, struct lock *lock, XftFont *f, XftColor *c,
+               int mon, int y, const char *s)
+{
+	XGlyphInfo ext;
+	if (!f || !s || !*s || !mons || mon < 0 || mon >= nmons)
+		return;
+	XftTextExtentsUtf8(dpy, f, (FcChar8 *)s, strlen(s), &ext);
+	drawtext(lock, f, c,
+	         mons[mon].x + (mons[mon].w - ext.xOff) / 2, y, s);
+}
+
+/* Lock face: time, ISO date, hostname and an AFK timer, centred on every
+ * physical monitor. */
 static void
 drawlock(Display *dpy, struct lock *lock, int force)
 {
@@ -233,11 +295,11 @@ drawlock(Display *dpy, struct lock *lock, int force)
 	time_t t = time(NULL);
 	struct tm *tm = localtime(&t);
 	long secs = (long)(t - lockstart);
-	int sh, y;
+	int mon, y;
 
 	if (!lock->xftdraw || !clkfont)
 		return;
-	sh = DisplayHeight(dpy, lock->screen);
+	refreshmonitors(dpy, lock);
 	strftime(tim, sizeof tim, "%H:%M", tm);
 	strftime(date, sizeof date, "%Y-%m-%d", tm);
 	if (secs >= 3600)
@@ -251,19 +313,27 @@ drawlock(Display *dpy, struct lock *lock, int force)
 
 	XClearWindow(dpy, lock->win);
 
-	y = sh / 2 + clkfont->ascent / 2;
-	centerline(dpy, lock, clkfont, &clkfg, y, tim);
-	if (clkfontsmall) {
-		y += 24;
-		centerline(dpy, lock, clkfontsmall, &clkdim, y + clkfontsmall->ascent, date);
-		y += clkfontsmall->height + 4;
-		centerline(dpy, lock, clkfontsmall, &clkdim, y + clkfontsmall->ascent, hostnamebuf);
-		y += clkfontsmall->height + 4;
-		centerline(dpy, lock, clkfontsmall, &clkdim, y + clkfontsmall->ascent, afk);
+	for (mon = 0; mon < nmons; mon++) {
+		if (!mons || mons[mon].h <= 0 || duplicatemon(mon))
+			continue;
+		y = mons[mon].y + mons[mon].h / 2 + clkfont->ascent / 2;
+		centerline_mon(dpy, lock, clkfont, &clkfg, mon, y, tim);
+		if (clkfontsmall) {
+			y += 24;
+			centerline_mon(dpy, lock, clkfontsmall, &clkdim, mon,
+			               y + clkfontsmall->ascent, date);
+			y += clkfontsmall->height + 4;
+			centerline_mon(dpy, lock, clkfontsmall, &clkdim, mon,
+			               y + clkfontsmall->ascent, hostnamebuf);
+			y += clkfontsmall->height + 4;
+			centerline_mon(dpy, lock, clkfontsmall, &clkdim, mon,
+			               y + clkfontsmall->ascent, afk);
+		}
 	}
 }
 
-/* Screensaver face: clock + hostname, alternating runes/ASCII every 30s. */
+/* Screensaver face: clock + hostname, alternating runes/ASCII every 30s,
+ * centred on every physical monitor. */
 static void
 drawscreensaver(Display *dpy, struct lock *lock, int force)
 {
@@ -271,11 +341,11 @@ drawscreensaver(Display *dpy, struct lock *lock, int force)
 	time_t t = time(NULL);
 	struct tm *tm = localtime(&t);
 	int phase = (int)(((t - lockstart) / 30) % 2);
-	int sh, y, i;
+	int mon, y, i;
 
 	if (!lock->xftdraw || !clkfont)
 		return;
-	sh = DisplayHeight(dpy, lock->screen);
+	refreshmonitors(dpy, lock);
 	strftime(tim, sizeof tim, "%H:%M", tm);
 	snprintf(stamp, sizeof stamp, "S %d %s", phase, tim);
 	if (!force && !strcmp(stamp, lock->lastclock))
@@ -284,21 +354,25 @@ drawscreensaver(Display *dpy, struct lock *lock, int force)
 
 	XClearWindow(dpy, lock->win);
 
-	/* clock: always normal digits (never runes) */
-	y = sh / 2 + clkfont->ascent / 2 - clkfont->descent;
-	centerline(dpy, lock, clkfont, &clkfg, y, tim);
-
 	/* hostname: runes <-> uppercase ASCII, rotating every 30 seconds */
-	if (phase == 0 && runicfontsmall) {
-		runify(hostnamebuf, hostR, sizeof hostR);
-		centerline(dpy, lock, runicfontsmall, &clkdim,
-		           y + clkfont->descent + runicfontsmall->height, hostR);
-	} else if (clkfontsmall) {
-		for (i = 0; hostnamebuf[i] && i < (int)sizeof(hostA) - 1; i++)
-			hostA[i] = toupper((unsigned char)hostnamebuf[i]);
-		hostA[i] = '\0';
-		centerline(dpy, lock, clkfontsmall, &clkdim,
-		           y + clkfont->descent + clkfontsmall->height + 4, hostA);
+	runify(hostnamebuf, hostR, sizeof hostR);
+	for (i = 0; hostnamebuf[i] && i < (int)sizeof(hostA) - 1; i++)
+		hostA[i] = toupper((unsigned char)hostnamebuf[i]);
+	hostA[i] = '\0';
+
+	for (mon = 0; mon < nmons; mon++) {
+		if (!mons || mons[mon].h <= 0 || duplicatemon(mon))
+			continue;
+		/* clock: always normal digits (never runes) */
+		y = mons[mon].y + mons[mon].h / 2 + clkfont->ascent / 2 - clkfont->descent;
+		centerline_mon(dpy, lock, clkfont, &clkfg, mon, y, tim);
+
+		if (phase == 0 && runicfontsmall)
+			centerline_mon(dpy, lock, runicfontsmall, &clkdim, mon,
+			               y + clkfont->descent + runicfontsmall->height, hostR);
+		else if (clkfontsmall)
+			centerline_mon(dpy, lock, clkfontsmall, &clkdim, mon,
+			               y + clkfont->descent + clkfontsmall->height + 4, hostA);
 	}
 }
 
@@ -439,6 +513,9 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 						XResizeWindow(dpy, locks[screen]->win,
 						              rre->width, rre->height);
 					XClearWindow(dpy, locks[screen]->win);
+					/* monitor layout changed: re-centre the clock */
+					refreshmonitors(dpy, locks[screen]);
+					redraw(dpy, locks[screen], 1);
 					break;
 				}
 			}

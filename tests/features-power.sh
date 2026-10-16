@@ -44,7 +44,7 @@ grep -q 'theme_install_fonts' "$ROOT/lib/theme.sh" || fail 'fonts not installed 
 
 # Screensaver: clock is never runes; the wake switches to the blurred lock.
 grep -q 'applyblur' "$SLOCK/slock.c" || fail 'screensaver wake does not restore the blur'
-awk '/^drawscreensaver/,/^}/' "$SLOCK/slock.c" | grep -q 'centerline(dpy, lock, clkfont' || fail 'screensaver clock is not normal digits'
+awk '/^drawscreensaver/,/^}/' "$SLOCK/slock.c" | grep -q 'centerline_mon(dpy, lock, clkfont' || fail 'screensaver clock is not normal digits'
 awk '/^drawscreensaver/,/^}/' "$SLOCK/slock.c" | grep -q 'runicfontsmall' || fail 'screensaver hostname runes missing'
 
 # Agent bar icon matches the AI workspace tag glyph.
