@@ -30,6 +30,14 @@ static const char *clockdim           = "#8a8a8a";
 
 static const char *clockshadow        = "#0f0f10";
 
+/* Screensaver slideshow: pictures from this directory are shown (one per
+ * monitor, randomly chosen, changing every SLIDESHOW_INTERVAL seconds) while
+ * the screensaver face is visible. When the directory is missing or has no
+ * usable image the screensaver keeps its plain look. */
+static const char *slideshow_dir      = "Pictures/Screensaver";
+static const int   slideshow_interval = 60;   /* seconds between changes */
+static const int   slideshow_max      = 512;  /* directory scan cap */
+
 /* Screensaver (slock -s): Elder Futhark runes alternating with ASCII. */
 static const char *runefont           = "Noto Sans Runic:size=54";
 static const char *runefontsmall      = "Noto Sans Runic:size=16";
