@@ -19,7 +19,6 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/time.h>
-#include <dirent.h>
 #include <X11/extensions/Xrandr.h>
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
@@ -44,7 +43,6 @@ struct lock {
 	Window root, win;
 	Pixmap pmap;
 	Pixmap bgmap;
-	Pixmap slidepm;	/* screensaver slideshow composite, or 0 */
 	unsigned long colors[NUMCOLS];
 	XftDraw *xftdraw;
 	char lastclock[128];
@@ -68,14 +66,6 @@ static char hostnamebuf[HOST_NAME_MAX + 1];
 static int screensaver = 0;   /* -s: show the screensaver first, lock on input */
 static int woken = 0;         /* set once the screensaver receives its first input */
 static time_t lockstart;      /* start time for the AFK timer */
-
-/* Screensaver slideshow state (filled before privileges are dropped). */
-static char **slide_files = NULL;   /* absolute image paths, or NULL */
-static int    slide_count = 0;
-static int   *slide_pick  = NULL;   /* one index per monitor */
-static int    slide_npick = 0;
-static time_t slide_last  = 0;
-static int    slide_no    = 0;
 
 static void
 die(const char *errstr, ...)
@@ -342,170 +332,6 @@ drawlock(Display *dpy, struct lock *lock, int force)
 	}
 }
 
-/* ── Screensaver slideshow ───────────────────────────────────────────────────
- * Reads ~/Pictures/Screensaver (jpg/jpeg/png) into a list before privileges are
- * dropped. Pictures are drawn centred (never cropped) on a Noir-dark fill, one
- * per monitor, chosen at random and rotated every slideshow_interval seconds. */
-static int
-has_image_ext(const char *n)
-{
-	const char *d = strrchr(n, '.');
-	if (!d) return 0;
-	return !strcasecmp(d, ".jpg") || !strcasecmp(d, ".jpeg") || !strcasecmp(d, ".png");
-}
-
-static int
-cmp_str(const void *a, const void *b)
-{
-	return strcmp(*(const char **)a, *(const char **)b);
-}
-
-static void
-slideshow_scan(void)
-{
-	char dir[PATH_MAX];
-	const char *home = getenv("HOME");
-	DIR *dh;
-	struct dirent *de;
-	int cap = 0;
-
-	if (!home || !*home)
-		return;
-	snprintf(dir, sizeof dir, "%s/%s", home, slideshow_dir);
-	if (!(dh = opendir(dir)))
-		return;
-	slide_files = calloc(slideshow_max, sizeof(char *));
-	if (!slide_files) { closedir(dh); return; }
-	while ((de = readdir(dh)) && cap < slideshow_max) {
-		char path[PATH_MAX];
-		if (de->d_name[0] == '.' || !has_image_ext(de->d_name))
-			continue;
-		snprintf(path, sizeof path, "%s/%s", dir, de->d_name);
-		if (access(path, R_OK) != 0)
-			continue;
-		slide_files[cap++] = strdup(path);
-	}
-	closedir(dh);
-	slide_count = cap;
-	if (slide_count == 0) {
-		free(slide_files);
-		slide_files = NULL;
-		return;
-	}
-	qsort(slide_files, slide_count, sizeof(char *), cmp_str);
-}
-
-/* Choose one image per monitor: distinct when there are enough pictures. */
-static void
-slideshow_pick(int nmon)
-{
-	int i, j, n = nmon > 0 ? nmon : 1;
-
-	if (slide_count <= 0) return;
-	free(slide_pick);
-	slide_pick = calloc(n, sizeof(int));
-	if (!slide_pick) return;
-	slide_npick = n;
-	for (i = 0; i < n; i++) {
-		int r = rand() % slide_count, tries = 0;
-		/* avoid repeating a picture already used for an earlier monitor */
-		int clash;
-		do {
-			clash = 0;
-			for (j = 0; j < i; j++)
-				if (slide_pick[j] == r && slide_count >= n) { clash = 1; break; }
-			if (clash) r = rand() % slide_count;
-		} while (clash && ++tries < 16);
-		slide_pick[i] = r;
-	}
-	slide_last = time(NULL);
-	slide_no++;
-}
-
-/* Paint one monitor cell: dark fill + the picture scaled to fit, centred. */
-static void
-slideshow_draw_cell(Display *dpy, struct lock *lock, int mon, int idx)
-{
-	int mw = mons[mon].w, mh = mons[mon].h;
-	Imlib_Image im;
-	int iw, ih, dw, dh, dx, dy;
-	double sc;
-
-	/* Noir-dark fill so letterboxed edges blend with the theme. */
-	imlib_context_set_drawable(lock->bgmap);
-	imlib_context_set_color(0x0f, 0x0f, 0x10, 255);
-	imlib_image_fill_rectangle(mons[mon].x, mons[mon].y, mw, mh);
-
-	if (!slide_files || idx < 0 || idx >= slide_count)
-		return;
-	im = imlib_load_image(slide_files[idx]);
-	if (!im)
-		return;
-	imlib_context_set_image(im);
-	iw = imlib_image_get_width();
-	ih = imlib_image_get_height();
-	if (iw <= 0 || ih <= 0) { imlib_free_image(); return; }
-	/* scale to fit (never upscale, never crop) */
-	if (iw > mw || ih > mh) {
-		double sw = (double)mw / iw, sh = (double)mh / ih;
-		sc = sw < sh ? sw : sh;
-	} else {
-		sc = 1.0;
-	}
-	dw = (int)(iw * sc); dh = (int)(ih * sc);
-	dx = mons[mon].x + (mw - dw) / 2;
-	dy = mons[mon].y + (mh - dh) / 2;
-	imlib_context_set_image(im);
-	imlib_context_set_drawable(lock->bgmap);
-	imlib_render_image_on_drawable_at_size(dx, dy, dw, dh);
-	imlib_free_image();
-}
-
-static void
-slide_drawable(Display *dpy, struct lock *lock)
-{
-	/* Set the window background to the slideshow pixmap (or clear it when the
-	 * screensaver must show the blurred desktop instead). */
-	if (screensaver && !woken && lock->slidepm) {
-		XSetWindowBackgroundPixmap(dpy, lock->win, lock->slidepm);
-	} else if (lock->bgmap) {
-		XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
-	} else {
-		XSetWindowBackground(dpy, lock->win, lock->colors[INIT]);
-	}
-	XClearWindow(dpy, lock->win);
-}
-
-static void
-slide_drawable(Display *dpy, struct lock *lock);
-
-static void
-slideshow_paint(Display *dpy, struct lock *lock)
-{
-	int mon;
-
-	if (slide_count <= 0 || !mons)
-		return;
-	if (lock->slidepm) {
-		XFreePixmap(dpy, lock->slidepm);
-		lock->slidepm = 0;
-	}
-	lock->slidepm = XCreatePixmap(dpy, lock->root,
-	                              DisplayWidth(dpy, lock->screen),
-	                              DisplayHeight(dpy, lock->screen),
-	                              DefaultDepth(dpy, lock->screen));
-	if (!lock->slidepm)
-		return;
-	if (slide_npick < nmons)
-		slideshow_pick(nmons);
-	for (mon = 0; mon < nmons; mon++) {
-		if (!mons[mon].h || duplicatemon(mon))
-			continue;
-		slideshow_draw_cell(dpy, lock, mon, slide_pick ? slide_pick[mon] : -1);
-	}
-	slide_drawable(dpy, lock);
-}
-
 /* Screensaver face: clock + hostname, alternating runes/ASCII every 30s,
  * centred on every physical monitor. */
 static void
@@ -520,28 +346,13 @@ drawscreensaver(Display *dpy, struct lock *lock, int force)
 	if (!lock->xftdraw || !clkfont)
 		return;
 	refreshmonitors(dpy, lock);
-
-	/* rotate the slideshow pictures once per interval (screensaver only) */
-	if (screensaver && !woken && slide_count > 0 &&
-	    (slide_last == 0 || time(NULL) - slide_last >= slideshow_interval)) {
-		slideshow_pick(nmons);
-		slideshow_paint(dpy, lock);
-	}
-
-	/* ensure the first picture shows immediately when -s starts */
-	if (screensaver && !woken && slide_count > 0 && slide_last == 0) {
-		slideshow_pick(nmons);
-		slideshow_paint(dpy, lock);
-	}
-
 	strftime(tim, sizeof tim, "%H:%M", tm);
 	snprintf(stamp, sizeof stamp, "S %d %s", phase, tim);
 	if (!force && !strcmp(stamp, lock->lastclock))
 		return;
 	snprintf(lock->lastclock, sizeof lock->lastclock, "%s", stamp);
 
-	/* keep the slideshow behind the text (Expose/redraw must not lose it) */
-	slide_drawable(dpy, lock);
+	XClearWindow(dpy, lock->win);
 
 	/* hostname: runes <-> uppercase ASCII, rotating every 30 seconds */
 	runify(hostnamebuf, hostR, sizeof hostR);
@@ -734,7 +545,6 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	lock->screen = screen;
 	lock->root = RootWindow(dpy, lock->screen);
 	lock->bgmap = 0; /* screensaver mode has no blurred background */
-	lock->slidepm = 0;
 
     if(image) 
     {
@@ -881,10 +691,6 @@ main(int argc, char **argv) {
 		hostnamebuf[0] = '\0';
 	hostnamebuf[sizeof hostnamebuf - 1] = '\0';
 	initclock(dpy);
-
-	/* read the screensaver pictures before dropping privileges */
-	slideshow_scan();
-	srand((unsigned)time(NULL) ^ (unsigned)getpid());
 
 	/* drop privileges */
 	if (setgroups(0, NULL) < 0)

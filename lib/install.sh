@@ -182,10 +182,6 @@ install_helpers(){
  if [[ -f $ROOT/runtime/autostart.example ]]; then
   managed_config_install 'autostart/example' "$ROOT/runtime/autostart.example" "$HOME/.config/nirupi/autostart.example" 0644
  fi
- # Screensaver slideshow: point ~/Pictures/Screensaver at the Nextcloud folder
- # when it exists, so pictures sync across machines. A plain directory (no
- # Nextcloud) is left alone; no link is created when the target is missing.
- screensaver_link
  # Calendar settings example (created once; edited in the TUI).
  if [[ ! -e $HOME/.config/nirupi/calendar.conf && -f $ROOT/runtime/calendar.conf.example ]]; then
   mkdir -p "$HOME/.config/nirupi"
@@ -726,33 +722,6 @@ ensure_helium(){
 # Install a working, setuid-root slock at /usr/local/bin/slock. Our slock build
 # tolerates the "nobody" group being absent (Void uses "nogroup"). We replace an
 # existing regular file (backup kept) so upgrades actually take effect.
-# Point ~/Pictures/Screensaver at ~/Nextcloud/Screensaver when the Nextcloud
-# folder exists, so the lock-screen slideshow shows synced pictures. Absent
-# Nextcloud/folder -> no link and the screensaver keeps its plain look. Never
-# fatal, never replaces a real directory or a foreign symlink.
-screensaver_link(){
- local target="$HOME/Nextcloud/Screensaver"
- local link="$HOME/Pictures/Screensaver"
- [[ -d $target ]] || return 0
- mkdir -p "$HOME/Pictures"
- if [[ -L $link ]]; then
-  [[ "$(readlink -f "$link" 2>/dev/null)" == "$(readlink -f "$target")" ]] && return 0
-  warn "Screensaver link points elsewhere; leaving $link untouched"; return 0
- fi
- if [[ -e $link ]]; then
-  if [[ -d $link && -z "$(ls -A "$link" 2>/dev/null)" ]]; then
-   rmdir "$link" 2>/dev/null || { warn "Could not empty-replace $link"; return 0; }
-  else
-   log "Using the existing $link for screensaver pictures"; return 0
-  fi
- fi
- if ln -s "$target" "$link" 2>/dev/null; then
-  log "Screensaver pictures linked: $link -> $target"
- else
-  warn "Could not create the screensaver link $link"
- fi
-}
-
 ensure_slock(){
   local built="${1:-}"
   [[ -n $built && -x $built ]] || built="$HOME/.local/lib/nirupi/$VERSION/bin/slock"
