@@ -44,6 +44,7 @@ struct lock {
 	Window root, win;
 	Pixmap pmap;
 	Pixmap bgmap;
+	Pixmap slidepm;	/* screensaver slideshow composite, or 0 */
 	unsigned long colors[NUMCOLS];
 	XftDraw *xftdraw;
 	char lastclock[128];
@@ -461,24 +462,39 @@ slideshow_draw_cell(Display *dpy, struct lock *lock, int mon, int idx)
 }
 
 static void
+slide_drawable(Display *dpy, struct lock *lock)
+{
+	/* Set the window background to the slideshow pixmap (or clear it when the
+	 * screensaver must show the blurred desktop instead). */
+	if (screensaver && !woken && lock->slidepm) {
+		XSetWindowBackgroundPixmap(dpy, lock->win, lock->slidepm);
+	} else if (lock->bgmap) {
+		XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
+	} else {
+		XSetWindowBackground(dpy, lock->win, lock->colors[INIT]);
+	}
+	XClearWindow(dpy, lock->win);
+}
+
+static void
+slide_drawable(Display *dpy, struct lock *lock);
+
+static void
 slideshow_paint(Display *dpy, struct lock *lock)
 {
 	int mon;
 
 	if (slide_count <= 0 || !mons)
 		return;
-	/* rebuild the composite background only in screensaver phase */
-	if (lock->bgmap && !screensaver)
-		return;
-	if (lock->bgmap) {
-		XFreePixmap(dpy, lock->bgmap);
-		lock->bgmap = 0;
+	if (lock->slidepm) {
+		XFreePixmap(dpy, lock->slidepm);
+		lock->slidepm = 0;
 	}
-	lock->bgmap = XCreatePixmap(dpy, lock->root,
-	                            DisplayWidth(dpy, lock->screen),
-	                            DisplayHeight(dpy, lock->screen),
-	                            DefaultDepth(dpy, lock->screen));
-	if (!lock->bgmap)
+	lock->slidepm = XCreatePixmap(dpy, lock->root,
+	                              DisplayWidth(dpy, lock->screen),
+	                              DisplayHeight(dpy, lock->screen),
+	                              DefaultDepth(dpy, lock->screen));
+	if (!lock->slidepm)
 		return;
 	if (slide_npick < nmons)
 		slideshow_pick(nmons);
@@ -487,8 +503,7 @@ slideshow_paint(Display *dpy, struct lock *lock)
 			continue;
 		slideshow_draw_cell(dpy, lock, mon, slide_pick ? slide_pick[mon] : -1);
 	}
-	XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
-	XClearWindow(dpy, lock->win);
+	slide_drawable(dpy, lock);
 }
 
 /* Screensaver face: clock + hostname, alternating runes/ASCII every 30s,
@@ -513,13 +528,20 @@ drawscreensaver(Display *dpy, struct lock *lock, int force)
 		slideshow_paint(dpy, lock);
 	}
 
+	/* ensure the first picture shows immediately when -s starts */
+	if (screensaver && !woken && slide_count > 0 && slide_last == 0) {
+		slideshow_pick(nmons);
+		slideshow_paint(dpy, lock);
+	}
+
 	strftime(tim, sizeof tim, "%H:%M", tm);
 	snprintf(stamp, sizeof stamp, "S %d %s", phase, tim);
 	if (!force && !strcmp(stamp, lock->lastclock))
 		return;
 	snprintf(lock->lastclock, sizeof lock->lastclock, "%s", stamp);
 
-	XClearWindow(dpy, lock->win);
+	/* keep the slideshow behind the text (Expose/redraw must not lose it) */
+	slide_drawable(dpy, lock);
 
 	/* hostname: runes <-> uppercase ASCII, rotating every 30 seconds */
 	runify(hostnamebuf, hostR, sizeof hostR);
@@ -712,6 +734,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	lock->screen = screen;
 	lock->root = RootWindow(dpy, lock->screen);
 	lock->bgmap = 0; /* screensaver mode has no blurred background */
+	lock->slidepm = 0;
 
     if(image) 
     {
