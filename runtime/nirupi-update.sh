@@ -8,6 +8,11 @@ if [[ ! -d "$repo/.git" ]]; then
   exit 1
 fi
 before="$(cat "$repo/VERSION" 2>/dev/null || echo unknown)"
+# Take a system snapshot before a risky update, when the machine has a backend.
+if [[ -x "$HOME/.local/bin/nirupi-snapshot.sh" ]]; then
+  "$HOME/.local/bin/nirupi-snapshot.sh" create "nirupi update $before" || \
+    printf 'WARN no system snapshot taken; continuing\n' >&2
+fi
 printf 'Updating %s ...\n' "$repo"
 git -C "$repo" pull --ff-only
 after="$(cat "$repo/VERSION" 2>/dev/null || echo unknown)"

@@ -16,6 +16,8 @@ apps|$c/nirupi/apps.conf
 agents|$c/nirupi/agents.conf
 browser|$c/nirupi/browser.conf
 wallpapers|$c/nirupi/wallpapers.conf
+rules|$c/nirupi/rules.conf
+missions|$c/nirupi/missions.conf
 theme|$c/nirupi/tokens.env
 dwm|$c/suckless/dwm/config.h
 EOF

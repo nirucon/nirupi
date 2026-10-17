@@ -1,0 +1,14 @@
+# NIRUPI runtime window rules. Read by dwm when a window is managed; changes
+# apply to new windows immediately, no rebuild needed.
+#
+# Format (pipe separated):
+#   class|instance|title|tag|float|terminal|noswallow|fullscreen|monitor
+#
+# Empty or * matches anything. tag is 1-9 (0 keeps the current tag).
+# monitor is -1 (default) or a monitor number (0, 1, ...).
+#
+# Examples:
+# Signal|||9|0|0|0|0|-1
+# mpv|||0|1|0|0|0|-1
+# Gimp||| 5|1|0|0|0|-1
+# Picture-in-Picture|||0|1|0|0|0|-1
