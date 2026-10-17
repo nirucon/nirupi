@@ -1,6 +1,6 @@
 # nirupi
 
-My personal, minimal **Suckless** X11 desktop for **Arch/CachyOS**, **Void Linux** and **Debian**.
+My personal, minimal **Suckless** X11 desktop for **Arch Linux**, **Void Linux** and **Debian**.
 
 It builds patched `dwm`, `dmenu`, `st` and `slock` into `~/.local`, keeps the
 whole desktop on one theme palette, and wires up an X11 session, a status bar,
@@ -49,9 +49,9 @@ screen on input, an idle ladder that dims then locks then turns the screen off
 then suspends, a power menu with timers, log out confirmation, and a night
 light toggle.
 
-**Everyday tools.** Calendar and system update pop ups, clipboard history,
-caffeine (stay awake), focus/DND, screen recording, keyboard layout and
-touchpad toggles, and SSH host jumping.
+**Everyday tools.** Calendar and update pop ups (system packages, AUR and Git
+checkouts under `~/Git`), clipboard history, caffeine (stay awake), focus/DND,
+screen recording, keyboard layout and touchpad toggles, and SSH host jumping.
 
 **Your apps.** Web apps open in Helium in Chromium app mode (`nirupi webapp
 add NAME URL`). Your own packages and repos go in
@@ -81,6 +81,7 @@ nirupi doctor --fix        # check the setup and repair it
 nirupi status --once       # bar values
 nirupi webapp add mail https://mail.example.com
 nirupi update              # pull in the latest nirupi and dots
+nirupi repos pull --all    # fast-forward clean Git checkouts in ~/Git
 nirupi rollback --all      # undo the last change
 ```
 

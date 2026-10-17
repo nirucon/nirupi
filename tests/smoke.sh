@@ -36,6 +36,7 @@ printf 'PASS: status count and helper deployment regression guards\n'
 printf "PASS: read-only hardware audit\n"
 
 "$ROOT/tests/updates.sh"
+"$ROOT/tests/repos.sh"
 
 # Refuse to take ownership of a symlink managed by another tool.
 grep -q 'Refusing to replace unmanaged symlink' "$ROOT/lib/common.sh"

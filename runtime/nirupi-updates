@@ -1,10 +1,251 @@
 #!/usr/bin/env bash
-# Read-only update counter and package DB change fingerprint.
+# Read-only update counter, cached Git checkout state and package DB fingerprint.
 set -o pipefail
+
 cache="${XDG_CACHE_HOME:-$HOME/.cache}/dwm-status"
+repo_cache="${XDG_CACHE_HOME:-$HOME/.cache}/nirupi"
+repo_tsv="$repo_cache/repos.tsv"
+repo_count="$repo_cache/repos.count"
+repo_stamp="$repo_cache/repos.stamp"
+repo_attempt="$repo_cache/repos.attempt"
+
+usage(){
+  printf 'Usage: nirupi-updates [--refresh|--db-stamp]\n' >&2
+  printf '       nirupi-updates --refresh-git [--force] [--wait]\n' >&2
+  printf '       nirupi-updates --git-count|--git-list|--git-all|--git-names\n' >&2
+  exit 2
+}
+
+now_epoch(){ date +%s 2>/dev/null || printf '0'; }
+
+load_config(){
+  local conf="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf"
+  if [[ -f "$conf" && ! -L "$conf" ]]; then
+    # shellcheck disable=SC1090
+    . "$conf"
+  fi
+  if ! declare -p GIT_UPDATES_DIRS >/dev/null 2>&1; then
+    GIT_UPDATES_DIRS=("$HOME/Git")
+  fi
+  if ! declare -p GIT_UPDATES_IGNORE >/dev/null 2>&1; then
+    GIT_UPDATES_IGNORE=()
+  fi
+  [[ ${GIT_UPDATES_CACHE_SECONDS:-} =~ ^[0-9]+$ ]] || GIT_UPDATES_CACHE_SECONDS=3600
+  [[ ${SHOW_GIT_UPDATES:-} =~ ^[01]$ ]] || SHOW_GIT_UPDATES=1
+  # Explicit `nirupi repos` actions work even when the bar segment is hidden.
+  [[ ${NIRUPI_GIT_FORCE:-0} == 1 ]] && SHOW_GIT_UPDATES=1
+}
+
+repo_cache_safe(){
+  if [[ -L "$repo_cache" || ( -e "$repo_cache" && ! -d "$repo_cache" ) ]]; then
+    printf 'Unsafe repo cache directory\n' >&2
+    return 1
+  fi
+  mkdir -p -- "$repo_cache" 2>/dev/null || return 1
+}
+
+read_cached_count(){
+  local n=0
+  load_config
+  [[ "$SHOW_GIT_UPDATES" -eq 1 ]] || { printf '0\n'; return 0; }
+  [[ -r "$repo_count" && ! -L "$repo_count" ]] && n="$(tr -d '[:space:]' < "$repo_count" 2>/dev/null)"
+  [[ "$n" =~ ^[0-9]+$ ]] || n=0
+  printf '%s\n' "$n"
+}
+
+write_cache_file(){
+  local target="$1" value="$2" tmp
+  [[ ! -L "$target" ]] || { printf 'Unsafe cache file\n' >&2; return 1; }
+  tmp="$(mktemp "$repo_cache/.tmp.XXXXXXXX")" || return 1
+  if ! printf '%s\n' "$value" > "$tmp" || ! mv -f -- "$tmp" "$target"; then
+    rm -f -- "$tmp"
+    return 1
+  fi
+}
+
+git_fetch(){
+  local dir="$1" remote="$2" ssh_cmd
+  local -a timeout_cmd=()
+  command -v timeout >/dev/null 2>&1 && timeout_cmd=(timeout 25)
+  ssh_cmd="${GIT_SSH_COMMAND:-ssh -o BatchMode=yes -o ConnectTimeout=8}"
+  GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="$ssh_cmd" \
+    "${timeout_cmd[@]}" git -C "$dir" fetch --quiet --prune --no-tags \
+    --no-recurse-submodules "$remote" >/dev/null 2>&1
+}
+
+repo_scan(){
+  local tmp header='# path	name	state	behind	ahead	dirty	upstream	shallow	fetched'
+  local root dir name remote upstream branch
+  local state behind ahead dirty shallow fetched fetch_ok
+  local ign skip count p name st b a di up sh fe
+  local -a dirs=() ignores=()
+  local -A old=()
+
+  load_config
+  if [[ "$SHOW_GIT_UPDATES" -eq 0 ]]; then
+    printf '0\n'
+    return 0
+  fi
+  repo_cache_safe || return 1
+
+  tmp="$(mktemp "$repo_cache/.repos.XXXXXXXX")" || return 1
+  if ! printf '%s\n' "$header" > "$tmp"; then
+    rm -f -- "$tmp"
+    return 1
+  fi
+
+  if [[ -r "$repo_tsv" && ! -L "$repo_tsv" ]]; then
+    while IFS=$'\t' read -r p name st b a di up sh fe; do
+      [[ -z "$p" || "$p" == '#'* ]] && continue
+      old["$p"]="$st|$b|$a|$di|$up|$sh|$fe"
+    done < "$repo_tsv"
+  fi
+
+  dirs=("${GIT_UPDATES_DIRS[@]}")
+  ignores=("${GIT_UPDATES_IGNORE[@]}")
+  for root in "${dirs[@]}"; do
+    root="${root/#\~/$HOME}"
+    [[ -n "$root" && -d "$root" ]] || continue
+    for dir in "$root"/*; do
+      [[ -d "$dir" && -e "$dir/.git" ]] || continue
+      # The cache is tab-separated; skip pathological names rather than corrupt it.
+      [[ "$dir" == *$'\t'* || "$dir" == *$'\n'* ]] && continue
+      name="$(basename -- "$dir")"
+      skip=0
+      for ign in "${ignores[@]}"; do
+        [[ -n "$ign" ]] || continue
+        ign="${ign/#\~/$HOME}"
+        if [[ "$name" == "$ign" || "$dir" == "$ign" || "$dir" == "$ign"/* ]]; then
+          skip=1; break
+        fi
+      done
+      (( skip )) && continue
+      git -C "$dir" rev-parse --git-dir >/dev/null 2>&1 || continue
+
+      upstream=""; branch=""; state=""; behind=0; ahead=0; dirty=0
+      shallow=0; fetched=ok; fetch_ok=1
+      branch="$(git -C "$dir" symbolic-ref -q --short HEAD 2>/dev/null || true)"
+      if [[ -n "$branch" ]]; then
+        upstream="$(git -C "$dir" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+      fi
+      [[ "$(git -C "$dir" rev-parse --is-shallow-repository 2>/dev/null || true)" == true ]] && shallow=1
+      [[ -n "$(git -C "$dir" status --porcelain 2>/dev/null || true)" ]] && dirty=1
+
+      if [[ -z "$branch" ]]; then
+        state=detached
+        fetched=skipped
+      elif [[ -z "$upstream" ]]; then
+        state=no-upstream
+        fetched=skipped
+      else
+        remote="${upstream%%/*}"
+        if ! git_fetch "$dir" "$remote"; then
+          fetch_ok=0
+          fetched=error
+        fi
+        if (( fetch_ok )); then
+          read -r ahead behind < <(
+            git -C "$dir" rev-list --left-right --count 'HEAD...@{upstream}' 2>/dev/null \
+              | awk '{print $1, $2}'
+          )
+          [[ "$ahead" =~ ^[0-9]+$ ]] || ahead=0
+          [[ "$behind" =~ ^[0-9]+$ ]] || behind=0
+          if (( ahead > 0 && behind > 0 )); then
+            state=diverged
+          elif (( ahead > 0 )); then
+            state=ahead
+          elif (( dirty )); then
+            state=dirty
+          elif (( behind > 0 )); then
+            state=behind
+          else
+            state=clean
+          fi
+        fi
+        if (( ! fetch_ok )); then
+          # Keep the last known value instead of pretending the repo is clean.
+          if [[ -n "${old[$dir]:-}" ]]; then
+            IFS='|' read -r state behind ahead dirty upstream shallow fetched <<<"${old[$dir]}"
+            fetched=error
+          else
+            state=fetch-error; behind=0; ahead=0
+          fi
+        fi
+      fi
+
+      printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "$dir" "$name" "$state" "$behind" "$ahead" "$dirty" "$upstream" "$shallow" "$fetched" >> "$tmp"
+    done
+  done
+
+  count="$(awk -F'\t' '$1 !~ /^#/ && $4+0 > 0 {n++} END {print n+0}' "$tmp")"
+  [[ "$count" =~ ^[0-9]+$ ]] || count=0
+  if ! mv -f -- "$tmp" "$repo_tsv"; then
+    rm -f -- "$tmp"
+    return 1
+  fi
+  write_cache_file "$repo_count" "$count" || return 1
+  write_cache_file "$repo_stamp" "$(now_epoch)" || return 1
+  rm -f -- "$repo_attempt"
+  printf '%s\n' "$count"
+}
+
+refresh_git(){
+  local force="${1:-0}" wait="${2:-0}" now stamp age count
+  load_config
+  if [[ "$SHOW_GIT_UPDATES" -eq 0 ]]; then
+    printf '0\n'
+    return 0
+  fi
+  repo_cache_safe || return 1
+
+  now="$(now_epoch)"
+  stamp=0
+  [[ -r "$repo_stamp" && ! -L "$repo_stamp" ]] && stamp="$(tr -d '[:space:]' < "$repo_stamp" 2>/dev/null)"
+  [[ "$stamp" =~ ^[0-9]+$ ]] || stamp=0
+  age=$((now - stamp))
+  if (( ! force )) && (( age >= 0 && age < GIT_UPDATES_CACHE_SECONDS )); then
+    read_cached_count
+    return 0
+  fi
+
+  if command -v flock >/dev/null 2>&1; then
+    exec 8>"$repo_cache/repos.lock" || return 1
+    if (( force && wait )); then
+      flock -w 30 8 || { read_cached_count; return 0; }
+    else
+      flock -n 8 || { read_cached_count; return 0; }
+    fi
+  fi
+
+  count="$(repo_scan)" || return 1
+  printf '%s\n' "$count"
+}
+
+git_list(){
+  load_config
+  [[ "$SHOW_GIT_UPDATES" -eq 1 ]] || return 0
+  [[ -r "$repo_tsv" && ! -L "$repo_tsv" ]] || return 0
+  awk -F'\t' '$1 !~ /^#/ && $4+0 > 0 {print $2"\t"$4"\t"$3"\t"$5"\t"$6"\t"$7"\t"$9}' "$repo_tsv"
+}
+
+git_all(){
+  load_config
+  [[ "$SHOW_GIT_UPDATES" -eq 1 ]] || return 0
+  [[ -r "$repo_tsv" && ! -L "$repo_tsv" ]] || return 0
+  awk -F'\t' '$1 !~ /^#/ {print $2"\t"$4"\t"$3"\t"$5"\t"$6"\t"$7"\t"$1"\t"$9}' "$repo_tsv"
+}
+
+git_names(){
+  load_config
+  [[ "$SHOW_GIT_UPDATES" -eq 1 ]] || return 0
+  [[ -r "$repo_tsv" && ! -L "$repo_tsv" ]] || return 0
+  awk -F'\t' '$1 !~ /^#/ && $4+0 > 0 {print $2}' "$repo_tsv"
+}
+
 case "${1:-}" in
   --refresh)
-    # The status loop will repopulate the count on its next iteration.
+    # The status loop will repopulate the counts on its next iteration.
     if [[ -L "$cache" || ( -e "$cache" && ! -d "$cache" ) ]]; then
       printf 'Unsafe cache directory\n' >&2; exit 1
     fi
@@ -12,6 +253,15 @@ case "${1:-}" in
       [[ ! -L "$cache/$name" ]] || { printf 'Unsafe cache file\n' >&2; exit 1; }
       rm -f -- "$cache/$name"
     done
+    if [[ -e "$repo_cache" || -L "$repo_cache" ]]; then
+      if [[ -L "$repo_cache" || ! -d "$repo_cache" ]]; then
+        printf 'Unsafe repo cache directory\n' >&2; exit 1
+      fi
+      for name in repos.tsv repos.count repos.stamp repos.attempt; do
+        [[ ! -L "$repo_cache/$name" ]] || { printf 'Unsafe cache file\n' >&2; exit 1; }
+        rm -f -- "$repo_cache/$name"
+      done
+    fi
     printf 'Update cache invalidated\n'; exit 0;;
   --db-stamp)
     # stat metadata only; never calls network or package manager.
@@ -23,9 +273,26 @@ case "${1:-}" in
       stat -c '%Y:%s:%i' /var/db/xbps/pkgdb-*.plist 2>/dev/null || :
     fi
     exit 0;;
+  --refresh-git)
+    shift
+    force=0; wait=0
+    while (($#)); do
+      case "$1" in
+        --force) force=1;;
+        --wait) wait=1;;
+        *) usage;;
+      esac
+      shift
+    done
+    refresh_git "$force" "$wait"; exit $?;;
+  --git-count) read_cached_count; exit 0;;
+  --git-list) git_list; exit 0;;
+  --git-all) git_all; exit 0;;
+  --git-names) git_names; exit 0;;
   '') ;;
-  *) printf 'Usage: nirupi-updates [--refresh|--db-stamp]\n' >&2; exit 2;;
+  *) usage;;
 esac
+
 if command -v checkupdates >/dev/null 2>&1; then
   result="$(checkupdates 2>/dev/null)" || { printf '0\n'; exit 0; }
   [[ -z "$result" ]] && printf '0\n' || printf '%s\n' "$result" | wc -l

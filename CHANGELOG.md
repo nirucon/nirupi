@@ -2,6 +2,23 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.23.16
+- The **updates indicator now includes Git checkouts** under `~/Git` that are
+  behind upstream. The count is cached (`GIT_UPDATES_CACHE_SECONDS`, default one
+  hour) and refreshed in the background, so the bar never runs `git fetch` in
+  its render loop. Configure with `SHOW_GIT_UPDATES`, `GIT_UPDATES_DIRS` and
+  `GIT_UPDATES_IGNORE` in `status.conf`.
+- The updates pop-up now shows packages, AUR packages and Git repositories in
+  one panel, with separate choices for the distro updater and Git.
+- New **`nirupi repos status|pull --all`** safely fast-forwards clean checkouts.
+  Dirty, diverged, detached and upstream-less repos are skipped with a reason;
+  the nirupi checkout goes through `nirupi update` so scripts/theme/dwm stay in
+  sync. Build commands from `apps.conf` run after a successful pull.
+- `nirupi-updates` gained `--refresh-git`, `--git-count`, `--git-list`,
+  `--git-all` and `--git-names`. The daily update check and the status bar now
+  share the same cached state instead of scanning `~/Git` independently.
+
+
 ## 0.23.15
 - The wallpaper pool is now selected **automatically**: when
   `~/Nextcloud/Wallpapers/` exists the installer points `DEFAULT_DIR` at it

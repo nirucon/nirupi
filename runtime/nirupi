@@ -92,7 +92,8 @@ Session & apps
   nirupi agent [profile]             AI agent (opencode)
   nirupi webapp add|list|remove      Chromium app-mode web apps
   nirupi browser status|set|reset    default browser
-  nirupi updates [--refresh]         system updates
+  nirupi updates [--refresh]         system/Git update counts
+  nirupi repos status|pull --all     inspect or fast-forward ~/Git
 
 Maintenance
   nirupi status --once|--json        status-bar output
@@ -243,6 +244,7 @@ case "$cmd" in
   edit) exec "$HOME/.local/bin/nirupi-edit.sh" "$@";;
   reload) exec "$HOME/.local/bin/nirupi-reload.sh" "$@";;
   updates) exec "$HOME/.local/bin/nirupi-updates" "$@";;
+  repos) exec "$HOME/.local/bin/nirupi-repos.sh" "$@";;
   status)
     case "${1:-}" in
       --once|--json|--bar) exec "$HOME/.local/bin/dwm-status.sh" "$1";;

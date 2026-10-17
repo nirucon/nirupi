@@ -63,6 +63,11 @@ Segments (left to right): agent, media counts, volume, mic-mute, now playing,
 network, Nextcloud, battery, temperature, DND, recording, updates, kernel,
 host, weather (Ljungskile), date, time.
 
+The **updates** count includes distro packages and clean Git checkouts under
+`~/Git` that are behind upstream. Git state is cached (`GIT_UPDATES_CACHE_SECONDS`,
+default one hour) and refreshed in the background, so the bar never blocks on a
+fetch.
+
 Clicks on the bar (left = act, right = info where noted):
 
 | Section | Left click | Right click |
@@ -78,7 +83,7 @@ Clicks on the bar (left = act, right = info where noted):
 | Temperature | details | |
 | Do not disturb | toggle | |
 | Recording | open Videos | |
-| Updates | check updates | |
+| Updates | packages and Git checkouts | |
 | Weather | forecast | |
 | Kernel / Host | details / hostname+IP | |
 | Date / Time | full date / time | |
@@ -310,14 +315,28 @@ and dmenu follow the mode automatically.
 ## Updates at a glance
 
 Once a day (while the session runs) nirupi checks for updates and pops a
-notification: system packages and any `~/Git` repos that are behind. Apply with
-`nirupi update` (nirupi + repos) and `sudo nirupi updates` (packages). Silence
-notifications with `NIRUPI_NO_NOTIFY=1`.
+notification: system packages and any `~/Git` repos that are behind. The same
+cached result feeds the status bar. Apply with:
+
+```sh
+nirupi repos pull --all      # fast-forward clean Git checkouts
+nirupi update                # update nirupi itself + refresh scripts/dwm
+sudo nirupi updates          # distro packages
+```
+
+`nirupi repos status` shows the cached state, and `nirupi repos status
+--refresh` fetches now. Pulls are **fast-forward only**: dirty, diverged,
+detached or upstream-less checkouts are skipped with a reason. The nirupi
+checkout is handled by `nirupi update`, so scripts and dwm stay in sync.
+Fetches run with `GIT_TERMINAL_PROMPT=0` and SSH `BatchMode`, so an
+agent-loaded key is needed for private remotes. Silence notifications with
+`NIRUPI_NO_NOTIFY=1`.
 
 ## Status-bar pop-ups
 
 Click a status segment for information in a floating panel: **Updates** lists
-pending packages (*Update now* runs the updater), **Temperature/CPU** opens
+pending packages and Git checkouts (*Upgrade system packages* runs the distro
+updater, *Update Git repositories* fast-forwards `~/Git`), **Temperature/CPU** opens
 `btop`, **Battery** shows health/power/remaining, **Disk** shows per-mount
 usage, and **Weather** shows the SMHI forecast (`jq`; set `WEATHER_LAT`/
 shows the upcoming Google Calendar event from the synced iCal.
@@ -336,7 +355,7 @@ shows the upcoming Google Calendar event from the synced iCal.
 |---|---|
 | `~/.config/nirupi/apps.conf` | Extra packages per distro + Git repos |
 | `~/.config/nirupi/session.conf` | Idle lock, start dunst/picom |
-| `~/.config/nirupi/status.conf` | Status bar segments, weather, cache |
+| `~/.config/nirupi/status.conf` | Status bar segments, weather, update cache, Git dirs |
 | `~/.config/nirupi/agents.conf` | opencode profiles |
 | `~/.config/nirupi/browser.conf` | Default browser (`nirupi browser set X`) |
 | `~/.config/nirupi/tokens.env` | Active palette (from `nirupi theme set`) |
@@ -352,6 +371,8 @@ after editing with `nirupi migrate dwm --rebuild`.
 
 ```sh
 nirupi update                 # git pull + next steps
+nirupi repos status           # cached state of ~/Git checkouts
+nirupi repos pull --all       # safe fast-forward of the other checkouts
 # or manually:
 cd ~/Git/nirupi
 git pull --ff-only

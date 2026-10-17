@@ -14,22 +14,23 @@ if [[ "${1:-}" != --force && -r $stamp ]] && [[ "$(cat "$stamp" 2>/dev/null)" ==
   exit 0
 fi
 
+updates_bin="$(command -v nirupi-updates 2>/dev/null || true)"
+
 # System packages (reuse the read-only counter).
 pkgs=0
-if command -v nirupi-updates >/dev/null 2>&1; then
-  pkgs="$(nirupi-updates 2>/dev/null | tr -dc '0-9' | head -c 6 || true)"
+if [[ -n "$updates_bin" ]]; then
+  pkgs="$("$updates_bin" 2>/dev/null | tr -dc '0-9' | head -c 6 || true)"
   [[ ${pkgs:-0} =~ ^[0-9]+$ ]] || pkgs=0
 fi
 
-# Git repos under ~/Git that are behind their upstream.
+# Git checkouts under ~/Git that are behind their upstream. The same helper
+# feeds the status bar, so its cache is refreshed here once a day.
 repos=0; names=()
-for d in "$HOME"/Git/*; do
-  [[ -d $d/.git ]] || continue
-  git -C "$d" fetch -q --prune 2>/dev/null || true
-  n="$(git -C "$d" rev-list --count 'HEAD..@{upstream}' 2>/dev/null || printf 0)"
-  [[ ${n:-0} =~ ^[0-9]+$ ]] || n=0
-  if (( n > 0 )); then repos=$((repos + 1)); names+=("$(basename "$d")"); fi
-done
+if [[ -n "$updates_bin" ]]; then
+  repos="$("$updates_bin" --refresh-git --force --wait 2>/dev/null | tr -dc '0-9' | head -c 6 || true)"
+  [[ ${repos:-0} =~ ^[0-9]+$ ]] || repos=0
+  mapfile -t names < <("$updates_bin" --git-names 2>/dev/null || true)
+fi
 
 printf '%s\n' "$today" > "$stamp" 2>/dev/null || true
 total=$((pkgs + repos))
@@ -38,7 +39,7 @@ total=$((pkgs + repos))
 msg="System packages: $pkgs"
 (( repos > 0 )) && msg="$msg, repos behind: $repos (${names[*]})"
 body="$msg
-Run: nirupi update   ·   sudo nirupi updates"
+Run: nirupi repos pull   ·   sudo nirupi updates"
 if [[ ${NIRUPI_NO_NOTIFY:-0} != 1 ]] && command -v notify-send >/dev/null 2>&1; then
   notify-send -a NIRUPI -u normal "Updates available" "$body"
 else

@@ -46,6 +46,8 @@ SHOW_PLAYER_NAME=0        # 1 adds the player name, e.g. "nplay: ", before the t
 SHOW_MEMORY=0
 SHOW_UPTIME=0
 SHOW_UPDATES=1
+SHOW_GIT_UPDATES=1
+GIT_UPDATES_CACHE_SECONDS=3600
 SHOW_TEMP=1
 SHOW_BATTERY=1
 SHOW_NETWORK=1
@@ -119,6 +121,10 @@ CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/dwm-status"
 UPDATES_FILE="$CACHE_DIR/updates.count"
 UPDATES_STAMP="$CACHE_DIR/updates.stamp"
 UPDATES_DB_STAMP="$CACHE_DIR/updates.db-stamp"
+GIT_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/nirupi"
+GIT_COUNT_FILE="$GIT_CACHE_DIR/repos.count"
+GIT_STAMP_FILE="$GIT_CACHE_DIR/repos.stamp"
+GIT_ATTEMPT_FILE="$GIT_CACHE_DIR/repos.attempt"
 MEDIA_CACHE_FILE="$CACHE_DIR/media.count"
 MEDIA_CACHE_STAMP="$CACHE_DIR/media.stamp"
 NP_STATE_FILE="$CACHE_DIR/nowplaying.state"
@@ -132,6 +138,9 @@ WEATHER_CACHE_STAMP="$CACHE_DIR/weather.stamp"
 PROVIDER_DIR="$CACHE_DIR/providers"
 
 mkdir -p "$CACHE_DIR" "$PROVIDER_DIR"
+if [[ ! -L "$GIT_CACHE_DIR" ]]; then
+  mkdir -p "$GIT_CACHE_DIR" 2>/dev/null || true
+fi
 # Cache an expensive provider for a number of seconds: provider_cached NAME TTL CMD...
 provider_cached() {
   local name="$1" ttl="$2"; shift 2
@@ -190,11 +199,13 @@ bar_color_on(){
   fi
 }
 # Keep exactly one bar writer per user/X display, including concurrent startx/SDDM starts.
+BAR_LOCK=0
 if command -v flock >/dev/null 2>&1; then
   display_key="${DISPLAY:-no-display}"
   display_key="${display_key//[^a-zA-Z0-9_-]/_}"
   exec 9>"$CACHE_DIR/status-${display_key}.lock"
   flock -n 9 || exit 0
+  BAR_LOCK=1
 fi
 
 # Now playing state is persisted in cache files so it survives subshells.
@@ -712,11 +723,57 @@ get_uptime() {
 
 # next-event removed: the calendar event is no longer shown in the status bar.
 
+get_git_update_count() {
+  [[ "${SHOW_GIT_UPDATES:-1}" -eq 1 ]] || { printf '0'; return 0; }
+  local n=0
+  if [[ -r "$GIT_COUNT_FILE" && ! -L "$GIT_COUNT_FILE" ]]; then
+    n="$(tr -d '[:space:]' < "$GIT_COUNT_FILE" 2>/dev/null)"
+  fi
+  [[ "$n" =~ ^[0-9]+$ ]] || n=0
+  printf '%s' "$n"
+}
+
+refresh_git_async() {
+  # Never fetch in the render path: ask the cached helper to refresh itself in
+  # the background, guarded by a TTL and a short attempt backoff.
+  [[ "${SHOW_GIT_UPDATES:-1}" -eq 1 ]] || return 0
+  [[ -x "$CHECKUPDATES" ]] || return 0
+  [[ ! -L "$GIT_ATTEMPT_FILE" ]] || return 0
+
+  local now stamp attempt age ttl
+  now="$($DATEBIN +%s 2>/dev/null || printf '0')"
+  stamp=0
+  attempt=0
+  [[ -r "$GIT_STAMP_FILE" && ! -L "$GIT_STAMP_FILE" ]] && \
+    stamp="$(tr -d '[:space:]' < "$GIT_STAMP_FILE" 2>/dev/null)"
+  [[ -r "$GIT_ATTEMPT_FILE" ]] && \
+    attempt="$(tr -d '[:space:]' < "$GIT_ATTEMPT_FILE" 2>/dev/null)"
+  [[ "$stamp" =~ ^[0-9]+$ ]] || stamp=0
+  [[ "$attempt" =~ ^[0-9]+$ ]] || attempt=0
+  ttl="${GIT_UPDATES_CACHE_SECONDS:-3600}"
+  [[ "$ttl" =~ ^[0-9]+$ ]] || ttl=3600
+  age=$((now - stamp))
+  (( age >= 0 && age < ttl )) && return 0
+  (( now - attempt < 300 )) && return 0
+  printf '%s\n' "$now" > "$GIT_ATTEMPT_FILE" 2>/dev/null || return 0
+  (
+    [[ "$BAR_LOCK" == 1 ]] && exec 9>&-
+    if command -v setsid >/dev/null 2>&1; then
+      setsid "$CHECKUPDATES" --refresh-git >/dev/null 2>&1 < /dev/null
+    else
+      "$CHECKUPDATES" --refresh-git >/dev/null 2>&1 < /dev/null
+    fi
+  ) &
+}
+
 get_updates() {
   [[ "$SHOW_UPDATES" -eq 1 ]] || return 0
   [[ -x "$CHECKUPDATES" ]] || return 0
 
-  local now stamp age pac_count aur_count total db_stamp saved_db_stamp
+  local now stamp age pac_count aur_count pkg_total git_count total db_stamp saved_db_stamp
+  [[ "$SHOW_GIT_UPDATES" =~ ^[01]$ ]] || SHOW_GIT_UPDATES=1
+  [[ "$GIT_UPDATES_CACHE_SECONDS" =~ ^[0-9]+$ ]] || GIT_UPDATES_CACHE_SECONDS=3600
+  refresh_git_async
   now="$($DATEBIN +%s 2>/dev/null || printf '0')"
   stamp=0
 
@@ -734,8 +791,8 @@ get_updates() {
   saved_db_stamp="$(cat "$UPDATES_DB_STAMP" 2>/dev/null || true)"
 
   if [[ -r "$UPDATES_FILE" && "$db_stamp" == "$saved_db_stamp" && "$age" -ge 0 && "$age" -lt "$UPDATES_CACHE_SECONDS" ]]; then
-    total="$(tr -d '[:space:]' < "$UPDATES_FILE" 2>/dev/null)"
-    total="${total:-0}"
+    pkg_total="$(tr -d '[:space:]' < "$UPDATES_FILE" 2>/dev/null)"
+    pkg_total="${pkg_total:-0}"
   else
     pac_count="$("$CHECKUPDATES" 2>/dev/null || printf '0')"
     [[ "$pac_count" =~ ^[0-9]+$ ]] || pac_count=0
@@ -747,11 +804,14 @@ get_updates() {
       aur_count="$(yay -Qua 2>/dev/null | wc -l | tr -d '[:space:]')"
     fi
     [[ "$aur_count" =~ ^[0-9]+$ ]] || aur_count=0
-    total=$((pac_count + aur_count))
-    printf '%s\n' "$total" > "$UPDATES_FILE" 2>/dev/null || true
+    pkg_total=$((pac_count + aur_count))
+    printf '%s\n' "$pkg_total" > "$UPDATES_FILE" 2>/dev/null || true
     printf '%s\n' "$now" > "$UPDATES_STAMP" 2>/dev/null || true
     printf '%s\n' "$db_stamp" > "$UPDATES_DB_STAMP" 2>/dev/null || true
   fi
+
+  git_count="$(get_git_update_count)"
+  total=$(( ${pkg_total:-0} + ${git_count:-0} ))
 
   if [[ "${total:-0}" -gt 0 ]]; then
     printf '%s %s' "$(icon_updates)" "$total"

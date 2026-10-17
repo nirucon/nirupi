@@ -34,6 +34,13 @@ Manage Chromium app-mode web apps (Helium-first).
 .B browser status|set|reset | updates [--refresh] | status --once|--json
 Default browser, system updates and status-bar output.
 .TP
+.B repos status|pull (--all | NAME...)
+Inspect or fast-forward the Git checkouts under
+.IR ~/Git .
+Only clean, non-diverged branches are fast-forwarded; the nirupi checkout is
+updated through
+.BR "nirupi update" .
+.TP
 .B backup [--schedule|--unschedule] | gc --dry-run|--yes|--legacy
 Backups and garbage collection of old versions/snapshots.
 .TP

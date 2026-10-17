@@ -1,6 +1,6 @@
 # NIRUPI physical test checklist
 
-Run through this on each distribution (Debian, Void glibc, Arch/CachyOS) and
+Run through this on each distribution (Debian, Void glibc and Arch Linux) and
 on both a clean install and an in-place upgrade. No automated test can replace
 a real login on real hardware.
 

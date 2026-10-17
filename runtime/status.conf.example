@@ -10,6 +10,12 @@ BAR_COLOR=0
 
 # Segments (1 = show, 0 = hide)
 SHOW_UPDATES=1
+# Include Git checkouts under ~/Git in the updates count. The check is cached
+# and refreshed in the background; SHOW_GIT_UPDATES=0 also disables the scan.
+SHOW_GIT_UPDATES=1
+GIT_UPDATES_DIRS=("$HOME/Git")
+GIT_UPDATES_IGNORE=()
+GIT_UPDATES_CACHE_SECONDS=3600
 SHOW_WEATHER=1
 SHOW_TEMP=1
 SHOW_NETWORK=1

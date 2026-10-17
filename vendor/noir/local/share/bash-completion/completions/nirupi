@@ -3,7 +3,7 @@ _nirupi() {
   local cur prev words cword
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
-  local cmds="version status doctor appearance browser updates config theme wallpaper keys menu agent lock webapp backup gc update migrate dots rollback history help"
+  local cmds="version status doctor appearance browser updates repos config theme wallpaper keys menu agent lock webapp backup gc update migrate dots rollback history help"
 
   if [[ $COMP_CWORD -eq 1 ]]; then
     COMPREPLY=( $(compgen -W "$cmds" -- "$cur") ); return 0
@@ -16,7 +16,8 @@ _nirupi() {
     gc)        COMPREPLY=( $(compgen -W "--dry-run --yes --legacy" -- "$cur") );;
     doctor)    COMPREPLY=( $(compgen -W "--fix" -- "$cur") );;
     backup)    COMPREPLY=( $(compgen -W "--schedule --unschedule" -- "$cur") );;
-    updates)   COMPREPLY=( $(compgen -W "--refresh" -- "$cur") );;
+    updates)   COMPREPLY=( $(compgen -W "--refresh --refresh-git --force --git-count --git-list --git-all --git-names" -- "$cur") );;
+    repos)     COMPREPLY=( $(compgen -W "status pull --refresh --all" -- "$cur") );;
   esac
   if [[ ${COMP_WORDS[1]} == theme && $prev == @(set|preview) ]]; then
     COMPREPLY=( $(compgen -W "$(nirupi theme list 2>/dev/null | awk '{print $1}' | grep -v '^Available')" -- "$cur") )

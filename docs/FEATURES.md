@@ -37,8 +37,10 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 ## Status-bar pop-ups
 - **Click the date** → a centred floating **calendar** TUI (Swedish,
   Monday–Sunday, ISO week numbers; ←/→ months, ↑/↓ years, `t` today, `q` quit).
-- **Click the updates count** → the distro's **system update** runs in a centred
-  floating terminal (`apt-get` / `xbps-install` / `pacman`).
+- **Click the updates count** → a panel with pending **system packages, AUR
+  packages and Git checkouts** under `~/Git`. Choose *Upgrade system packages*
+  (runs `apt-get` / `xbps-install` / `pacman` in a centred floating terminal) or
+  *Update Git repositories* (safe `--ff-only` pulls).
 - Both also live in the control center (`Super+Shift+m`). The bar **agent icon**
   matches the AI workspace tag glyph.
 
@@ -164,6 +166,10 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 - **Bar modes** (`Super+Ctrl+Shift+b`): padded → full-bleed → hidden.
 - **Calendar** month view with optional Google iCal sync (`nirupi calendar`).
 - **Daily update check** with a notification when packages or repos are behind.
+  The cached Git count also feeds the status-bar updates segment.
+- **`nirupi repos status|pull --all`**: fast-forward clean checkouts under
+  `~/Git`; dirty, diverged, detached and upstream-less repos are skipped. The
+  nirupi checkout goes through `nirupi update` so scripts and dwm stay in sync.
 - **Sticky windows**, **keyboard move/resize of floats** and a
   **fibonacci/dwindle layout** in dwm.
 - **Status-bar pop-ups** with real info (updates list, btop, battery, disk,
@@ -174,7 +180,8 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
 
 ## Your apps & the web
 - **Default repositories** `nirupresence`, `nirunote`, `nplay` are cloned to
-  `~/Git/` on install and updated by `--update-dots`.
+  `~/Git/` on install and updated by `--update-dots`; `nirupi repos pull --all`
+  fast-forwards them (and any other clean checkout) on demand.
 - **Quick launch** — `Super+Shift+n` (nirunote), `Super+Shift+o` (nplay),
   plus control-center entries for all three (`nirupi-app.sh NAME`; if a checkout
   is only cloned, it offers to run its installer).
