@@ -146,7 +146,9 @@ provider_cached() {
   local name="$1" ttl="$2"; shift 2
   local file="$PROVIDER_DIR/$name" stamp_file="$PROVIDER_DIR/$name.stamp"
   local now stamp age value
-  now="$($DATEBIN +%s 2>/dev/null || printf '0')"
+  if ! printf -v now '%(%s)T' -1 2>/dev/null; then
+    now="$($DATEBIN +%s 2>/dev/null || printf '0')"
+  fi
   stamp=0
   [[ -r "$stamp_file" ]] && stamp="$(tr -d '[:space:]' < "$stamp_file" 2>/dev/null)"
   [[ "$stamp" =~ ^[0-9]+$ ]] || stamp=0
@@ -1089,53 +1091,48 @@ get_nextcloud() {
   esac
 }
 
+_now_playing_emit(){
+  local app="$1" raw_text="$2" visible
+  if [[ "${NOW_PLAYING_TEMPLATE:-0}" == 1 ]]; then
+    printf '%s\n%s\n' "$app" "$raw_text" > "$NP_CURRENT_FILE"
+    printf '%s' '__NIRUPI_NOW_PLAYING__'
+    return 0
+  fi
+  visible="$(render_now_playing_text "$raw_text")"
+  if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
+    printf '%s %s%s%s' "$(icon_music)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
+  else
+    printf '%s %s' "$(icon_music)" "$visible"
+  fi
+}
+
 get_now_playing() {
   [[ "$SHOW_NOW_PLAYING" -eq 1 ]] || return 0
 
-  local player status title artist app raw_text visible
-  local preferred_list player_name
+  local player status title artist app raw_text
+  local -a players=() ordered=()
+  local pref
 
   if command -v playerctl >/dev/null 2>&1; then
-    for player_name in $NOW_PLAYING_PREFERRED_PLAYERS; do
-      status="$(playerctl -p "$player_name" status 2>/dev/null || true)"
-      [[ "$status" == "Playing" ]] || continue
-
-      artist="$(playerctl -p "$player_name" metadata artist 2>/dev/null || true)"
-      title="$(playerctl -p "$player_name" metadata title 2>/dev/null || true)"
-      app="$(normalize_player_name "$player_name")"
-
-      if [[ -n "$artist" && -n "$title" ]]; then
-        raw_text="$artist - $title"
-      elif [[ -n "$title" ]]; then
-        raw_text="$title"
-      else
-        raw_text="$app"
-      fi
-
-      if [[ "${NOW_PLAYING_TEMPLATE:-0}" == 1 ]]; then
-        printf '%s\n%s\n' "$app" "$raw_text" > "$NP_CURRENT_FILE"
-        printf '%s' '__NIRUPI_NOW_PLAYING__'
-        return 0
-      fi
-
-      visible="$(render_now_playing_text "$raw_text")"
-      if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
-        printf '%s %s%s%s' "$(icon_music)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
-      else
-        printf '%s %s' "$(icon_music)" "$visible"
-      fi
-      return 0
-    done
-
     while IFS= read -r player; do
-      [[ -n "$player" ]] || continue
+      [[ -n "$player" ]] && players+=("$player")
+    done < <(playerctl -l 2>/dev/null || true)
+    # Honour the preferred-player order without probing every player first.
+    for pref in $NOW_PLAYING_PREFERRED_PLAYERS; do
+      for player in "${players[@]}"; do
+        [[ $player == "$pref" || $player == "$pref".* ]] || continue
+        ordered+=("$player")
+      done
+    done
+    for player in "${players[@]}"; do
+      case " ${ordered[*]-} " in *" $player "*) ;; *) ordered+=("$player");; esac
+    done
+    for player in "${ordered[@]}"; do
       status="$(playerctl -p "$player" status 2>/dev/null || true)"
       [[ "$status" == "Playing" ]] || continue
-
-      artist="$(playerctl -p "$player" metadata artist 2>/dev/null || true)"
-      title="$(playerctl -p "$player" metadata title 2>/dev/null || true)"
+      artist=""; title=""
+      IFS=$'\t' read -r artist title < <(playerctl -p "$player" metadata --format '{{artist}}\t{{title}}' 2>/dev/null || true)
       app="$(normalize_player_name "$player")"
-
       if [[ -n "$artist" && -n "$title" ]]; then
         raw_text="$artist - $title"
       elif [[ -n "$title" ]]; then
@@ -1143,31 +1140,19 @@ get_now_playing() {
       else
         raw_text="$app"
       fi
-
-      if [[ "${NOW_PLAYING_TEMPLATE:-0}" == 1 ]]; then
-        printf '%s\n%s\n' "$app" "$raw_text" > "$NP_CURRENT_FILE"
-        printf '%s' '__NIRUPI_NOW_PLAYING__'
-        return 0
-      fi
-
-      visible="$(render_now_playing_text "$raw_text")"
-      if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
-        printf '%s %s%s%s' "$(icon_music)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
-      else
-        printf '%s %s' "$(icon_music)" "$visible"
-      fi
+      _now_playing_emit "$app" "$raw_text"
       return 0
-    done < <(playerctl -l 2>/dev/null)
+    done
   fi
 
   if command -v cmus-remote >/dev/null 2>&1; then
-    local cmus_status cmus_artist cmus_title
-    cmus_status="$(cmus-remote -Q 2>/dev/null | awk '/^status / {print $2; exit}')"
+    local cmus_info cmus_status cmus_artist cmus_title
+    cmus_info="$(cmus-remote -Q 2>/dev/null || true)"
+    cmus_status="$(printf '%s\n' "$cmus_info" | awk '/^status / {print $2; exit}')"
     if [[ "$cmus_status" == "playing" ]]; then
-      cmus_artist="$(cmus-remote -Q 2>/dev/null | awk '/^tag artist / {sub(/^tag artist /,""); print; exit}')"
-      cmus_title="$(cmus-remote -Q 2>/dev/null | awk '/^tag title / {sub(/^tag title /,""); print; exit}')"
-      app="cmus"
-
+      cmus_artist="$(printf '%s\n' "$cmus_info" | awk '/^tag artist / {sub(/^tag artist /,""); print; exit}')"
+      cmus_title="$(printf '%s\n' "$cmus_info" | awk '/^tag title / {sub(/^tag title /,""); print; exit}')"
+      app=cmus
       if [[ -n "$cmus_artist" && -n "$cmus_title" ]]; then
         raw_text="$cmus_artist - $cmus_title"
       elif [[ -n "$cmus_title" ]]; then
@@ -1175,19 +1160,7 @@ get_now_playing() {
       else
         raw_text="$app"
       fi
-
-      if [[ "${NOW_PLAYING_TEMPLATE:-0}" == 1 ]]; then
-        printf '%s\n%s\n' "$app" "$raw_text" > "$NP_CURRENT_FILE"
-        printf '%s' '__NIRUPI_NOW_PLAYING__'
-        return 0
-      fi
-
-      visible="$(render_now_playing_text "$raw_text")"
-      if [[ "$SHOW_PLAYER_NAME" -eq 1 ]]; then
-        printf '%s %s%s%s' "$(icon_music)" "$app" "${NOW_PLAYING_LABEL_SEPARATOR:-: }" "$visible"
-      else
-        printf '%s %s' "$(icon_music)" "$visible"
-      fi
+      _now_playing_emit "$app" "$raw_text"
       return 0
     fi
   fi
@@ -1227,8 +1200,12 @@ build_status_line() {
   weather="$(get_weather || true)"
   datepart=""
   timepart=""
-  [[ "$SHOW_DATE" -eq 1 ]] && datepart="$($DATEBIN '+%Y-%m-%d w%V')"
-  [[ "$SHOW_TIME" -eq 1 ]] && timepart="$($DATEBIN '+%H:%M')"
+  if [[ "$SHOW_DATE" -eq 1 ]]; then
+    printf -v datepart '%(%Y-%m-%d w%V)T' -1 2>/dev/null || datepart="$($DATEBIN '+%Y-%m-%d w%V')"
+  fi
+  if [[ "$SHOW_TIME" -eq 1 ]]; then
+    printf -v timepart '%(%H:%M)T' -1 2>/dev/null || timepart="$($DATEBIN '+%H:%M')"
+  fi
 
   [[ -n "${volume:-}" ]] && volume="$(sect 6 "$volume")"
   [[ -n "${network:-}" ]] && network="$(sect 8 "$network")"
@@ -1297,7 +1274,15 @@ build_status_line() {
   else
     parts=("$(sect 1 "$(icon_agent)")" "${parts[@]}")
   fi
-  printf '[ %s ]' "$(printf '%s\n' "${parts[@]}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | paste -sd '|' - | sed 's/|/ | /g')"
+  local out="" p
+  for p in "${parts[@]}"; do
+    p="${p#"${p%%[![:space:]]*}"}"
+    p="${p%"${p##*[![:space:]]}"}"
+    [[ -n $p ]] || continue
+    [[ -n $out ]] && out+=" | "
+    out+="$p"
+  done
+  printf '[ %s ]' "$out"
 }
 
 # Heavy/system probes run at the original interval. Only the cached music
@@ -1338,9 +1323,12 @@ case "${1:-}" in
 esac
 NOW_PLAYING_TEMPLATE=1
 last_system_update=0
+last_line=""
 template=""
 while :; do
-  now_seconds="$("$DATEBIN" +%s 2>/dev/null || printf '0')"
+  if ! printf -v now_seconds '%(%s)T' -1 2>/dev/null; then
+    now_seconds="$("$DATEBIN" +%s 2>/dev/null || printf '0')"
+  fi
   if [[ -z "$template" ]] || (( now_seconds - last_system_update >= INTERVAL )); then
     template="$(build_status_line)"
     last_system_update="$now_seconds"
@@ -1348,9 +1336,17 @@ while :; do
   if [[ "$template" == *'__NIRUPI_NOW_PLAYING__'* ]]; then
     music="$(render_cached_now_playing)"
     line="${template/__NIRUPI_NOW_PLAYING__/$music}"
+    if [[ "$line" != "$last_line" && -n "$XSETROOT" ]]; then
+      "$XSETROOT" -name "$line" 2>/dev/null || true
+      last_line="$line"
+    fi
+    sleep "$NOW_PLAYING_FRAME_INTERVAL"
   else
     line="$template"
+    if [[ "$line" != "$last_line" && -n "$XSETROOT" ]]; then
+      "$XSETROOT" -name "$line" 2>/dev/null || true
+      last_line="$line"
+    fi
+    sleep "$INTERVAL"
   fi
-  [[ -n "$XSETROOT" ]] && "$XSETROOT" -name "$line" 2>/dev/null || true
-  sleep "$NOW_PLAYING_FRAME_INTERVAL"
 done

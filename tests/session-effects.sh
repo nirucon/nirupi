@@ -41,6 +41,6 @@ grep -q 'SUSPEND_DELAY_SECONDS' "$ROOT/runtime/session.conf.example" || fail 'se
 # Lock wrapper deployed and setuid slock provisioned on install/update.
 grep -q 'nirupi-lock.sh' "$ROOT/lib/install.sh" || fail 'lock wrapper not deployed'
 grep -q 'ensure_slock' "$ROOT/lib/install.sh" || fail 'ensure_slock missing'
-grep -q 'ensure_slock' "$ROOT/install.sh" || fail 'ensure_slock not wired into install/dots'
+grep -q 'ensure_slock' "$ROOT/lib/install.sh" || fail 'ensure_slock not wired into apply path'
 grep -q 'nirupi-lock.sh' "$ROOT/vendor/noir/local/bin/nirupi-menu.sh" || fail 'control center does not use nirupi-lock.sh'
 echo 'PASS: session effects (idle ladder, lock-on-suspend, logout confirm, night light, setuid slock)'
