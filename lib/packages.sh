@@ -181,17 +181,17 @@ install_packages(){
    # Void also expects a synchronized system. Keep the default conservative
    # (install only), but offer the full upgrade explicitly.
    if [[ ${NIRUPI_FULL_UPGRADE:-ask} == 1 ]]; then
-    sudo xbps-install -Syu -- "${PKGS[@]}"
+    sudo xbps-install -Syu -y -- "${PKGS[@]}"
    elif [[ ${NIRUPI_FULL_UPGRADE:-ask} == ask && -t 0 ]]; then
     printf 'Type UPGRADE for a full synchronized xbps system upgrade (Enter installs only): '
     read -r xbps_answer
     if [[ $xbps_answer == UPGRADE ]]; then
-     sudo xbps-install -Syu -- "${PKGS[@]}"
+     sudo xbps-install -Syu -y -- "${PKGS[@]}"
     else
-     sudo xbps-install -S -- "${PKGS[@]}"
+     sudo xbps-install -S -y -- "${PKGS[@]}"
     fi
    else
-    sudo xbps-install -S -- "${PKGS[@]}"
+    sudo xbps-install -S -y -- "${PKGS[@]}"
    fi;;
  esac
 }
@@ -223,7 +223,7 @@ install_optional_packages(){
   void)
    for p in "${todo[@]}"; do
     if xbps-query -R "$p" >/dev/null 2>&1 || xbps-query -p pkgver "$p" >/dev/null 2>&1; then
-     sudo xbps-install -Sy -- "$p" || warn "optional install failed: $p"
+     sudo xbps-install -Sy -y -- "$p" || warn "optional install failed: $p"
     else warn "optional package unavailable: $p"; fi
    done;;
  esac

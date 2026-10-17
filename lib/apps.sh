@@ -107,7 +107,7 @@ install_custom_packages(){
   case "$DISTRO" in
     arch|cachyos) sudo pacman -S --needed --noconfirm -- "${extra[@]}";;
     debian) sudo apt-get install -- "${extra[@]}";;
-    void) sudo xbps-install -S -- "${extra[@]}";;
+    void) sudo xbps-install -S -y -- "${extra[@]}";;
   esac
 }
 
