@@ -150,7 +150,7 @@ install_helpers(){
   rm -f -- "$HOME/.local/bin/nirupi-status-click"
   log 'Removed legacy nirupi-status-click compatibility symlink'
  fi
- for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-power.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh nirupi-clipd.sh nirupi-calendar.sh nirupi-calendar.py nirupi-sysupdate.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh nirupi-emoji.sh nirupi-clip-transform.sh nirupi-audio.sh nirupi-capture.sh nirupi-agent-selection.sh nirupi-wallpaper.sh nirupi-tag-wallpaper.sh nirupi-reload.sh nirupi-edit.sh nirupi-ssh.sh nirupi-agent-ask.sh nirupi-agent-screen.sh nirupi-ask-command.sh nirupi-autostart.sh nirupi-battery.sh nirupi-notifications.sh nirupi-launch.sh nirupi-rofi-clip.sh nirupi-rofi-files.sh nirupi-agent-rewrite.sh nirupi-usb.sh nirupi-lid.sh nirupi-barmode.sh nirupi-updatecheck.sh nirupi-popup.sh nirupi-updates-popup.sh nirupi-repos.sh nirupi-battery-popup.sh nirupi-disk-popup.sh nirupi-weather-popup.sh nirupi-btop.sh nirupi-panel.py nirupi-changes.sh nirupi-fleet.sh nirupi-net-popup.sh nirupi-wifi.sh nirupi-bluetooth.sh; do
+ for app in dwm-status.sh wallrotate.sh wallpaperchange.sh sleep-suspend.sh dwm-keybindings.sh apply-screenlayout.sh clip-menu.sh clip-save.sh screenshot-browser.sh screenshot-select.sh sr-dmenu.sh tui-dmenu.sh webapp-ai-launcher.sh webapp-dmenu-brave.sh webapp-dmenu.sh nirupi-lock.sh nirupi-logout.sh nirupi-power.sh nirupi-nightlight.sh nirupi-webapp.sh nirupi-osd.sh nirupi-caffeine.sh nirupi-focus.sh nirupi-record.sh nirupi-window.sh nirupi-keyboard.sh nirupi-touchpad.sh nirupi-app.sh nirupi-clipd.sh nirupi-calendar.sh nirupi-calendar.py nirupi-sysupdate.sh nirupi-keys.sh nirupi-menu.sh nirupi-agent.sh nirupi-backup.sh nirupi-status-click.sh nirupi-emoji.sh nirupi-clip-transform.sh nirupi-audio.sh nirupi-capture.sh nirupi-agent-selection.sh nirupi-wallpaper.sh nirupi-tag-wallpaper.sh nirupi-reload.sh nirupi-edit.sh nirupi-ssh.sh nirupi-agent-ask.sh nirupi-agent-screen.sh nirupi-ask-command.sh nirupi-autostart.sh nirupi-battery.sh nirupi-notifications.sh nirupi-launch.sh nirupi-rofi-clip.sh nirupi-rofi-files.sh nirupi-agent-rewrite.sh nirupi-usb.sh nirupi-lid.sh nirupi-barmode.sh nirupi-updatecheck.sh nirupi-popup.sh nirupi-updates-popup.sh nirupi-repos.sh nirupi-battery-popup.sh nirupi-disk-popup.sh nirupi-weather-popup.sh nirupi-btop.sh nirupi-panel.py nirupi-changes.sh nirupi-fleet.sh nirupi-net-popup.sh nirupi-wifi.sh nirupi-bluetooth.sh nirupi-tune.sh nirupi-snapshot.sh nirupi-explain.sh nirupi-mission.sh nirupi-dwm.sh; do
   src="$ROOT/vendor/noir/local/bin/$app"
   if [[ -f $src ]]; then
    dest="$HOME/.local/bin/$app"
@@ -171,6 +171,16 @@ install_helpers(){
  if [[ -f $ROOT/runtime/nirupi.1 ]]; then
   mkdir -p "$HOME/.local/share/man/man1"
   managed_config_install 'man/nirupi.1' "$ROOT/runtime/nirupi.1" "$HOME/.local/share/man/man1/nirupi.1"
+ fi
+ # Workspace missions (created once; user-owned).
+ if [[ ! -e $HOME/.config/nirupi/missions.conf && -f $ROOT/runtime/missions.conf.example ]]; then
+  mkdir -p "$HOME/.config/nirupi"
+  put_file "$ROOT/runtime/missions.conf.example" "$HOME/.config/nirupi/missions.conf" 0644
+ fi
+ # Runtime dwm rules (created once; user-owned).
+ if [[ ! -e $HOME/.config/nirupi/rules.conf && -f $ROOT/runtime/rules.conf.example ]]; then
+  mkdir -p "$HOME/.config/nirupi"
+  put_file "$ROOT/runtime/rules.conf.example" "$HOME/.config/nirupi/rules.conf" 0644
  fi
  # Per-workspace wallpaper config example (created once, then yours to edit).
  if [[ ! -e $HOME/.config/nirupi/wallpapers.conf && -f $ROOT/runtime/wallpapers.conf.example ]]; then
@@ -276,7 +286,9 @@ install_desktop() (
   install_helpers
  # Preferred browser + the personal default Git repositories in ~/Git.
  ensure_helium
- ensure_signal
+ if [[ ${NIRUPI_INSTALL_OPTIONAL:-0} == 1 || ${NIRUPI_PROFILE:-desktop} == full ]]; then
+  ensure_signal
+ fi
  install_default_repos
  # Only initialize GTK on clean profiles; upgrades preserve LXAppearance choices.
  "$HOME/.local/bin/nirupi-appearance" default || warn "GTK appearance setup skipped; use nirupi appearance status"
@@ -615,7 +627,7 @@ enable_void_service(){
  return 0
 }
 enable_services(){
- local unit svc
+ local unit svc other
  case "$DISTRO" in
   arch|cachyos|debian)
    command -v systemctl >/dev/null 2>&1 || return 0
@@ -640,16 +652,34 @@ enable_services(){
    # Void has no systemd: a runit service is enabled by symlinking its unit
    # into /var/service. dbus, elogind and polkitd come first — on a clean
    # install NetworkManager, bluetoothd and the desktop session depend on them.
-   for svc in dbus elogind polkitd tailscaled bluetoothd NetworkManager; do
+   for svc in dbus elogind polkitd tailscaled bluetoothd; do
     [[ -e /etc/sv/$svc ]] || continue
     [[ -e /var/service/$svc ]] && continue
     enable_void_service "$svc" /var/service || warn "Could not enable $svc"
-   done;;
+   done
+   # Do not stack NetworkManager on top of an existing network stack (dhcpcd,
+   # iwd, wpa_supplicant). This mirrors the systemd guard above and avoids the
+   # classic "NetworkManager started but no network" surprise on Void.
+   if [[ -e /var/service/NetworkManager ]]; then
+    log 'NetworkManager already enabled'
+   elif [[ -e /etc/sv/NetworkManager ]]; then
+    for svc in dhcpcd iwd wpa_supplicant; do
+     [[ -e /var/service/$svc ]] && { other=$svc; break; }
+    done
+    if [[ -n $other ]]; then
+     warn "NetworkManager not enabled: $other is already managing the network"
+    elif enable_void_service NetworkManager /var/service; then
+     log 'Enabled NetworkManager (runit)'
+    else
+     warn 'Could not enable NetworkManager'
+    fi
+   fi;;
  esac
 }
 
-# Best-effort Signal Desktop provisioning. Arch ships signal-desktop (in PKGS);
-# Debian needs Signal's own apt repository. Void has no package (skipped).
+# Best-effort Signal Desktop provisioning for the optional/full profile.
+# Arch ships signal-desktop (optional); Debian needs Signal's own apt repository;
+# Void has no package (skipped).
 ensure_signal(){
   command -v signal-desktop >/dev/null 2>&1 && return 0
   case "$DISTRO" in
@@ -669,23 +699,64 @@ ensure_signal(){
   esac
 }
 
+# Verify a detached Helium release signature with the published public key.
+# Returns 1 when gpg is unavailable or the signature does not verify.
+verify_helium_tarball(){
+  local file="$1" sig="$2" key="$3" work
+  command -v gpg >/dev/null 2>&1 || return 1
+  work="$(mktemp -d)"
+  if ! curl -fsSL "$key" -o "$work/key.asc" 2>/dev/null; then
+    rm -rf -- "$work"; return 1
+  fi
+  if ! gpg --batch --quiet --no-tty --no-default-keyring \
+      --keyring "$work/keyring.gpg" --import "$work/key.asc" 2>/dev/null; then
+    rm -rf -- "$work"; return 1
+  fi
+  if ! gpg --batch --quiet --no-tty --no-default-keyring \
+      --keyring "$work/keyring.gpg" --verify "$sig" "$file" 2>/dev/null; then
+    rm -rf -- "$work"; return 1
+  fi
+  rm -rf -- "$work"
+  return 0
+}
+
 ensure_helium_tarball(){
   command -v curl >/dev/null 2>&1 && command -v tar >/dev/null 2>&1 || { warn 'curl/tar missing; cannot fetch Helium'; return 0; }
-  local json url tmp appdir bin
+  local json url sig tmp appdir bin staged
   json="$(curl -fsSL "$HELIUM_API" 2>/dev/null)" || { warn 'Could not query Helium releases'; return 0; }
   url="$(printf '%s' "$json" | grep -oE 'https://[^"]*x86_64_linux\.tar\.xz' | head -n1)"
   [[ -n $url ]] || { warn 'No Helium tarball URL found'; return 0; }
+  sig="$url.asc"
   tmp="$(mktemp -d)"
   log "Downloading Helium tarball ($(basename "$url"))"
   if ! curl -fL "$url" -o "$tmp/helium.tar.xz"; then warn 'Helium download failed'; rm -rf -- "$tmp"; return 0; fi
+  if command -v gpg >/dev/null 2>&1 && curl -fsSL "$sig" -o "$tmp/helium.tar.xz.asc" 2>/dev/null; then
+    if ! verify_helium_tarball "$tmp/helium.tar.xz" "$tmp/helium.tar.xz.asc" "$HELIUM_KEY_URL"; then
+      warn 'Helium signature verification failed; refusing the tarball'
+      rm -rf -- "$tmp"; return 0
+    fi
+    log 'Helium tarball signature verified'
+  elif [[ -n ${NIRUPI_HELIUM_INSECURE:-} ]]; then
+    warn 'Helium signature not verified (NIRUPI_HELIUM_INSECURE set)'
+  else
+    warn 'Helium signature could not be verified (install gnupg or set NIRUPI_HELIUM_INSECURE=1); skipping tarball'
+    rm -rf -- "$tmp"; return 0
+  fi
   if ! tar -xJf "$tmp/helium.tar.xz" -C "$tmp" 2>/dev/null && ! tar -xf "$tmp/helium.tar.xz" -C "$tmp" 2>/dev/null; then
     warn 'Helium extraction failed'; rm -rf -- "$tmp"; return 0
   fi
   bin="$(find "$tmp" -maxdepth 4 -type f -name helium -print -quit 2>/dev/null)"
   [[ -n $bin && -x $bin ]] || { warn 'Helium binary not found in archive'; rm -rf -- "$tmp"; return 0; }
   appdir="$(dirname "$bin")"
-  rm -rf -- "$HOME/.local/opt/helium"; mkdir -p "$HOME/.local/opt"
-  mv "$appdir" "$HOME/.local/opt/helium"
+  mkdir -p "$HOME/.local/opt"
+  staged="$HOME/.local/opt/.helium.new.$$"
+  rm -rf -- "$staged"
+  mv "$appdir" "$staged"
+  # Atomic-ish swap: keep the previous browser until the new one is in place.
+  rm -rf -- "$HOME/.local/opt/helium.old"
+  [[ -e $HOME/.local/opt/helium ]] && mv "$HOME/.local/opt/helium" "$HOME/.local/opt/helium.old"
+  mv "$staged" "$HOME/.local/opt/helium"
+  rm -rf -- "$HOME/.local/opt/helium.old"
   mkdir -p "$HOME/.local/bin"
   ln -sf "$HOME/.local/opt/helium/helium" "$HOME/.local/bin/helium"
   ln -sf "$HOME/.local/opt/helium/helium" "$HOME/.local/bin/helium-browser"

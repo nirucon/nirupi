@@ -6,10 +6,12 @@ fail(){ echo "FAIL: $*" >&2; exit 1; }
 
 CI="$ROOT/.github/workflows/ci.yml"
 [[ -f $CI ]] || fail 'CI workflow missing'
-grep -q 'ubuntu-latest' "$CI" || fail 'CI missing ubuntu job'
+grep -q 'debian:stable' "$CI" || fail 'CI missing Debian job'
 grep -q 'archlinux' "$CI" || fail 'CI missing archlinux job'
 grep -q 'tests/smoke.sh' "$CI" || fail 'CI does not run smoke'
 grep -q 'shellcheck --severity=error' "$CI" || fail 'CI missing shellcheck step'
+grep -q 'tools/package-list.sh' "$CI" || fail 'CI missing package manifest validation'
+grep -q 'Build suckless' "$CI" || fail 'CI missing suckless build'
 
 grep -q 'niru_doctor_fix' "$ROOT/runtime/nirupi" || fail 'doctor --fix missing'
 grep -q -- '--fix' "$ROOT/runtime/nirupi" || fail 'doctor --fix flag missing'
@@ -32,8 +34,9 @@ grep -q 'whiptail' "$ROOT/install.sh" || fail 'installer TUI missing'
 for r in nirupresence nirunote nplay; do
   grep -q "$r" "$ROOT/lib/apps.sh" || fail "default repo $r missing"
 done
-grep -q 'install_default_repos' "$ROOT/install.sh" || fail 'install_default_repos not wired (dots path)'
 grep -q 'install_default_repos' "$ROOT/lib/install.sh" || fail 'install_default_repos not wired (apply path)'
+# --theme-only and --update-dots must not clone repos or install a browser.
+awk '/ACTION == theme \|\| ACTION == dots/,/^fi/' "$ROOT/install.sh" | grep -q 'install_default_repos\|ensure_helium\|ensure_slock' && fail 'theme-only branch has install side effects'
 grep -q 'ensure_helium' "$ROOT/lib/install.sh" || fail 'ensure_helium missing'
 grep -q 'pkg.helium.computer' "$ROOT/lib/install.sh" || fail 'Helium Debian repo missing'
 grep -q 'helium.tar.xz' "$ROOT/lib/install.sh" || fail 'Helium tarball fallback missing'

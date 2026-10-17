@@ -8,9 +8,11 @@ fail(){ echo "FAIL $*" >&2; exit 1; }
 
 # --- Void: runit service helper and base services ---------------------------
 grep -q '^enable_void_service(){' "$INS" || fail 'enable_void_service helper missing'
-for svc in dbus elogind polkitd tailscaled bluetoothd NetworkManager; do
+for svc in dbus elogind polkitd tailscaled bluetoothd; do
   grep -Eq "for svc in .*\b$svc\b" "$INS" || fail "Void base service not enabled: $svc"
 done
+grep -q 'enable_void_service NetworkManager /var/service' "$INS" || fail 'Void NetworkManager not routed via the helper'
+grep -q 'dhcpcd iwd wpa_supplicant' "$INS" || fail 'Void NetworkManager conflict guard missing'
 grep -q 'enable_void_service "$svc" /var/service' "$INS" || fail 'Void services not routed via the helper'
 
 # --- Void: SDDM activation through runit -------------------------------------

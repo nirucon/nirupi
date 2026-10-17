@@ -39,7 +39,8 @@ grep -q 'gtk-theme-name=Adwaita-dark' "$HOME/.config/gtk-4.0/settings.ini"
 grep -q 'QT_STYLE_OVERRIDE=kvantum' "$ROOT/runtime-session.sh"
 grep -q "GTK_THEME=\"Adwaita:dark\"" "$ROOT/runtime-session.sh"
 grep -q "COLORTERM=truecolor" "$ROOT/runtime-session.sh"
-grep -q "xsetroot -solid '#0f0f10'" "$ROOT/runtime-session.sh"
+grep -q 'NIRUPI_C_BG' "$ROOT/runtime-session.sh"
+grep -q 'xsetroot -solid "#${NIRUPI_C_BG}"' "$ROOT/runtime-session.sh"
 grep -q 'command -v picom' "$ROOT/runtime-session.sh"
 
 # Idempotent second run
