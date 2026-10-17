@@ -196,23 +196,41 @@ start_idle() {
     fi
     if [ "$prev" -gt 0 ]; then
       xidlehook --not-when-fullscreen --not-when-audio "$@" & IDLE_PID=$!
+      # xidlehook drives DPMS itself; make sure X's own screensaver/DPMS timers
+      # cannot fire on top of it.
+      command -v xset >/dev/null 2>&1 && { xset s off 2>/dev/null || :; xset -dpms 2>/dev/null || :; }
       return 0
     fi
+  fi
+  # xss-lock is preferred over xautolock: it can drive both the lock and DPMS
+  # (xautolock can only lock, which left the screen lit forever).
+  if [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null && command -v xss-lock >/dev/null 2>&1; then
+    # xss-lock performs the lock; the screen is turned off with DPMS. These must
+    # be separate knobs: `xset s` is the screensaver trigger xss-lock listens to,
+    # so using it for blanking would re-lock the screen instead of keeping it
+    # dark. `xset dpms` turns the panel off and any input wakes it.
+    xset s "$((IDLE_LOCK_MINUTES * 60))" "$((IDLE_LOCK_MINUTES * 60))" 2>/dev/null || :
+    if [ "$IDLE_DPMS_MINUTES" -gt 0 ] 2>/dev/null && command -v xset >/dev/null 2>&1; then
+      xset +dpms 2>/dev/null || :
+      xset dpms "$((IDLE_DPMS_MINUTES * 60))" "$((IDLE_DPMS_MINUTES * 60))" "$((IDLE_DPMS_MINUTES * 60))" 2>/dev/null || :
+    else
+      xset -dpms 2>/dev/null || :
+    fi
+    xss-lock -- "$LOCKER" & IDLE_PID=$!
+    return 0
   fi
   if [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null && command -v xautolock >/dev/null 2>&1; then
     xautolock -time "$IDLE_LOCK_MINUTES" -locker "$LOCKER" -notify "$IDLE_WARN_SECONDS" \
       -notifier "notify-send -u normal 'NIRUPI' 'Screen locks in ${IDLE_WARN_SECONDS}s'" & IDLE_PID=$!
-    return 0
-  fi
-  if [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null && command -v xss-lock >/dev/null 2>&1; then
-    # xss-lock handles the lock (and locks on suspend). Give it the DPMS step
-    # too, so the ladder works without xidlehook/xautolock.
+    # xautolock cannot switch the panel off; let X's DPMS do it, and keep the
+    # screensaver trigger out of the way so it does not re-lock.
+    command -v xset >/dev/null 2>&1 && xset s off 2>/dev/null || :
     if [ "$IDLE_DPMS_MINUTES" -gt 0 ] 2>/dev/null && command -v xset >/dev/null 2>&1; then
-      xset s "$((IDLE_LOCK_MINUTES * 60))" "$((IDLE_DPMS_MINUTES * 60))" 2>/dev/null || :
+      xset +dpms 2>/dev/null || :
+      xset dpms "$((IDLE_DPMS_MINUTES * 60))" "$((IDLE_DPMS_MINUTES * 60))" "$((IDLE_DPMS_MINUTES * 60))" 2>/dev/null || :
     else
-      xset s "$((IDLE_LOCK_MINUTES * 60))" "$((IDLE_LOCK_MINUTES * 60))" 2>/dev/null || :
+      command -v xset >/dev/null 2>&1 && xset -dpms 2>/dev/null || :
     fi
-    xss-lock -- "$LOCKER" & IDLE_PID=$!
     return 0
   fi
   printf '%s\n' '[NIRUPI] No idle tool found (xidlehook/xautolock/xss-lock)' >&2
@@ -223,10 +241,12 @@ start_idle
 # xss-lock with --transfer-sleep-lock locks the session before the machine sleeps
 # (lid close / suspend key / loginctl). Skipped when xss-lock is already the idle
 # locker, to avoid running two lockers.
+# Any tool already performing the idle lock means no extra xss-lock may start.
 idle_locker_is_xsslock() {
-  [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null \
-    && ! command -v xidlehook >/dev/null 2>&1 \
-    && ! command -v xautolock >/dev/null 2>&1
+  [ "$IDLE_LOCK_MINUTES" -gt 0 ] 2>/dev/null || return 1
+  command -v xidlehook >/dev/null 2>&1 && return 1
+  command -v xautolock >/dev/null 2>&1 && return 1
+  command -v xss-lock >/dev/null 2>&1
 }
 if [ "$LOCK_ON_SUSPEND" = 1 ] && command -v xss-lock >/dev/null 2>&1; then
   if ! idle_locker_is_xsslock; then

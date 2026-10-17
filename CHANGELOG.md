@@ -2,6 +2,19 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.24.1
+- **Lock screen stays dark.** `xset s` (the screensaver trigger xss-lock listens
+  to) was being used for the DPMS step, so the panel woke, re-locked and showed
+  the clock instead of staying off. The lock and the panel timeout are now
+  separate knobs: `xset s` for xss-lock, `xset dpms` for the screen.
+- **One idle locker only.** The lock-on-suspend helper started a second
+  `xss-lock` whenever another locker (xautolock) was already running, which
+  produced double locks. `xss-lock` is now preferred over `xautolock` because it
+  can drive both the lock and DPMS; xautolock is a last resort and gets
+  `xset s off` + `xset dpms` so the panel still switches off.
+- xidlehook disables X's own screensaver/DPMS timers so they cannot fire on top.
+
+
 ## 0.24.0
 - **Profiles**: `minimal`, `desktop` and `full`; optional applications are only
   installed when requested, and Debian uses `--no-install-recommends`. Hardware
