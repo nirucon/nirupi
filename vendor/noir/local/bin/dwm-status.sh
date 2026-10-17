@@ -201,8 +201,11 @@ bar_color_on(){
   fi
 }
 # Keep exactly one bar writer per user/X display, including concurrent startx/SDDM starts.
+# One-shot commands (--once/--json) must work while the bar is running.
 BAR_LOCK=0
-if command -v flock >/dev/null 2>&1; then
+ONE_SHOT=0
+[[ ${1:-} == --once || ${1:-} == --json ]] && ONE_SHOT=1
+if (( ! ONE_SHOT )) && command -v flock >/dev/null 2>&1; then
   display_key="${DISPLAY:-no-display}"
   display_key="${display_key//[^a-zA-Z0-9_-]/_}"
   exec 9>"$CACHE_DIR/status-${display_key}.lock"

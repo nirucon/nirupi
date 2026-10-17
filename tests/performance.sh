@@ -8,6 +8,8 @@ BAR="$ROOT/vendor/noir/local/bin/dwm-status.sh"
 fail(){ echo "FAIL: $*" >&2; exit 1; }
 
 grep -q 'last_line' "$BAR" || fail 'status bar has no last_line change detection'
+grep -q 'ONE_SHOT' "$BAR" || fail 'one-shot status still takes the bar lock'
+! grep -q 'if command -v flock >/dev/null 2>&1; then' "$BAR" || fail 'flock is not guarded by ONE_SHOT'
 grep -q 'sleep "$INTERVAL"' "$BAR" || fail 'status bar does not sleep at INTERVAL when idle'
 grep -q 'playerctl -l' "$BAR" || fail 'now-playing does not enumerate players once'
 grep -q 'paste -sd' "$BAR" && fail 'status bar still uses paste for joining'
