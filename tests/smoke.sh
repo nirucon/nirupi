@@ -121,3 +121,7 @@ printf 'PASS: build-stage cleanup guard\n'
 "$ROOT/tests/webapps.sh"
 
 "$ROOT/tests/ops.sh"
+
+"$ROOT/tests/performance.sh"
+"$ROOT/tests/system-tools.sh"
+"$ROOT/tests/dwm-enhancements.sh"

@@ -363,6 +363,8 @@ shows the upcoming Google Calendar event from the synced iCal.
 | `~/.config/dunst/dunstrc.d/90-nirupi.conf` | Generated dunst colours (do not edit) |
 | `~/.config/nirupi/wallpapers.conf` | Per-workspace wallpapers (`nirupi wallpaper per-tag …`) |
 | `~/.config/nirupi/autostart/` | Login autostart entries (`*.sh`, per-workspace) |
+| `~/.config/nirupi/rules.conf` | Runtime dwm window rules (tag/float/monitor) |
+| `~/.config/nirupi/missions.conf` | Named workspace/app sets (`nirupi mission NAME`) |
 
 DWM keybindings/colors are compiled in `vendor/suckless/dwm/config.h`; rebuild
 after editing with `nirupi migrate dwm --rebuild`.
@@ -392,11 +394,35 @@ the bundled dotfiles and DWM config (previous files are backed up).
 nirupi gc --dry-run           # show old versions/snapshots/backups to prune
 nirupi gc --yes               # prune (keeps current + N newest)
 nirupi gc --yes --legacy      # also prune old legacy archives
+nirupi gc --dry-run --system  # native package/journal/kernel cleanup plan
+nirupi gc --yes --system      # run it after confirmation
 nirupi status --once|--json   # bar for scripts
+nirupi doctor --perf          # bar wakeups, compositor, swap, governor
+nirupi tune plan              # show reversible sysctl changes
+nirupi tune apply             # write /etc/sysctl.d/90-nirupi.conf
+nirupi tune revert            # remove it
+nirupi snapshot status        # available snapshot backend
+nirupi snapshot create "pre-update"
 nirupi backup                 # back up user config now
+nirupi backup --list|--verify FILE|--restore FILE
 nirupi backup --schedule      # weekly backup (systemd user timer or cron)
 nirupi backup --unschedule    # disable the scheduled backup
 ```
+
+## dwm state, rules and missions
+
+```sh
+nirupi dwm state              # tags/layout/mfact saved in ~/.cache/nirupi/dwm.state
+nirupi dwm tag 3              # switch workspace
+nirupi dwm layout monocle     # right|left|float|monocle|center|centerfloat|fib
+nirupi mission --list         # configured app sets
+nirupi mission work           # open it
+nirupi edit rules             # add runtime class/title rules
+```
+
+`dwm` saves layout state on tag/layout/mfact/bar changes and restores it on the
+next login or in-place restart. Runtime rules apply to new windows immediately
+and never require a rebuild.
 
 Rollback (local TTY only; touches only `$HOME` and `~/.local/state/nirupi/`):
 
@@ -411,6 +437,8 @@ nirupi rollback --binaries            # binary links only
 ```sh
 nirupi doctor            # fonts, tools, agent, theme
 nirupi doctor --fix      # best-effort: Nerd Font + idle-lock tool
+nirupi doctor --perf     # performance snapshot
+nirupi explain           # redacted system health context + agent diagnosis
 bash ./install.sh --verify
 ```
 

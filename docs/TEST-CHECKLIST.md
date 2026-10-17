@@ -11,7 +11,12 @@ a real login on real hardware.
 - [ ] Machine backup or snapshot taken.
 
 ## Install / upgrade
-- [ ] `bash ./install.sh --apply --session sddm|startx` completes.
+- [ ] `bash ./install.sh --plan --profile minimal|desktop|full` shows the
+      correct base/optional/hardware package sets.
+- [ ] `bash ./install.sh --apply --session sddm|startx` completes; cancelling
+      the TUI aborts before any change.
+- [ ] `bash ./install.sh --theme-only` changes only theme files (no repos,
+      Helium download or setuid slock).
 - [ ] `bash ./install.sh --verify` passes.
 - [ ] `nirupi doctor` reports fonts, tools, agent and theme.
 - [ ] No keybinding collisions (`bash tests/keybindings.sh`).
@@ -29,7 +34,13 @@ a real login on real hardware.
 - [ ] `Super+Ctrl+t` opens the theme picker (active theme + description shown);
       choosing **Satie**, **Carl Larsson**, **Hackerman**, **Nord dark** or
       **Noir day** restyles terminals, TUI tools, rofi, dunst and the bar live.
-- [ ] `Super+Ctrl+Shift+r` restarts dwm in place (windows survive, no logout).
+- [ ] `Super+Ctrl+Shift+r` restarts dwm in place (windows survive, no logout);
+      tags/layout/mfact/bar state is restored from `~/.cache/nirupi/dwm.state`.
+- [ ] `~/.config/nirupi/rules.conf` adds a rule (e.g. float `mpv`); it applies
+      to the next window without a rebuild.
+- [ ] `nirupi mission work` opens the configured apps on their tags;
+      `Super+Ctrl+M` shows the picker.
+- [ ] `Super+Ctrl+D` collects a redacted health context and asks the agent.
 - [ ] `Super+Ctrl+Print` opens the capture menu; `Super+Ctrl+a` asks the agent
       about the current selection; `Super+Ctrl+s` asks about a screen region.
 - [ ] `Super+Ctrl+c` proposes a command you can edit and run on Enter; nothing
@@ -70,6 +81,8 @@ a real login on real hardware.
 - [ ] `Super+Shift+r` reloads Xresources colors; `nirupi theme wallpaper IMAGE`
       recolors terminals + bar; `nirupi theme mode noir` restores Noir.
 - [ ] Idle for `IDLE_LOCK_MINUTES` (default 10) locks with slock; unlock works.
+- [ ] With `Noir-day`, the lock screen uses the light palette and the root
+      background follows the theme (no black flash).
 - [ ] DND toggle (control center) suppresses notifications; indicator shows.
 
 ## Apps / tools
@@ -78,6 +91,14 @@ a real login on real hardware.
       (`~/.config/dunst/dunstrc.d/90-nirupi.conf`; your `dunstrc` is untouched).
 - [ ] Browser uses `--force-dark-mode` (brave-flags.conf).
 - [ ] Screenshots, clipboard, wallpaper rotation, power menu work.
+- [ ] `nirupi doctor --perf` reports ~2s idle bar wakeups (not 0.3s) with no
+      player running.
+- [ ] `nirupi tune plan` is read-only; `nirupi tune apply` writes
+      `/etc/sysctl.d/90-nirupi.conf`; `nirupi tune revert` removes it.
+- [ ] `nirupi snapshot status` names the available backend (or none).
+- [ ] `nirupi gc --dry-run --system` lists the native cleanup commands.
+- [ ] `nirupi backup --now`, `--verify FILE` and `--restore FILE` round-trip a
+      config file.
 - [ ] Capture menu (`Super+Ctrl+Print`) works; annotation/OCR offered only when
       `satty`/`tesseract` are present.
 - [ ] Palette (`Super+Shift+h`) lists Emoji, Transform, Capture, Audio and
