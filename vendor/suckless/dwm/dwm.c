@@ -20,7 +20,9 @@
  *
  * To understand everything else, start reading main().
  */
+#include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <locale.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -29,6 +31,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -165,6 +168,11 @@ typedef struct {
 
 /* function declarations */
 static void applyrules(Client *c);
+static void applyuserrules(Client *c, const char *class, const char *instance, int *fs);
+static void loadstate(void);
+static void savestate(void);
+static char *statepath(void);
+static int layoutidx(const Layout *l);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
@@ -352,6 +360,260 @@ static unsigned int scratchtag = 1 << LENGTH(tags);
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
 
 /* function implementations */
+/* ── Runtime window rules ───────────────────────────────────────────────────
+ * ~/.config/nirupi/rules.conf lets the user add/override rules without
+ * recompiling. One rule per line, pipe separated:
+ *   class|instance|title|tag|float|terminal|noswallow|fullscreen|monitor
+ * Empty or * matches anything. tag is 1-9 (0 keeps the current tag).
+ */
+static char *
+trimfield(char *s)
+{
+	char *e;
+	while (isspace((unsigned char)*s))
+		s++;
+	e = s + strlen(s);
+	while (e > s && isspace((unsigned char)e[-1]))
+		*--e = '\0';
+	return s;
+}
+
+static int
+splitfields(char *s, char **out, int max)
+{
+	int n = 0;
+	out[n++] = s;
+	for (; *s; s++) {
+		if (*s == '|') {
+			*s = '\0';
+			if (n < max)
+				out[n++] = s + 1;
+		}
+	}
+	return n;
+}
+
+static const char *
+fieldat(char **fields, int nf, int i)
+{
+	return i < nf ? fields[i] : "";
+}
+
+static int
+rulematch(const char *pattern, const char *value)
+{
+	if (!pattern || !*pattern || !strcmp(pattern, "*"))
+		return 1;
+	return value && strstr(value, pattern);
+}
+
+static void
+applyuserrules(Client *c, const char *class, const char *instance, int *fs)
+{
+	char line[1024], *fields[9], *path;
+	const char *home = getenv("HOME"), *cfg = getenv("XDG_CONFIG_HOME");
+	FILE *f;
+	Monitor *m;
+	int nf, tag, val, mon;
+	char *end;
+	static char rulepath[PATH_MAX];
+
+	if (cfg && *cfg)
+		snprintf(rulepath, sizeof rulepath, "%s/nirupi/rules.conf", cfg);
+	else if (home && *home)
+		snprintf(rulepath, sizeof rulepath, "%s/.config/nirupi/rules.conf", home);
+	else
+		return;
+	if (!(f = fopen(rulepath, "r")))
+		return;
+	while (fgets(line, sizeof line, f)) {
+		line[strcspn(line, "\r\n")] = '\0';
+		if (!line[0] || line[0] == '#')
+			continue;
+		nf = splitfields(line, fields, LENGTH(fields));
+		if (nf < 1)
+			continue;
+		for (val = 0; val < nf; val++)
+			fields[val] = trimfield(fields[val]);
+		if (!rulematch(fieldat(fields, nf, 0), class) ||
+		    !rulematch(fieldat(fields, nf, 1), instance) ||
+		    !rulematch(fieldat(fields, nf, 2), c->name))
+			continue;
+		tag = atoi(fieldat(fields, nf, 3));
+		if (tag >= 1 && tag <= (int)LENGTH(tags))
+			c->tags = 1U << (tag - 1);
+		if (*fieldat(fields, nf, 4))
+			c->isfloating = atoi(trimfield(fields[4])) ? 1 : 0;
+		if (*fieldat(fields, nf, 5))
+			c->isterminal = atoi(trimfield(fields[5])) ? 1 : 0;
+		if (*fieldat(fields, nf, 6))
+			c->noswallow = atoi(trimfield(fields[6])) ? 1 : 0;
+		if (*fieldat(fields, nf, 7))
+			*fs = atoi(trimfield(fields[7])) ? 1 : 0;
+		if (*fieldat(fields, nf, 8)) {
+			mon = atoi(fieldat(fields, nf, 8));
+			if (mon >= 0) {
+				for (m = mons; m && m->num != mon; m = m->next);
+				if (m)
+					c->mon = m;
+			}
+		}
+		(void)end;
+	}
+	fclose(f);
+}
+
+/* ── Layout state persistence ─────────────────────────────────────────────── */
+static char *
+statepath(void)
+{
+	static char dir[PATH_MAX], path[PATH_MAX];
+	const char *cache = getenv("XDG_CACHE_HOME"), *home = getenv("HOME");
+	if (cache && *cache)
+		snprintf(dir, sizeof dir, "%s/nirupi", cache);
+	else if (home && *home)
+		snprintf(dir, sizeof dir, "%s/.cache/nirupi", home);
+	else
+		return NULL;
+	if (mkdir(dir, 0700) < 0 && errno != EEXIST)
+		return NULL;
+	snprintf(path, sizeof path, "%s/dwm.state", dir);
+	return path;
+}
+
+static int
+layoutidx(const Layout *l)
+{
+	int i;
+	for (i = 0; i < (int)LENGTH(layouts); i++)
+		if (&layouts[i] == l)
+			return i;
+	return 0;
+}
+
+static void
+savestate(void)
+{
+	char *path = statepath(), tmp[PATH_MAX];
+	FILE *f;
+	Monitor *m;
+	int i = 0;
+
+	if (!path)
+		return;
+	snprintf(tmp, sizeof tmp, "%s.tmp", path);
+	if (!(f = fopen(tmp, "w")))
+		return;
+	for (m = mons; m; m = m->next, i++) {
+		fprintf(f, "mon %d\n", i);
+		fprintf(f, "selected %d\n", m == selmon);
+		fprintf(f, "tagset %u\n", m->tagset[m->seltags]);
+		fprintf(f, "curtag %u\n", m->pertag->curtag);
+		fprintf(f, "prevtag %u\n", m->pertag->prevtag);
+		fprintf(f, "nmaster %d\n", m->nmaster);
+		fprintf(f, "mfact %f\n", m->mfact);
+		fprintf(f, "layout0 %d\n", layoutidx(m->lt[0]));
+		fprintf(f, "layout1 %d\n", layoutidx(m->lt[1]));
+		fprintf(f, "sellt %d\n", m->sellt);
+		fprintf(f, "showbar %d\n", m->showbar);
+	}
+	fclose(f);
+	if (rename(tmp, path) < 0)
+		unlink(tmp);
+}
+
+static void
+applystate(Monitor *m, unsigned int tagset, unsigned int curtag, unsigned int prevtag,
+           int nmaster, float mfact, int layout0, int layout1, int sellt, int showbar, int selected)
+{
+	if (!m)
+		return;
+	if (tagset)
+		m->tagset[m->seltags] = tagset & TAGMASK;
+	if (curtag <= LENGTH(tags))
+		m->pertag->curtag = curtag;
+	if (prevtag <= LENGTH(tags))
+		m->pertag->prevtag = prevtag;
+	if (nmaster >= 0)
+		m->pertag->nmasters[m->pertag->curtag] = nmaster;
+	if (mfact >= 0.05f && mfact <= 0.95f)
+		m->pertag->mfacts[m->pertag->curtag] = mfact;
+	if (layout0 >= 0 && layout0 < (int)LENGTH(layouts))
+		m->pertag->ltidxs[m->pertag->curtag][0] = &layouts[layout0];
+	if (layout1 >= 0 && layout1 < (int)LENGTH(layouts))
+		m->pertag->ltidxs[m->pertag->curtag][1] = &layouts[layout1];
+	if (sellt >= 0)
+		m->pertag->sellts[m->pertag->curtag] = sellt ? 1 : 0;
+	if (showbar >= 0)
+		m->pertag->showbars[m->pertag->curtag] = showbar ? 1 : 0;
+	m->nmaster = m->pertag->nmasters[m->pertag->curtag];
+	m->mfact = m->pertag->mfacts[m->pertag->curtag];
+	m->sellt = m->pertag->sellts[m->pertag->curtag];
+	m->lt[m->sellt] = m->pertag->ltidxs[m->pertag->curtag][m->sellt];
+	m->lt[m->sellt ^ 1] = m->pertag->ltidxs[m->pertag->curtag][m->sellt ^ 1];
+	m->showbar = m->pertag->showbars[m->pertag->curtag];
+	if (selected)
+		selmon = m;
+}
+
+static void
+loadstate(void)
+{
+	char line[256], *path = statepath();
+	FILE *f;
+	Monitor *m = NULL, *mon;
+	unsigned int tagset = 0, curtag = 0, prevtag = 0;
+	int nmaster = -1, layout0 = -1, layout1 = -1, sellt = -1, showbar = -1, selected = 0;
+	float mfact = -1.0f;
+	int idx, i;
+
+	if (!path || !(f = fopen(path, "r")))
+		return;
+	while (fgets(line, sizeof line, f)) {
+		if (sscanf(line, "mon %d", &idx) == 1) {
+			applystate(m, tagset, curtag, prevtag, nmaster, mfact, layout0, layout1, sellt, showbar, selected);
+			m = mons;
+			for (i = 0; i < idx && m; i++)
+				m = m->next;
+			tagset = 0; curtag = 0; prevtag = 0;
+			nmaster = -1; mfact = -1.0f; layout0 = -1; layout1 = -1; sellt = -1; showbar = -1; selected = 0;
+		} else if (sscanf(line, "selected %d", &i) == 1) {
+			selected = i;
+		} else if (sscanf(line, "tagset %u", &tagset) == 1) {
+			/* parsed */
+		} else if (sscanf(line, "curtag %u", &curtag) == 1) {
+			/* parsed */
+		} else if (sscanf(line, "prevtag %u", &prevtag) == 1) {
+			/* parsed */
+		} else if (sscanf(line, "nmaster %d", &nmaster) == 1) {
+			/* parsed */
+		} else if (sscanf(line, "mfact %f", &mfact) == 1) {
+			/* parsed */
+		} else if (sscanf(line, "layout0 %d", &layout0) == 1) {
+			/* parsed */
+		} else if (sscanf(line, "layout1 %d", &layout1) == 1) {
+			/* parsed */
+		} else if (sscanf(line, "sellt %d", &sellt) == 1) {
+			/* parsed */
+		} else if (sscanf(line, "showbar %d", &showbar) == 1) {
+			/* parsed */
+		}
+	}
+	applystate(m, tagset, curtag, prevtag, nmaster, mfact, layout0, layout1, sellt, showbar, selected);
+	fclose(f);
+	/* Recompute the selected monitor's current tag mirror after restore. */
+	if (!selmon)
+		selmon = mons;
+	for (mon = mons; mon; mon = mon->next) {
+		mon->nmaster = mon->pertag->nmasters[mon->pertag->curtag];
+		mon->mfact = mon->pertag->mfacts[mon->pertag->curtag];
+		mon->sellt = mon->pertag->sellts[mon->pertag->curtag];
+		mon->lt[mon->sellt] = mon->pertag->ltidxs[mon->pertag->curtag][mon->sellt];
+		mon->lt[mon->sellt ^ 1] = mon->pertag->ltidxs[mon->pertag->curtag][mon->sellt ^ 1];
+		mon->showbar = mon->pertag->showbars[mon->pertag->curtag];
+	}
+}
+
 void
 applyrules(Client *c)
 {
@@ -386,6 +648,7 @@ applyrules(Client *c)
 				c->mon = m;
 		}
 	}
+	applyuserrules(c, class, instance, &fs);
 	/* NIRUPI pop-up panels: float, centred, comfortable size. */
 	if ((strstr(class, "nirupi-info") || strstr(class, "nirupi-calendar") ||
 	     strstr(class, "nirupi-btop") || strcmp(class, "Rofi") == 0) && c->isfloating)
@@ -1189,6 +1452,7 @@ focusmon(const Arg *arg)
 		return;
 	unfocus(selmon->sel, 0);
 	selmon = m;
+	savestate();
 	focus(NULL);
 }
 
@@ -1362,6 +1626,7 @@ void
 incnmaster(const Arg *arg)
 {
 	selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag] = MAX(selmon->nmaster + arg->i, 0);
+	savestate();
 	arrange(selmon);
 }
 
@@ -1686,6 +1951,7 @@ propertynotify(XEvent *e)
 void
 quit(const Arg *arg)
 {
+	savestate();
 	if (arg->i) {
 		/* Clean in-place restart: release the WM role before re-exec so the
 		 * new dwm can grab SubstructureRedirect (no competing window manager). */
@@ -1841,11 +2107,13 @@ dragmfact(const Arg *arg)
 			if (f < 0.05) f = 0.05;
 			if (f > 0.95) f = 0.95;
 			m->mfact = f;
+			m->pertag->mfacts[m->pertag->curtag] = f;
 			arrange(m);
 			break;
 		}
 	} while (ev.type != ButtonRelease);
 	XUngrabPointer(dpy, CurrentTime);
+	savestate();
 }
 
 void
@@ -2060,6 +2328,7 @@ setlayout(const Arg *arg)
 	if (arg && arg->v)
 		selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt] = (Layout *)arg->v;
 	strncpy(selmon->ltsymbol, selmon->lt[selmon->sellt]->symbol, sizeof selmon->ltsymbol);
+	savestate();
 	if (selmon->sel)
 		arrange(selmon);
 	else
@@ -2078,6 +2347,7 @@ setmfact(const Arg *arg)
 	if (f < 0.05 || f > 0.95)
 		return;
 	selmon->mfact = selmon->pertag->mfacts[selmon->pertag->curtag] = f;
+	savestate();
 	arrange(selmon);
 }
 
@@ -2137,7 +2407,12 @@ setup(void)
 	/* init bars */
 	updatebars();
 	updatestatus();
-	updatebarpos(selmon);
+	loadstate();
+	{
+		Monitor *m;
+		for (m = mons; m; m = m->next)
+			updatebarpos(m);
+	}
 	/* Publish the top-bar offset so every dmenu opens just below the bar. */
 	{
 		char dmenuy[16];
@@ -2296,6 +2571,7 @@ void
 togglebar(const Arg *arg)
 {
 	selmon->showbar = selmon->pertag->showbars[selmon->pertag->curtag] = !selmon->showbar;
+	savestate();
 	updatebarpos(selmon);
 	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, bh);
 	arrange(selmon);
@@ -2316,6 +2592,7 @@ barmode(const Arg *arg)
 		selmon->showbar = 0;
 	}
 	selmon->pertag->showbars[selmon->pertag->curtag] = selmon->showbar;
+	savestate();
 	updatebarpos(selmon);
 	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, bh);
 	{
@@ -2928,6 +3205,7 @@ view(const Arg *arg)
 	if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
 		togglebar(NULL);
 
+	savestate();
 	focus(NULL);
 	arrange(selmon);
 	runwallhook();

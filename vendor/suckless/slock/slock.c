@@ -23,6 +23,7 @@
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xresource.h>
 #include <X11/Xft/Xft.h>
 #include <Imlib2.h>
 
@@ -161,6 +162,40 @@ initclock(Display *dpy)
 	                  DefaultColormap(dpy, screen), clockdim, &clkdim);
 	XftColorAllocName(dpy, DefaultVisual(dpy, screen),
 	                  DefaultColormap(dpy, screen), clockshadow, &clkshadow);
+}
+
+/* Override the compiled palette/fonts from Xresources (slock.*), so a NIRUPI
+ * theme switch also reaches the lock screen without a rebuild. */
+static void
+xresload(Display *dpy)
+{
+	XrmDatabase db;
+	XrmValue value;
+	char *type, *resm, *copy;
+
+	if (!(resm = XResourceManagerString(dpy)))
+		return;
+	db = XrmGetStringDatabase(resm);
+	if (!db)
+		return;
+#define XRES(name, dst) do { \
+	if (XrmGetResource(db, (name), NULL, &type, &value) && value.addr) { \
+		copy = strdup(value.addr); \
+		if (copy) (dst) = copy; \
+	} \
+} while (0)
+	XRES("slock.init", colorname[INIT]);
+	XRES("slock.input", colorname[INPUT]);
+	XRES("slock.failed", colorname[FAILED]);
+	XRES("slock.clockForeground", clockforeground);
+	XRES("slock.clockDim", clockdim);
+	XRES("slock.clockShadow", clockshadow);
+	XRES("slock.clockFont", clockfont);
+	XRES("slock.clockFontSmall", clockfontsmall);
+	XRES("slock.runeFont", runefont);
+	XRES("slock.runeFontSmall", runefontsmall);
+#undef XRES
+	XrmDestroyDatabase(db);
 }
 
 /* Draw text with a subtle 1px dark halo so it stays readable on any blur. */
@@ -685,6 +720,8 @@ main(int argc, char **argv) {
 
 	if (!(dpy = XOpenDisplay(NULL)))
 		die("slock: cannot open display\n");
+	XrmInitialize();
+	xresload(dpy);
 
 	/* lock-screen clock: resolve fonts/colours before dropping privileges */
 	if (gethostname(hostnamebuf, sizeof hostnamebuf - 1) != 0)
