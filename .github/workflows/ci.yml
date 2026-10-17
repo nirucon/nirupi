@@ -100,7 +100,7 @@ jobs:
           xbps-install -Suy xbps
           xbps-install -Suy
           xbps-install -Sy git libstdc++ \
-            base-devel python3 diffutils shadow findutils sudo shellcheck gawk \
+            base-devel bash python3 diffutils shadow findutils sudo shellcheck gawk \
             libX11-devel libxcb-devel libXft-devel libXinerama-devel \
             libXext-devel libXrandr-devel imlib2-devel fontconfig-devel freetype-devel pkg-config
       - uses: actions/checkout@v4
