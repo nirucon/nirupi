@@ -95,6 +95,9 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
   from the AUR so AUR-only apps use the package manager.
 - **Theme picker** `Super+Ctrl+t` (`nirupi theme menu`): rofi with colour
   swatches per theme.
+- **Complete theming** — the lock screen reads `slock.*` from Xresources and the
+  session root background follows `NIRUPI_C_BG`, so light themes no longer
+  flash a black lock screen or root window.
 - Shipped themes: `noir` (default), `Satie` (monochrome graphite, one muted-gold
   accent), `carl-larsson` (warm umber/watercolour), `hackerman` (phosphor green),
   `nord-dark`, `commodore-64` (VIC-II blue), `commando` (field camo),
@@ -141,6 +144,14 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
   **in-place restart** `Super+Ctrl+Shift+r` (releases the WM role before
   re-exec), **drag the master factor** (`Super+Button2`), and float rules for
   dialogs/tools (PiP, pavucontrol, Steam, Lutris).
+- **Runtime rules** — `~/.config/nirupi/rules.conf` adds class/instance/title
+  rules (tag, float, terminal, fullscreen, monitor) without recompiling.
+- **Layout state** — tags, layouts, master factor, nmaster and bar state are
+  saved in `~/.cache/nirupi/dwm.state` and restored on restart/login.
+- **Scriptable control** — `nirupi dwm tag 3`, `nirupi dwm layout monocle`,
+  `nirupi dwm state`, `nirupi dwm restart`.
+- **Missions** — `nirupi mission work` (or `Super+Ctrl+M`) opens a named set of
+  apps on their tags. Edit `~/.config/nirupi/missions.conf`.
 
 ## Launcher, autostart, laptop
 - **Unified launcher** `Super+Shift+p` (and `nirupi launch`): one rofi that
@@ -199,9 +210,23 @@ The full list lives in [`KEYBINDINGS.md`](KEYBINDINGS.md) and on screen with
   Bluetooth, weather, the three apps, agent, backup and updates.
 
 ## Operations
-- `nirupi doctor [--fix]`, `nirupi gc`, `nirupi backup [--schedule]`,
-  `nirupi rollback`, `nirupi update`.
-- CI (smoke on Debian + Arch, shellcheck), generated `KEYBINDINGS.md`.
+- `nirupi doctor [--fix|--json|--perf]`, `nirupi gc [--system]`,
+  `nirupi backup [--list|--verify|--restore|--schedule]`, `nirupi rollback`,
+  `nirupi update`.
+- `nirupi tune` — opt-in, reversible sysctl tuning (swappiness, cache pressure,
+  dirty ratios, inotify, BBR when available). No governor/zram changes behind
+  your back; hints are printed instead. `nirupi tune revert` removes it.
+- `nirupi snapshot` — pre-update snapshots through timeshift, snapper, ZFS or
+  btrfs when a backend already exists (never installs one).
+- `nirupi gc --system` — native cleanup: `paccache`/orphans/journal on Arch,
+  `apt autoremove`/autoclean on Debian, `xbps-remove -Oo`/`vkpurge` on Void.
+- `nirupi explain` (`Super+Ctrl+D`) — redacted health context (services,
+  journal/runit, audio, network, disk, packages) sent to the agent.
+- **Profiles** — `minimal`, `desktop`, `full`; optional apps are never
+  installed unless requested. Debian uses `--no-install-recommends`.
+- CI builds dwm/dmenu/st/slock and validates package names on Debian, Arch and
+  Void, then runs the smoke suite as a non-root user.
+- Generated `KEYBINDINGS.md`, shellcheck (errors) and package-manifest guards.
 
 ## Customising
 - Keybindings/colours: `vendor/suckless/dwm/config.h` → rebuild with

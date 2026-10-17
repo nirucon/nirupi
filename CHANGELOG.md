@@ -2,6 +2,43 @@
 
 All notable changes to NIRUPI. Versions are the `VERSION` file value.
 
+## 0.24.0
+- **Profiles**: `minimal`, `desktop` and `full`; optional applications are only
+  installed when requested, and Debian uses `--no-install-recommends`. Hardware
+  firmware/VA-API stays best-effort for every profile.
+- **Installer**: whiptail flow with profile, session, optional-apps and summary
+  steps; `--profile`, `--optional`/`--no-optional`, `--full-upgrade`/
+  `--no-full-upgrade`; read-only `--plan` shows base, optional and hardware
+  package sets. `--theme-only` is now side-effect free.
+- **Performance**: the status bar sleeps at the system interval when idle,
+  animates only while a player is active, avoids unchanged `xsetroot` writes,
+  enumerates MPRIS players once and joins segments in pure bash. `nirupi doctor
+  --perf` reports wakeups, compositor, swap, governor, zram and root filesystem.
+- **Packaging**: explicit `xinput`, `ffmpeg` and `gnupg`; optional
+  `tesseract`/`satty`; hardened `-O2` builds for dwm/dmenu/st/slock with PIE,
+  RELRO/now and stack protector. Helium tarballs are signature-verified and
+  swapped atomically; `bootstrap.sh` remains the only curl-to-shell entry.
+- **Void**: NetworkManager is no longer enabled over dhcpcd/iwd/wpa_supplicant;
+  an optional synchronized `xbps-install -Syu` is offered with a typed
+  `UPGRADE`.
+- **dwm**: runtime rules in `~/.config/nirupi/rules.conf`, layout state saved in
+  `~/.cache/nirupi/dwm.state` and restored on login/restart, drag-mfact persisted,
+  `Super+Ctrl+D` diagnose and `Super+Ctrl+M` missions. `nirupi dwm` exposes
+  state/tag/layout/gaps/bar/restart control.
+- **Complete theming**: slock reads `slock.*` Xresources and the session root
+  background follows the active palette, so light themes reach the lock screen.
+- **System tools**: `nirupi tune` (reversible sysctl; plan/apply/revert),
+  `nirupi snapshot` (timeshift/snapper/ZFS/btrfs when configured),
+  `nirupi gc --system` (paccache/apt/xbps and kernel/journal cleanup),
+  backup verify/restore/encryption/retention, and `nirupi explain` (redacted
+  health context to the agent).
+- **Backup**: archives include PID in the name, support `--list`, `--verify`,
+  `--restore [--yes]`, optional age recipients and retention via
+  `NIRUPI_BACKUP_KEEP`.
+- **Docs/tests**: README rewritten around the essentials; USAGE/FEATURES/man
+  page updated; new performance, system-tools and dwm-enhancement tests; CI
+  builds suckless and validates package names on Debian, Arch and Void.
+
 ## 0.23.16
 - The **updates indicator now includes Git checkouts** under `~/Git` that are
   behind upstream. The count is cached (`GIT_UPDATES_CACHE_SECONDS`, default one

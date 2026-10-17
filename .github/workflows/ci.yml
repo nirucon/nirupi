@@ -8,55 +8,118 @@ on:
 
 jobs:
   smoke-debian:
-    name: smoke (ubuntu-latest)
+    name: smoke + build (debian stable)
     runs-on: ubuntu-latest
+    container: debian:stable
     steps:
-      - uses: actions/checkout@v4
       - name: Install tools
-        run: sudo apt-get update && sudo apt-get install -y python3 shellcheck
-      - name: Bash syntax
         run: |
-          for f in install.sh runtime-session.sh lib/*.sh runtime/nirupi runtime/nirupi-* vendor/noir/local/bin/*.sh tests/*.sh; do
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential git python3 sudo diffutils shellcheck passwd \
+            libx11-dev libxcb1-dev libx11-xcb-dev libxcb-res0-dev libxft-dev \
+            libxinerama-dev libxext-dev libxrandr-dev libimlib2-dev \
+            libfontconfig1-dev libfreetype-dev pkg-config
+      - uses: actions/checkout@v4
+      - name: Bash syntax + shellcheck
+        run: |
+          for f in install.sh runtime-session.sh lib/*.sh runtime/nirupi runtime/nirupi-* vendor/noir/local/bin/*.sh tests/*.sh tools/*.sh; do
             bash -n "$f"
           done
-      - name: Smoke tests
-        run: bash tests/smoke.sh
-      - name: shellcheck (errors only)
-        run: |
           shellcheck --severity=error \
             install.sh runtime-session.sh lib/*.sh runtime/nirupi runtime/nirupi-* \
-            vendor/noir/local/bin/*.sh tests/*.sh
+            vendor/noir/local/bin/*.sh tests/*.sh tools/*.sh
+      - name: Package manifest (Debian)
+        run: |
+          tools/package-list.sh debian base | while read -r p; do
+            [ -n "$p" ] || continue
+            apt-cache show "$p" >/dev/null || { echo "missing Debian package: $p" >&2; exit 1; }
+          done
+      - name: Build suckless
+        run: |
+          for app in dwm dmenu st slock; do
+            make -C "vendor/suckless/$app" -j2
+          done
+      - name: Smoke tests (non-root)
+        run: |
+          useradd -m -s /bin/bash ci
+          chown -R ci:ci "$GITHUB_WORKSPACE"
+          su ci -c "cd '$GITHUB_WORKSPACE' && bash tests/smoke.sh"
 
   smoke-arch:
-    name: smoke (archlinux container)
+    name: smoke + build (archlinux)
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - uses: actions/checkout@v4
       - name: Install tools
-        run: pacman -Sy --noconfirm --needed python sudo diffutils
-      - name: Smoke tests (non-root, as on a real install)
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel git python sudo diffutils shellcheck \
+            libx11 libxcb libxft libxinerama libxext libxrandr imlib2 \
+            fontconfig freetype2 pkgconf
+      - uses: actions/checkout@v4
+      - name: Bash syntax + shellcheck
+        run: |
+          for f in install.sh runtime-session.sh lib/*.sh runtime/nirupi runtime/nirupi-* vendor/noir/local/bin/*.sh tests/*.sh tools/*.sh; do
+            bash -n "$f"
+          done
+          shellcheck --severity=error \
+            install.sh runtime-session.sh lib/*.sh runtime/nirupi runtime/nirupi-* \
+            vendor/noir/local/bin/*.sh tests/*.sh tools/*.sh
+      - name: Package manifest (Arch)
+        run: |
+          tools/package-list.sh arch base | while read -r p; do
+            [ -n "$p" ] || continue
+            pacman -Si "$p" >/dev/null || { echo "missing Arch package: $p" >&2; exit 1; }
+          done
+      - name: Build suckless
+        run: |
+          for app in dwm dmenu st slock; do
+            make -C "vendor/suckless/$app" -j2
+          done
+      - name: Smoke tests (non-root)
         run: |
           useradd -m -s /bin/bash ci
           chown -R ci:ci "$GITHUB_WORKSPACE"
           su ci -c "cd '$GITHUB_WORKSPACE' && bash tests/smoke.sh"
 
   smoke-void:
-    name: smoke (voidlinux container)
+    name: smoke + build (voidlinux)
     runs-on: ubuntu-latest
     container: voidlinux/voidlinux:latest
     steps:
-      - name: Bootstrap (default mirror, git, libstdc++ for checkout)
+      - name: Bootstrap
         run: |
           for d in /etc/xbps.d /usr/share/xbps.d; do
             [ -d "$d" ] && sed -i 's#alpha.de.repo.voidlinux.org#repo-default.voidlinux.org#g' "$d"/*.conf || true
           done
           xbps-install -Suy xbps
-          xbps-install -Sy git libstdc++
+          xbps-install -Sy git libstdc++ \
+            base-devel python3 diffutils shadow findutils sudo shellcheck \
+            libX11-devel libxcb-devel libXft-devel libXinerama-devel \
+            libXext-devel libXrandr-devel imlib2-devel fontconfig-devel freetype-devel pkg-config
       - uses: actions/checkout@v4
-      - name: Install tools
-        run: xbps-install -Sy bash python3 diffutils shadow findutils sudo
-      - name: Smoke tests (non-root, as on a real install)
+      - name: Bash syntax + shellcheck
+        run: |
+          for f in install.sh runtime-session.sh lib/*.sh runtime/nirupi runtime/nirupi-* vendor/noir/local/bin/*.sh tests/*.sh tools/*.sh; do
+            bash -n "$f"
+          done
+          shellcheck --severity=error \
+            install.sh runtime-session.sh lib/*.sh runtime/nirupi runtime/nirupi-* \
+            vendor/noir/local/bin/*.sh tests/*.sh tools/*.sh
+      - name: Package manifest (Void)
+        run: |
+          xbps-install -S
+          tools/package-list.sh void base | while read -r p; do
+            [ -n "$p" ] || continue
+            xbps-query -R "$p" >/dev/null || { echo "missing Void package: $p" >&2; exit 1; }
+          done
+      - name: Build suckless
+        run: |
+          for app in dwm dmenu st slock; do
+            make -C "vendor/suckless/$app" -j2
+          done
+      - name: Smoke tests (non-root)
         run: |
           useradd -m -s /bin/bash ci
           chown -R ci:ci "$GITHUB_WORKSPACE"
