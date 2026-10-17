@@ -28,6 +28,11 @@ START_DUNST=1
 # Start the compositor (picom) with the session if installed.
 START_PICOM=1
 
+# ── Keyboard ─────────────────────────────────────────────────────────────────
+# Applied once at login; Super+Shift+L still toggles se/us at runtime.
+KEYBOARD_LAYOUT=se
+# KEYBOARD_VARIANT=nodeadkeys
+
 # ── Battery (laptops) ────────────────────────────────────────────────────────
 # Warn at BATTERY_WARN%, critical at BATTERY_CRIT%. Set BATTERY_SUSPEND=1 to
 # suspend at the critical level. BATTERY_POLL is the check interval in seconds.

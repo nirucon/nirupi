@@ -4,7 +4,7 @@
 /* Config schema marker. dwm.c refuses to build with an older config.h.
  * If you upgrade NIRUPI, merge the new settings (a *.nirupi-new file is
  * written next to your old config) and rebuild: nirupi migrate dwm --rebuild */
-#define NIRUPI_CONFIG_VERSION 16
+#define NIRUPI_CONFIG_VERSION 17
 
 /* ---- Compatibility shim for some patched dwm.c expecting `refreshrate` ---- */
 #ifndef REFRESH_RATE
@@ -225,6 +225,10 @@ static const char *askscreencmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-
 static const char *agentrewritecmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-agent-rewrite.sh", NULL };
 /* AI command: describe a task, review the suggested command, run on Enter (Super+Ctrl+c). */
 static const char *askcommandcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-ask-command.sh", NULL };
+/* Diagnose the running system with the agent (Super+Ctrl+d). */
+static const char *explaincmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-explain.sh", NULL };
+/* Workspace/app missions (Super+Ctrl+m). */
+static const char *missioncmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-mission.sh", NULL };
 /* SSH/host picker (Super+s). */
 static const char *sshcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/nirupi-ssh.sh", NULL };
 /* Capture menu: region/window/full + annotate + OCR (Super+Ctrl+Print). */
@@ -329,6 +333,8 @@ static const Key keys[] = {
 	{ MODKEY|ControlMask,           XK_a,                     spawn,          {.v = agentselectioncmd } }, /* Super+Ctrl+a -> ask agent about selection */
 	{ MODKEY|ControlMask,           XK_s,                     spawn,          {.v = askscreencmd } },  /* Super+Ctrl+s -> ask agent about screen (OCR) */
 	{ MODKEY|ControlMask,           XK_c,                     spawn,          {.v = askcommandcmd } },  /* Super+Ctrl+c -> AI command (confirm & run) */
+	{ MODKEY|ControlMask,           XK_d,                     spawn,          {.v = explaincmd } },    /* Super+Ctrl+d -> diagnose the system with the agent */
+	{ MODKEY|ControlMask,           XK_m,                     spawn,          {.v = missioncmd } },    /* Super+Ctrl+m -> workspace missions */
 	{ MODKEY|ControlMask,           XK_r,                     spawn,          {.v = agentrewritecmd } }, /* Super+Ctrl+r -> rewrite the selection in place */
 	{ MODKEY,                       XK_s,                     spawn,          {.v = sshcmd } },         /* Super+s -> SSH host picker */
 	{ MODKEY|ControlMask,           XK_t,                     spawn,          {.v = thememenu } },       /* Super+Ctrl+t -> theme picker */

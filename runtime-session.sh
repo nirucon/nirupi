@@ -93,7 +93,21 @@ command -v qt6ct >/dev/null 2>&1 && export QT_QPA_PLATFORMTHEME=qt6ct
 command -v kvantummanager >/dev/null 2>&1 && export QT_STYLE_OVERRIDE=kvantum
 export XCURSOR_THEME="${XCURSOR_THEME:-Adwaita}"
 export COLORTERM=truecolor
-command -v setxkbmap >/dev/null 2>&1 && setxkbmap se
+# Keyboard layout is configurable; default to Swedish only when unset.
+KEYBOARD_LAYOUT="${KEYBOARD_LAYOUT:-se}"
+KEYBOARD_VARIANT="${KEYBOARD_VARIANT:-}"
+if command -v setxkbmap >/dev/null 2>&1; then
+  if [ -n "$KEYBOARD_VARIANT" ]; then
+    setxkbmap "$KEYBOARD_LAYOUT" -variant "$KEYBOARD_VARIANT" 2>/dev/null || :
+  else
+    setxkbmap "$KEYBOARD_LAYOUT" 2>/dev/null || :
+  fi
+fi
+# Root background follows the active palette instead of a hardcoded noir value.
+if [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/theme/status.env" ]; then
+  . "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/theme/status.env"
+fi
+: "${NIRUPI_C_BG:=0f0f10}"
 
 # Recovery: a caffeine flag left over from a crashed session would keep the
 # screen awake forever. Clear it and restore normal DPMS on a fresh session.
@@ -102,7 +116,7 @@ if [ -f "${XDG_CACHE_HOME:-$HOME/.cache}/nirupi/caffeine" ]; then
         "${XDG_CACHE_HOME:-$HOME/.cache}/nirupi/caffeine.pid" 2>/dev/null || :
 fi
 command -v xset >/dev/null 2>&1 && xset s on +dpms >/dev/null 2>&1 || :
-command -v xsetroot >/dev/null 2>&1 && xsetroot -solid '#0f0f10'
+command -v xsetroot >/dev/null 2>&1 && xsetroot -solid "#${NIRUPI_C_BG}" 2>/dev/null || :
 
 # Per-workspace wallpaper for the initial tag (no-op when disabled).
 PER_TAG=0

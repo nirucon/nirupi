@@ -573,6 +573,8 @@ theme_render_statusbar(){
     printf 'NIRUPI_C_YELLOW=%s\n' "$NOIR_ANSI_3"
     printf 'NIRUPI_C_BLUE=%s\n' "$NOIR_ANSI_4"
     printf 'NIRUPI_C_CYAN=%s\n' "$NOIR_ANSI_6"
+    printf 'NIRUPI_C_BG=%s\n' "$NOIR_BG"
+    printf 'NIRUPI_C_FG=%s\n' "$NOIR_FG"
   } | theme_generate "$dest"
 }
 
@@ -882,6 +884,11 @@ theme_write_xresources(){
     printf 'dwm.foreground: #%s\ndwm.background: #%s\ndwm.border: #%s\n' "$NOIR_FG" "$NOIR_BG" "$NOIR_BORDER"
     printf 'dwm.foregroundSel: #%s\ndwm.backgroundSel: #%s\ndwm.borderSel: #%s\n' "$NOIR_FG" "$NOIR_SELECTION" "$NOIR_FOCUS"
     printf 'dwm.font: %s:%s\n' "$NOIR_FONT" "${NOIR_FONT_SIZE:-11}"
+    # Lock screen (slock reads these at launch through Xresources).
+    printf 'slock.init: #%s\nslock.input: #%s\nslock.failed: #%s\n' "$NOIR_BG" "$NOIR_SELECTION" "$NOIR_ANSI_1"
+    printf 'slock.clockForeground: #%s\nslock.clockDim: #%s\nslock.clockShadow: #%s\n' "$NOIR_FG" "$NOIR_MUTED" "$NOIR_BG"
+    printf 'slock.clockFont: %s:size=54\nslock.clockFontSmall: %s:size=14\n' "$NOIR_FONT" "$NOIR_FONT"
+    printf 'slock.runeFont: Noto Sans Runic:size=54\nslock.runeFontSmall: Noto Sans Runic:size=16\n'
   } > "$tmp"
   chmod 0644 "$tmp"
   mv -f -- "$tmp" "$dest"
