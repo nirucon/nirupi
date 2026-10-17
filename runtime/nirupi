@@ -90,6 +90,9 @@ Session & apps
   nirupi edit [TOPIC]                open a NIRUPI config in $EDITOR
   nirupi reload                      rebuild dwm if needed + restart in place
   nirupi agent [profile]             AI agent (opencode)
+  nirupi explain                     diagnose the system with the agent
+  nirupi mission [NAME]              open a named workspace/app set
+  nirupi dwm state|tag N|layout NAME scriptable dwm control
   nirupi webapp add|list|remove      Chromium app-mode web apps
   nirupi browser status|set|reset    default browser
   nirupi updates [--refresh]         system/Git update counts
@@ -98,8 +101,10 @@ Session & apps
 Maintenance
   nirupi status --once|--json        status-bar output
   nirupi doctor [--fix]              diagnose fonts/tools/theme
-  nirupi backup [--schedule|--unschedule]
-  nirupi gc --dry-run|--yes|--legacy prune old versions/backups
+  nirupi backup [--list|--verify FILE|--restore FILE|--schedule|--unschedule]
+  nirupi snapshot status|create|list system snapshot before updates
+  nirupi tune status|plan|apply|revert reversible system tuning
+  nirupi gc --dry-run|--yes|--legacy|--system prune old versions/backups
   nirupi update                      self-update (git pull + steps)
   nirupi rollback --all|--configs RUN|--binaries
   nirupi migrate plan|dwm --rebuild|binaries --rebuild
@@ -137,7 +142,7 @@ nirupi_doctor(){
   for app in dwm dmenu st nirupi-session dwm-status.sh nirupi-updates nirupi-browser; do
     if [[ -x $HOME/.local/bin/$app ]]; then drow OK "$app"; else drow FAIL "$app" "not installed"; fi
   done
-  for app in Xorg xsetroot kitty rofi opencode slock xss-lock xidlehook xautolock nextcloud; do
+  for app in Xorg xsetroot kitty rofi opencode slock xss-lock xidlehook xautolock nextcloud xinput ffmpeg gpg; do
     if command -v "$app" >/dev/null 2>&1; then drow OK "$app"; else drow WARN "$app" "missing"; fi
   done
   [[ -r /etc/os-release ]] && . /etc/os-release && ID="${ID:-}"
@@ -202,7 +207,7 @@ nirupi_doctor(){
     *) drow HINT locale "no UTF-8 locale set (icons/accents may render wrong)";;
   esac
   # Optional tools used by the pop-ups and toggles (all best-effort).
-  for _t in xclip maim flameshot gammastep brightnessctl ffmpeg rofi; do
+  for _t in xclip maim flameshot gammastep brightnessctl ffmpeg rofi tesseract satty; do
     command -v "$_t" >/dev/null 2>&1 || drow HINT "tool-$_t" "install $_t"
   done
   if (( json )); then
@@ -223,6 +228,48 @@ nirupi_doctor(){
     [[ $s == FAIL ]] && fail=$((fail+1))
   done
   return "$fail"
+}
+# Read-only performance snapshot for `nirupi doctor --perf`.
+nirupi_perf(){
+ local conf="${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf"
+ local interval=2 frame=0.3 pid a b wake
+ [[ -r $conf ]] && {
+  interval="$(sed -n 's/^[[:space:]]*NIRUPI_BAR_INTERVAL[[:space:]]*=[[:space:]]*//p' "$conf" | tail -n1)"
+  frame="$(sed -n 's/^[[:space:]]*NOW_PLAYING_FRAME_INTERVAL[[:space:]]*=[[:space:]]*//p' "$conf" | tail -n1)"
+ }
+ [[ $interval =~ ^[1-9][0-9]*$ ]] || interval=2
+ [[ $frame =~ ^[0-9.]+$ ]] || frame=0.3
+ printf 'NIRUPI performance snapshot\n'
+ printf '  bar interval       : %ss (music frame: %ss)\n' "$interval" "$frame"
+ pid="$(pgrep -u "$(id -u)" -f "^bash ${HOME//\//\\/}/\.local/bin/dwm-status\.sh$" | head -n1 || true)"
+ if [[ -n $pid && -r /proc/$pid/status ]]; then
+  printf '  status process     : pid %s, cpu %s%%, rss %s KB\n' "$pid" \
+    "$(ps -p "$pid" -o %cpu= 2>/dev/null | tr -d ' ')" "$(ps -p "$pid" -o rss= 2>/dev/null | tr -d ' ')"
+  a="$(awk '$1 == "voluntary_ctxt_switches:" {print $2}' /proc/$pid/status 2>/dev/null)"
+  sleep 2
+  b="$(awk '$1 == "voluntary_ctxt_switches:" {print $2}' /proc/$pid/status 2>/dev/null)"
+  if [[ $a =~ ^[0-9]+$ && $b =~ ^[0-9]+$ ]]; then
+   wake=$(( (b - a) / 2 ))
+   printf '  status wakeups     : ~%s/s (voluntary context switches)\n' "$wake"
+  fi
+ else
+  printf '  status process     : not running\n'
+ fi
+ printf '  compositor         : %s\n' "$(pgrep -x picom >/dev/null 2>&1 && printf 'picom running' || printf 'off')"
+ printf '  swappiness         : %s\n' "$(cat /proc/sys/vm/swappiness 2>/dev/null || printf '?')"
+ printf '  cpu governor       : %s\n' "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || printf '?')"
+ if command -v zramctl >/dev/null 2>&1; then
+  printf '  zram               : %s\n' "$(zramctl --noheadings --output NAME,DISKSIZE,ALGORITHM 2>/dev/null | tr '\n' ' ' || true)"
+ fi
+ if command -v swapon >/dev/null 2>&1; then
+  printf '  swap               : %s\n' "$(swapon --show=NAME,TYPE,SIZE --noheadings 2>/dev/null | tr '\n' ' ' || true)"
+ fi
+ if command -v findmnt >/dev/null 2>&1; then
+  printf '  root               : %s (%s)\n' "$(findmnt -n -o SOURCE / 2>/dev/null)" "$(findmnt -n -o FSTYPE / 2>/dev/null)"
+ fi
+ if command -v systemctl >/dev/null 2>&1; then
+  printf '  fstrim.timer       : %s\n' "$(systemctl is-enabled fstrim.timer 2>/dev/null || printf 'not-enabled')"
+ fi
 }
 case "$cmd" in
   version|--version|-V) nirupi_version; printf '
@@ -251,9 +298,10 @@ case "$cmd" in
     esac
     printf 'Session: %s\nDisplay: %s\n' "${XDG_SESSION_TYPE:-unknown}" "${DISPLAY:-none}"; pgrep -af '[d]wm-status.sh' || :;;
   doctor)
-    fix=0; json=0
-    for a in "$@"; do case "$a" in --fix) fix=1;; --json) json=1;; esac; done
+    fix=0; json=0; perf=0
+    for a in "$@"; do case "$a" in --fix) fix=1;; --json) json=1;; --perf) perf=1;; esac; done
     (( fix )) && niru_doctor_fix
+    (( perf )) && { nirupi_perf; exit 0; }
     if (( json )); then nirupi_doctor --json; else nirupi_doctor; fi;;
   config) printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/nirupi/status.conf";;
   history) printf 'Use: bash ~/Git/nirupi/install.sh --history\n';;
@@ -264,6 +312,11 @@ case "$cmd" in
     printf 'NIRUPI maintenance library not installed; run install.sh --apply to deploy it.\n' >&2
     exit 2;;
   agent) exec "$HOME/.local/bin/nirupi-agent.sh" "$@";;
+  explain) exec "$HOME/.local/bin/nirupi-explain.sh" "$@";;
+  mission) exec "$HOME/.local/bin/nirupi-mission.sh" "$@";;
+  dwm) exec "$HOME/.local/bin/nirupi-dwm.sh" "$@";;
+  snapshot) exec "$HOME/.local/bin/nirupi-snapshot.sh" "$@";;
+  tune) exec "$HOME/.local/bin/nirupi-tune.sh" "$@";;
   menu) exec "$HOME/.local/bin/nirupi-menu.sh" "$@";;
   keys) exec "$HOME/.local/bin/nirupi-keys.sh" "$@";;
   backup) exec "$HOME/.local/bin/nirupi-backup.sh" "$@";;

@@ -41,10 +41,30 @@ Only clean, non-diverged branches are fast-forwarded; the nirupi checkout is
 updated through
 .BR "nirupi update" .
 .TP
-.B backup [--schedule|--unschedule] | gc --dry-run|--yes|--legacy
-Backups and garbage collection of old versions/snapshots.
+.B backup [--list|--verify FILE|--restore FILE [--yes]|--schedule|--unschedule]
+Configuration backups with verification, restore and optional scheduling.
 .TP
-.B update | doctor [--fix] | rollback --all|--configs RUN|--binaries
+.B gc --dry-run|--yes|--legacy|--system
+Prune old NIRUPI versions/snapshots, or use the native package manager,
+journal and kernel cleanup with
+.BR --system .
+.TP
+.B tune status|plan|apply|revert
+Reversible sysctl tuning (swappiness, cache pressure, dirty ratios, inotify,
+BBR when available). Never changes governors or zram behind your back.
+.TP
+.B snapshot status|create [REASON]|list
+Create a system snapshot before updates when timeshift, snapper, ZFS or btrfs
+is already configured.
+.TP
+.B explain [--print]
+Collect a redacted system-health context and ask the agent to diagnose it.
+.TP
+.B mission [NAME] | dwm state|tag N|layout NAME
+Run a named workspace/app set, or control the running dwm through its own
+keybindings.
+.TP
+.B update | doctor [--fix|--json|--perf] | rollback --all|--configs RUN|--binaries
 Self-update, diagnostics and rollback.
 .SH FILES
 .I ~/.config/nirupi/

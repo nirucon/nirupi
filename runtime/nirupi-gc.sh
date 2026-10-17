@@ -7,22 +7,25 @@
 # release snapshots and the newest NIRUPI_KEEP_BACKUPS backup/migration runs.
 # --legacy also prunes old legacy archives (kept by default).
 set -Eeuo pipefail
+if [[ ${EUID:-$(id -u)} -eq 0 ]]; then sudo(){ "$@"; }; fi
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/nirupi"
+DISTRO=unknown
+[[ -r /etc/os-release ]] && . /etc/os-release && DISTRO="${ID:-unknown}"
 LIBROOT="$HOME/.local/lib/nirupi"
 KEEP_VERSIONS="${NIRUPI_KEEP_VERSIONS:-1}"
 KEEP_SNAPSHOTS="${NIRUPI_KEEP_SNAPSHOTS:-3}"
 KEEP_BACKUPS="${NIRUPI_KEEP_BACKUPS:-5}"
-DRY=0; ASSUME=0; LEGACY=0
+DRY=0; ASSUME=0; LEGACY=0; SYSTEM=0
 while (($#)); do
   case "$1" in
-    --dry-run) DRY=1;; --yes) ASSUME=1;; --legacy) LEGACY=1;;
-    -h|--help) echo 'Usage: nirupi gc [--dry-run] [--yes] [--legacy]'; exit 0;;
+    --dry-run) DRY=1;; --yes) ASSUME=1;; --legacy) LEGACY=1;; --system) SYSTEM=1;;
+    -h|--help) echo 'Usage: nirupi gc [--dry-run] [--yes] [--legacy] [--system]'; exit 0;;
     *) echo "Unknown option: $1" >&2; exit 2;;
   esac
   shift
 done
 
-current="$(sed -n 's/^NIRUPI_VERSION=//p' "$STATE/installed.env" 2>/dev/null | head -n1)"
+current="$(sed -n 's/^NIRUPI_VERSION=//p' "$STATE/installed.env" 2>/dev/null | head -n1 || true)"
 if [[ -z $current ]]; then
   link="$(readlink -f "$HOME/.local/bin/dwm" 2>/dev/null || true)"
   current="$(printf '%s' "$link" | sed -n 's#.*/nirupi/\([^/]*\)/.*#\1#p')"
@@ -110,12 +113,38 @@ prune_dir "$STATE/backups" "$KEEP_BACKUPS"
 prune_dir "$STATE/migrations" "$KEEP_BACKUPS"
 if (( LEGACY )); then prune_dir "$STATE/legacy" "$KEEP_BACKUPS"; fi
 
-if ((${#targets[@]} == 0)); then echo 'Nothing to prune'; exit 0; fi
+# ── System cleanup (opt-in, distro-native) ───────────────────────────────────
+sys_cmds=()
+sys_notes=()
+if (( SYSTEM )); then
+  case "${DISTRO:-}" in
+    arch|cachyos)
+      command -v paccache >/dev/null 2>&1 && sys_cmds+=('sudo paccache -r -k1')
+      if command -v pacman >/dev/null 2>&1; then
+        orphans="$(pacman -Qtdq 2>/dev/null || true)"
+        [[ -n $orphans ]] && sys_notes+=("Orphan packages: $(printf '%s ' $orphans)")
+      fi
+      command -v journalctl >/dev/null 2>&1 && sys_cmds+=('sudo journalctl --vacuum-size=200M') ;;
+    debian)
+      command -v apt-get >/dev/null 2>&1 && sys_cmds+=('sudo apt-get autoremove --purge -y')
+      command -v apt-get >/dev/null 2>&1 && sys_cmds+=('sudo apt-get autoclean')
+      command -v journalctl >/dev/null 2>&1 && sys_cmds+=('sudo journalctl --vacuum-size=200M') ;;
+    void)
+      command -v xbps-remove >/dev/null 2>&1 && sys_cmds+=('sudo xbps-remove -Oo')
+      command -v vkpurge >/dev/null 2>&1 && sys_cmds+=('sudo vkpurge rm all') ;;
+  esac
+fi
+if ((${#targets[@]} == 0)) && ((${#sys_cmds[@]} == 0)); then echo 'Nothing to prune'; exit 0; fi
 echo "NIRUPI gc will remove:"
 for t in "${targets[@]}"; do
   sz="$(du -sh "$t" 2>/dev/null | cut -f1)"
   printf '  %-8s %s\n' "${sz:-?}" "$t"
 done
+if ((${#sys_cmds[@]})); then
+  echo 'System cleanup:'
+  for c in "${sys_cmds[@]}"; do printf '  %s\n' "$c"; done
+  for n in "${sys_notes[@]}"; do printf '  note: %s\n' "$n"; done
+fi
 if (( DRY )); then echo '(dry run; nothing removed)'; exit 0; fi
 if (( ASSUME == 0 )); then
   [[ -t 0 ]] || { echo 'Refusing without --yes on a non-interactive terminal' >&2; exit 1; }
@@ -123,4 +152,9 @@ if (( ASSUME == 0 )); then
   [[ $ans == GC ]] || { echo 'Cancelled'; exit 1; }
 fi
 for t in "${targets[@]}"; do rm -rf -- "$t"; done
-echo "Removed ${#targets[@]} path(s)."
+echo "Removed ${#targets[@]} NIRUPI path(s)."
+for c in "${sys_cmds[@]}"; do
+  printf '\n$ %s\n' "$c"
+  bash -c "$c" || echo "WARN: system cleanup command failed: $c" >&2
+done
+echo 'System cleanup finished.'

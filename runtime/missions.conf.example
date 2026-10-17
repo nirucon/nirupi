@@ -1,0 +1,6 @@
+# NIRUPI missions: name|tag|command
+# A tag of 0 keeps the current workspace. Commands run detached.
+work|1|helium
+work|6|kitty
+work|2|opencode
+music|9|helium https://music.youtube.com
