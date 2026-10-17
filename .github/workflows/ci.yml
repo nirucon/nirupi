@@ -21,7 +21,7 @@ jobs:
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            build-essential git python3 sudo diffutils shellcheck passwd \
+            build-essential git python3 sudo diffutils shellcheck passwd gawk \
             libx11-dev libxcb1-dev libx11-xcb-dev libxcb-res0-dev libxft-dev \
             libxinerama-dev libxext-dev libxrandr-dev libimlib2-dev \
             libfontconfig1-dev libfreetype-dev pkg-config
@@ -97,9 +97,10 @@ jobs:
           for d in /etc/xbps.d /usr/share/xbps.d; do
             [ -d "$d" ] && sed -i 's#alpha.de.repo.voidlinux.org#repo-default.voidlinux.org#g' "$d"/*.conf || true
           done
+          xbps-install -Suy xbps
           xbps-install -Suy
           xbps-install -Sy git libstdc++ \
-            base-devel python3 diffutils shadow findutils sudo shellcheck \
+            base-devel python3 diffutils shadow findutils sudo shellcheck gawk \
             libX11-devel libxcb-devel libXft-devel libXinerama-devel \
             libXext-devel libXrandr-devel imlib2-devel fontconfig-devel freetype-devel pkg-config
       - uses: actions/checkout@v4
