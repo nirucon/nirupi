@@ -43,6 +43,7 @@ EOF
 # Optional whiptail installer TUI. Silently skipped when whiptail is absent or
 # stdin is not a TTY; cancelling an interactive apply aborts before any change.
 installer_tui(){
+  [[ ${NIRUPI_NO_TUI:-0} == 1 ]] && return 0
   command -v whiptail >/dev/null 2>&1 || return 0
   [[ -t 0 ]] || return 0
   local choice opt_text
